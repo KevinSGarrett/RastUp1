@@ -207,3 +207,22 @@ Tasks (planning-level; details to be filled by agents when we reach those WBS it
       - Add expected secret names into the secrets catalog/rotation ledger.
 - [ ] Ensure CI has basic "integration smoke" tests (mocked or sandbox).
 
+
+---
+
+## Appendix: Candidate External Services (for later evaluation)
+
+These are NOT active yet; they are options for future integration, to be
+designed and wired in via WBS items and CI, not ad-hoc:
+
+- **Code quality & security**
+  - GitHub Advanced Security / CodeQL
+  - SAST/DAST tools (Snyk, Semgrep, etc.)
+- **Observability**
+  - Error tracking / APM (e.g., Sentry, Datadog, New Relic)
+- **Product integrations**
+  - Email: SES / SendGrid / Postmark (for verification & transactional email)
+  - SMS: Twilio / SNS / MessageBird (for phone verification & alerts)
+  - CAPTCHA: reCAPTCHA / hCaptcha / Cloudflare Turnstile
+- **AI helpers around GitHub**
+  - Bugbot (PR-level review & suggestions)

@@ -1,0 +1,368 @@
+{
+  "version": "1.0",
+  "updated": "2025-11-18",
+  "repository": "rastup/platform",
+  "description": "Code map for RastUp platform - navigational guide to codebase structure",
+  "structure": {
+    "api": {
+      "description": "GraphQL and REST API schemas",
+      "path": "api/",
+      "subdirs": {
+        "schema": {
+          "description": "GraphQL schema definitions",
+          "key_files": [
+            "search.graphql"
+          ]
+        }
+      }
+    },
+    "db": {
+      "description": "Database schemas and migrations",
+      "path": "db/",
+      "subdirs": {
+        "migrations": {
+          "description": "SQL migration scripts (sequential)",
+          "key_files": [
+            "025_search_outbox.sql"
+          ],
+          "naming_convention": "NNN_description.sql"
+        }
+      }
+    },
+    "services": {
+      "description": "Application services (TypeScript/Node.js)",
+      "path": "services/",
+      "subdirs": {
+        "search": {
+          "description": "Search and indexing service",
+          "owner": "AGENT-2",
+          "key_files": [
+            "indexer.ts - Outbox-based search indexer",
+            "query.ts - Search query builder",
+            "ranking.ts - Search ranking logic",
+            "promotions.ts - Paid placement logic",
+            "types.ts - TypeScript type definitions",
+            "config.ts - Service configuration"
+          ],
+          "dependencies": [
+            "Typesense",
+            "OpenSearch",
+            "Aurora PostgreSQL",
+            "DynamoDB"
+          ]
+        }
+      }
+    },
+    "orchestrator": {
+      "description": "Orchestrator for managing agent tasks and workflows",
+      "path": "orchestrator/",
+      "language": "Python",
+      "key_files": [
+        "cli.py - Command-line interface",
+        "blueprints.py - Blueprint management",
+        "task_status.py - Task status tracking",
+        "review_latest.py - Run report review",
+        "llm_client.py - LLM API client"
+      ]
+    },
+    "tests": {
+      "description": "Test suites organized by domain",
+      "path": "tests/",
+      "subdirs": {
+        "analytics": {
+          "description": "Analytics and experimentation tests",
+          "key_files": [
+            "test_identity.py - Identity resolution tests",
+            "test_attribution.py - Attribution model tests",
+            "test_srm.py - Sample ratio mismatch tests",
+            "test_cuped.py - CUPED variance reduction tests"
+          ]
+        },
+        "frontend": {
+          "description": "Frontend component and E2E tests",
+          "key_files": [
+            "*.mjs - Jest/Vitest tests"
+          ]
+        },
+        "search": {
+          "description": "Search service tests",
+          "key_files": [
+            "test_collections_json.py - Collection schema validation",
+            "*.mjs - Integration tests"
+          ]
+        },
+        "security": {
+          "description": "Security control tests",
+          "key_files": [
+            "test_controls.py - Security policy validation"
+          ]
+        }
+      }
+    },
+    "tools": {
+      "description": "Utility scripts and tooling",
+      "path": "tools/",
+      "subdirs": {
+        "analytics": {
+          "description": "Analytics utilities",
+          "key_files": [
+            "identity.py - Identity resolution",
+            "attribution.py - Attribution models",
+            "srm.py - Sample ratio mismatch detection",
+            "cuped.py - CUPED variance reduction"
+          ]
+        },
+        "frontend": {
+          "description": "Frontend build and validation tools",
+          "key_files": [
+            "*.mjs - Build and validation scripts"
+          ]
+        }
+      },
+      "key_files": [
+        "validate_event_contracts.py - Event schema validation"
+      ]
+    },
+    "docs": {
+      "description": "Documentation and specifications",
+      "path": "docs/",
+      "subdirs": {
+        "blueprints": {
+          "description": "Product and technical blueprints",
+          "key_files": [
+            "blueprint_index.json - Blueprint catalog",
+            "non_tech_source.md - Non-technical requirements",
+            "tech_source.md - Technical requirements"
+          ],
+          "subdirs": {
+            "non-tech": "582 non-technical blueprint files",
+            "tech": "350 technical blueprint files"
+          }
+        },
+        "data": {
+          "description": "Data schemas and documentation",
+          "subdirs": {
+            "analytics": "Analytics event schemas",
+            "aurora": "Database schemas",
+            "auth": "Authentication documentation",
+            "events": "Event contracts",
+            "pipelines": "Data pipeline documentation",
+            "privacy": "Privacy documentation",
+            "search": "Search implementation docs",
+            "semantic_layer": "Semantic layer definitions"
+          }
+        },
+        "orchestrator": {
+          "description": "Orchestrator specifications and reviews",
+          "key_files": [
+            "ORCHESTRATOR_SPEC.md - High-level spec",
+            "LONG_SPEC.md - Detailed spec",
+            "TODO_ORCHESTRATOR.md - Orchestrator todos"
+          ],
+          "subdirs": {
+            "from-agents": "Agent run reports and artifacts",
+            "reviews": "Orchestrator reviews"
+          }
+        },
+        "runs": {
+          "description": "Agent run reports",
+          "naming_convention": "YYYY-MM-DD-WBS-NNN-AGENT-N.md"
+        },
+        "security": {
+          "description": "Security policies and procedures",
+          "key_files": [
+            "README.md - Security overview",
+            "iam_and_kms.md - IAM and encryption",
+            "waf_bot_control.md - WAF configuration",
+            "audit_logging.md - Audit trail",
+            "privacy_operations.md - Privacy procedures",
+            "pci_dss.md - PCI compliance",
+            "rbac_and_mfa.md - Access control",
+            "training_and_drills.md - Security training"
+          ]
+        },
+        "adrs": {
+          "description": "Architecture Decision Records",
+          "key_files": [
+            "ADR-001-multi-role-service-profiles.md",
+            "ADR-002-typesense-for-search.md",
+            "ADR-003-stripe-escrow-payments.md",
+            "ADR-004-outbox-pattern-search-indexing.md",
+            "ADR-005-city-gated-feature-flags.md"
+          ]
+        }
+      },
+      "key_files": [
+        "ARCHITECTURE.md - System architecture overview",
+        "ACCESS_ENVELOPE.md - Access control policies",
+        "TEST_POLICY.md - Testing standards",
+        "RISKS.md - Risk register",
+        "CODEMAP.json - This file",
+        "FILE_INDEX.json - File index",
+        "FILE_INDEX.md - File index (markdown)",
+        "PROGRESS.md - Project progress",
+        "TODO_MASTER.md - Master todo list"
+      ]
+    },
+    "ops": {
+      "description": "Operations, configuration, and runbooks",
+      "path": "ops/",
+      "subdirs": {
+        "runbooks": {
+          "description": "Operational runbooks",
+          "key_files": [
+            "deployment.md - Deployment procedures",
+            "rollback.md - Rollback procedures",
+            "on-call.md - On-call guide",
+            "troubleshooting.md - Troubleshooting guide",
+            "incident_response.md - Incident response",
+            "secret_rotation.md - Secret rotation",
+            "search-index.md - Search index operations"
+          ]
+        },
+        "config": {
+          "description": "Configuration files",
+          "key_files": [
+            "registry.md - Configuration registry",
+            "flags.yaml - Feature flags"
+          ]
+        },
+        "locks": {
+          "description": "Agent lock files",
+          "naming_convention": "AGENT-N.lock"
+        },
+        "tasks": {
+          "description": "Agent task files",
+          "naming_convention": "AGENT-N/WBS-NNN-YYYYMMDD-HHMMSSZ.md"
+        },
+        "typesense": {
+          "description": "Typesense configuration",
+          "key_files": [
+            "collections.json - Collection schemas"
+          ]
+        },
+        "dr": {
+          "description": "Disaster recovery procedures"
+        }
+      },
+      "key_files": [
+        "config.yaml - Main configuration",
+        "wbs.json - Work breakdown structure",
+        "queue.jsonl - Task queue",
+        "model-decisions.jsonl - Model decision log",
+        "orchestrator_capabilities.yaml - Orchestrator capabilities"
+      ]
+    },
+    "observability": {
+      "description": "Logging, monitoring, and observability",
+      "path": "observability/",
+      "key_files": [
+        "log_schema.md - Log structure definition",
+        "redaction_policy.md - PII redaction rules"
+      ],
+      "subdirs": {
+        "dashboards": {
+          "description": "Dashboard definitions"
+        }
+      }
+    },
+    "privacy": {
+      "description": "Privacy policies and procedures",
+      "path": "privacy/",
+      "key_files": [
+        "data_lifecycle.md - Data lifecycle management"
+      ]
+    }
+  },
+  "key_patterns": {
+    "naming_conventions": {
+      "migrations": "Sequential numbered files: NNN_description.sql",
+      "run_reports": "YYYY-MM-DD-WBS-NNN-AGENT-N.md",
+      "agent_locks": "AGENT-N.lock",
+      "task_files": "AGENT-N/WBS-NNN-YYYYMMDD-HHMMSSZ.md",
+      "blueprints": "NT-NNNN (non-tech), TD-NNNN (tech)"
+    },
+    "agent_responsibilities": {
+      "AGENT-1": "Bootstrap & DevOps - Infrastructure, CI/CD, monitoring, analytics",
+      "AGENT-2": "Backend Services - APIs, search, payments, data processing",
+      "AGENT-3": "Frontend & UX - Web, mobile, user-facing features",
+      "AGENT-4": "QA / Security / Docs / Release - Testing, security, documentation, operations"
+    },
+    "workflow": {
+      "task_assignment": "Orchestrator creates task files in ops/tasks/AGENT-N/",
+      "task_execution": "Agent reads task, implements, creates run report",
+      "run_report": "Agent creates report in docs/runs/ with attach pack",
+      "attach_pack": "Artifacts in docs/orchestrator/from-agents/AGENT-N/",
+      "review": "Orchestrator reviews run report and updates queue"
+    }
+  },
+  "technology_stack": {
+    "backend": {
+      "runtime": "Node.js (TypeScript)",
+      "frameworks": ["Express", "Apollo Server"],
+      "databases": ["Aurora PostgreSQL", "DynamoDB"],
+      "search": ["Typesense", "OpenSearch"],
+      "cache": ["Redis", "DynamoDB"],
+      "messaging": ["SQS", "SNS", "EventBridge"]
+    },
+    "frontend": {
+      "web": ["React", "Next.js"],
+      "mobile": ["React Native"],
+      "testing": ["Jest", "Playwright", "Cypress"]
+    },
+    "infrastructure": {
+      "cloud": "AWS",
+      "compute": ["ECS Fargate", "Lambda"],
+      "storage": ["S3", "EBS"],
+      "cdn": "CloudFront",
+      "iac": ["Terraform", "CDK"]
+    },
+    "devops": {
+      "ci_cd": "GitHub Actions",
+      "monitoring": ["CloudWatch", "Datadog"],
+      "logging": ["CloudWatch Logs", "S3"],
+      "secrets": "AWS Secrets Manager",
+      "alerting": "PagerDuty"
+    },
+    "external_services": {
+      "payments": "Stripe",
+      "identity": "Plaid",
+      "communications": ["Twilio", "SendGrid", "SES"],
+      "push": ["FCM", "APNs"]
+    }
+  },
+  "getting_started": {
+    "new_developers": [
+      "1. Read docs/ARCHITECTURE.md for system overview",
+      "2. Review docs/adrs/ for key design decisions",
+      "3. Check ops/runbooks/ for operational procedures",
+      "4. Review docs/security/ for security policies",
+      "5. Read docs/TEST_POLICY.md for testing standards",
+      "6. Check docs/blueprints/blueprint_index.json for requirements"
+    ],
+    "finding_code": [
+      "Use this CODEMAP.json to understand structure",
+      "Check docs/FILE_INDEX.json for detailed file listing",
+      "Review WBS items in ops/wbs.json for feature ownership",
+      "Check agent responsibilities in key_patterns section"
+    ],
+    "making_changes": [
+      "Follow testing standards in docs/TEST_POLICY.md",
+      "Update relevant documentation",
+      "Follow deployment procedures in ops/runbooks/deployment.md",
+      "Create ADR for significant architectural decisions"
+    ]
+  },
+  "references": {
+    "architecture": "docs/ARCHITECTURE.md",
+    "adrs": "docs/adrs/",
+    "runbooks": "ops/runbooks/",
+    "security": "docs/security/",
+    "testing": "docs/TEST_POLICY.md",
+    "risks": "docs/RISKS.md",
+    "access": "docs/ACCESS_ENVELOPE.md",
+    "blueprints": "docs/blueprints/",
+    "wbs": "ops/wbs.json",
+    "progress": "docs/PROGRESS.md"
+  }
+}
