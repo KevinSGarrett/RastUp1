@@ -383,3 +383,4 @@ This document should be updated whenever:
 - Technology stack decisions are made
 
 **Review Cadence**: Quarterly or before major releases
+
