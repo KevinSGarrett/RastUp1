@@ -1,0 +1,16 @@
+{
+  "agent": "AGENT-2",
+  "run_id": "run-20251118T075944Z",
+  "wbs_ids": ["WBS-003"],
+  "blueprint_ids": ["TD-0001","TD-0003","TD-0004","TD-0005","TD-0006","TD-0007","TD-0008","TD-0236","TD-0237","TD-0238","TD-0239","TD-0240","TD-0241","TD-0242","TD-0243","TD-0244","TD-0245","TD-0246","TD-0247","TD-0248","TD-0249"],
+  "status": "completed",
+  "timestamp_utc": "2025-11-18T07:59:44Z",
+  "artifacts": [
+    {"path": "run-report.md", "type": "run_report"},
+    {"path": "diff-summary.txt", "type": "diff_summary"},
+    {"path": "tests-node.txt", "type": "test_output"},
+    {"path": "tests-python.txt", "type": "test_output"},
+    {"path": "ci.txt", "type": "ci_output"},
+    {"path": "performance-security.txt", "type": "notes"}
+  ]
+}

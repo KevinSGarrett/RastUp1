@@ -1,0 +1,15 @@
+{
+  "agent": "AGENT-3",
+  "run_id": "run-20251118T082740Z",
+  "wbs_ids": ["WBS-004"],
+  "blueprint_ids": ["TD-0302","TD-0303","TD-0311","TD-0312","TD-0313","TD-0314","TD-0315","TD-0316","TD-0317","TD-0318","TD-0319"],
+  "status": "partial",
+  "timestamp_utc": "2025-11-18T08:27:40Z",
+  "artifacts": [
+    {"path": "run-report.md", "type": "run_report"},
+    {"path": "diff-summary.txt", "type": "diff_summary"},
+    {"path": "tests.txt", "type": "test_output"},
+    {"path": "ci.txt", "type": "ci_output"},
+    {"path": "performance-security.txt", "type": "notes"}
+  ]
+}

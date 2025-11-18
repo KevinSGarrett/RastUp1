@@ -1,0 +1,201 @@
+# WBS-002 Semantic Metrics Catalog
+generated_at: 2025-11-18T07:32:00Z
+agent: AGENT-1
+
+dimensions:
+  - id: city
+    description: ISO city slug derived from booking legs and service profiles.
+  - id: role
+    description: Service profile role (model, photographer, videographer, creator, fansub).
+  - id: privacy_tier
+    description: Privacy tier of the underlying event; used to filter export eligibility.
+  - id: safe_mode_band
+    description: Highest Safe-Mode band observed for assets linked to the metric observation.
+  - id: channel_group
+    description: Marketing channel grouping derived from click-token proof (paid_search, paid_social, organic_social, affiliate, influencer, email, direct, other).
+  - id: variant_key
+    description: Experiment variant identifier used in experimentation dashboards.
+  - id: experiment_key
+    description: Experiment identifier registered in the experimentation catalog.
+  - id: support_channel
+    description: Support contact channel (email, chat, phone, in-product).
+  - id: priority
+    description: Support ticket priority (p0, p1, p2, p3).
+  - id: risk_bucket
+    description: Trust & Safety risk classification bucket (low, medium, high, critical).
+  - id: suite_name
+    description: Data quality expectation suite identifier.
+
+metrics:
+  - id: bookings_confirmed_daily
+    name: Daily Confirmed Bookings
+    description: Count of booking legs confirmed within the day (tz = UTC).
+    owner: data-platform
+    layer: gold
+    source_table: analytics_event_gold_daily
+    filter:
+      metric_name: bookings.confirmed.count
+    dimensions: [city, role]
+    freshness_sla_minutes: 480
+    data_quality_assertions:
+      - type: not_null
+        column: value
+      - type: gte
+        column: value
+        value: 0
+
+  - id: gmv_captured_daily
+    name: Daily Captured GMV
+    description: Sum of captured payment amounts per day.
+    owner: finance-analytics
+    layer: gold
+    source_table: analytics_event_gold_daily
+    filter:
+      metric_name: payments.captured.gmv_cents
+    aggregation: sum
+    unit: cents
+    dimensions: [city, role]
+    freshness_sla_minutes: 540
+    data_quality_assertions:
+      - type: not_null
+        column: value
+      - type: gte
+        column: value
+        value: 0
+
+  - id: refund_rate_7d
+    name: 7-Day Rolling Refund Rate
+    description: Percentage of captured GMV refunded within trailing seven days.
+    owner: finance-analytics
+    layer: semantic
+    definition:
+      numerator_metric: payments.refund.amount_7d
+      denominator_metric: payments.captured.amount_7d
+      formula: numerator_metric / nullif(denominator_metric, 0)
+    dimensions: [city, role]
+    freshness_sla_minutes: 600
+
+  - id: messaging_moderation_rate_daily
+    name: Daily Messaging Auto-Flag Rate
+    description: Share of messages auto-flagged by moderation scoring above 0.8.
+    owner: trust-safety
+    layer: gold
+    source_table: analytics_event_gold_daily
+    filter:
+      metric_name: messaging.flagged.rate
+    dimensions: [privacy_tier, safe_mode_band]
+    freshness_sla_minutes: 360
+
+  - id: dsar_backlog
+    name: DSAR Backlog Count
+    description: Count of open DSAR requests by type.
+    owner: privacy-ops
+    layer: silver
+    source_table: dsar_request
+    filter:
+      status__in: [pending, in_progress]
+    dimensions: [privacy_tier]
+    freshness_sla_minutes: 60
+    data_quality_assertions:
+      - type: gte
+        column: value
+        value: 0
+
+  - id: paid_attributed_gmv_daily
+    name: Paid Attributed GMV (Proof Only)
+    description: Sum of captured GMV attributed to paid channels with valid click-token proof.
+    owner: growth-analytics
+    layer: gold
+    source_table: fact_attribution_conversions
+    filter:
+      is_valid_proof: true
+      channel_group__in: [paid_search, paid_social, affiliate, influencer, email]
+    aggregation: sum
+    unit: cents
+    dimensions: [channel_group, city]
+    freshness_sla_minutes: 120
+    data_quality_assertions:
+      - type: gte
+        column: value
+        value: 0
+
+  - id: nonproof_conversion_rate
+    name: Conversions Without Proof Share
+    description: Percentage of conversions lacking click-token proof within attribution window.
+    owner: growth-analytics
+    layer: gold
+    definition:
+      numerator_metric: conversions.nonproof.count
+      denominator_metric: conversions.total.count
+      formula: numerator_metric / nullif(denominator_metric, 0)
+    dimensions: [channel_group]
+    freshness_sla_minutes: 180
+
+  - id: experiment_variant_cuped_lift
+    name: CUPED-Adjusted Variant Lift
+    description: CUPED-adjusted percent lift vs control for primary experiment metric.
+    owner: experimentation-platform
+    layer: gold
+    source_table: experiment_daily_metrics
+    filter:
+      metric_type: primary
+    aggregation: weighted_mean
+    dimensions: [experiment_key, variant_key]
+    freshness_sla_minutes: 60
+    data_quality_assertions:
+      - type: between
+        column: value
+        min: -5
+        max: 5
+
+  - id: trust_dispute_rate_daily
+    name: Trust Dispute Rate
+    description: Daily ratio of disputes to completed legs segmented by risk bucket.
+    owner: trust-safety
+    layer: gold
+    definition:
+      numerator_metric: trust.disputes.count
+      denominator_metric: bookings.completed.count
+      formula: numerator_metric / nullif(denominator_metric, 0)
+    dimensions: [risk_bucket, city]
+    freshness_sla_minutes: 120
+
+  - id: payout_backlog_count
+    name: Payout Backlog Count
+    description: Number of payouts pending disbursement older than 48 hours.
+    owner: finance-analytics
+    layer: silver
+    source_table: finance_recon_status
+    filter:
+      status: pending
+      age_hours__gte: 48
+    aggregation: count
+    dimensions: [city]
+    freshness_sla_minutes: 60
+
+  - id: support_ticket_backlog
+    name: Support Ticket Backlog
+    description: Open support tickets segmented by channel and priority.
+    owner: support-ops
+    layer: silver
+    source_table: support_ticket_metrics
+    aggregation: sum
+    unit: tickets
+    dimensions: [support_channel, priority]
+    freshness_sla_minutes: 15
+    data_quality_assertions:
+      - type: gte
+        column: value
+        value: 0
+
+  - id: data_quality_failures
+    name: Data Quality Failure Count
+    description: Count of failed data quality suites per day.
+    owner: data-platform-sre
+    layer: silver
+    source_table: data_quality_run
+    filter:
+      status: failed
+    aggregation: count
+    dimensions: [suite_name]
+    freshness_sla_minutes: 30

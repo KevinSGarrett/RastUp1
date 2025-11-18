@@ -1,0 +1,1 @@
+No dedicated performance or security scans executed this run. Pending CI scaffolding (Makefile `ci` target missing); recommend adding once tooling is available.

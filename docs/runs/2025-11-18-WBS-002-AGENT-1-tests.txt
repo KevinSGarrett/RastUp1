@@ -1,0 +1,9 @@
+Command Results:
+
+1. `python tools/validate_event_contracts.py`
+   - Output: `[ok] Manifest validated: 4 event(s) checked.`
+   - Exit code: 0
+
+2. `make ci`
+   - Output: `make: *** No rule to make target 'ci'.  Stop.`
+   - Exit code: 2

@@ -1,0 +1,159 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://docs.rastup.internal/events/payment.refund.processed.v1.schema.json",
+  "title": "payment.refund.processed",
+  "description": "Emitted when a refund transitions to succeeded in the payment provider.",
+  "type": "object",
+  "properties": {
+    "event": {
+      "const": "payment.refund.processed"
+    },
+    "version": {
+      "const": 1
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "emitted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 100
+    },
+    "privacy_tier": {
+      "type": "string",
+      "enum": ["tier1"]
+    },
+    "retention_class": {
+      "type": "string",
+      "enum": ["payments_core"]
+    },
+    "pii_fields": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-zA-Z0-9_.]+$"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "refund": {
+      "type": "object",
+      "properties": {
+        "payment_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "payment_intent_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "leg_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "booking_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "amount_cents": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "currency": {
+          "type": "string",
+          "pattern": "^[A-Z]{3}$"
+        },
+        "provider": {
+          "type": "string"
+        },
+        "provider_refund_id": {
+          "type": "string"
+        },
+        "reason": {
+          "type": ["string", "null"]
+        },
+        "initiated_by": {
+          "type": "string",
+          "enum": ["buyer", "seller", "support", "system"]
+        },
+        "tax_component_cents": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fee_component_cents": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "payment_id",
+        "payment_intent_id",
+        "leg_id",
+        "booking_id",
+        "amount_cents",
+        "currency",
+        "provider",
+        "provider_refund_id",
+        "initiated_by",
+        "tax_component_cents",
+        "fee_component_cents"
+      ],
+      "additionalProperties": false
+    },
+    "compliance": {
+      "type": "object",
+      "properties": {
+        "nsf_check": {
+          "type": "boolean"
+        },
+        "aml_flag": {
+          "type": "boolean"
+        },
+        "chargeback_reference": {
+          "type": ["string", "null"]
+        }
+      },
+      "required": ["nsf_check", "aml_flag"],
+      "additionalProperties": false
+    },
+    "context": {
+      "type": "object",
+      "properties": {
+        "request_id": {
+          "type": "string"
+        },
+        "ingest_app": {
+          "type": "string"
+        },
+        "webhook_delivery_id": {
+          "type": ["string", "null"]
+        },
+        "replay": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "required": ["request_id", "ingest_app"],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "event",
+    "version",
+    "occurred_at",
+    "emitted_at",
+    "source",
+    "privacy_tier",
+    "retention_class",
+    "pii_fields",
+    "refund",
+    "compliance",
+    "context"
+  ],
+  "additionalProperties": false
+}

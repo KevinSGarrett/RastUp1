@@ -1,0 +1,225 @@
+# WBS-003 Search API (AppSync GraphQL)
+
+scalar AWSDate
+scalar AWSDateTime
+scalar AWSJSON
+scalar AWSURL
+
+enum SearchSurface {
+  PEOPLE
+  STUDIOS
+  WORK
+  HELP
+}
+
+enum RoleType {
+  MODEL
+  PHOTOGRAPHER
+  VIDEOGRAPHER
+  CREATOR
+  FANSUB
+}
+
+enum SearchSort {
+  DEFAULT
+  TOP_RATED
+  PRICE_LOW
+  PRICE_HIGH
+  NEW
+  DISTANCE
+}
+
+type FacetValue {
+  value: String!
+  count: Int!
+  promoted: Boolean
+}
+
+type Facet {
+  key: String!
+  values: [FacetValue!]!
+}
+
+type SearchCard {
+  id: ID!
+  kind: SearchSurface!
+  score: Float!
+  title: String!
+  subtitle: String
+  city: String
+  region: String
+  country: String
+  coordinates: GeoPoint
+  image: AWSURL
+  verified: Boolean
+  ratingAvg: Float
+  ratingCount: Int
+  priceFromCents: Int
+  priceToCents: Int
+  priceCurrency: String
+  badges: [String!]!
+  promotions: [String!]!
+  safeModeBand: Int!
+  availabilityDate: AWSDate
+  availabilityScore: Float
+  instantBook: Boolean
+  handle: String
+  slug: String
+  role: RoleType
+  distanceKm: Float
+}
+
+type GeoPoint {
+  lat: Float!
+  lon: Float!
+}
+
+type SearchPageInfo {
+  nextCursor: String
+  previousCursor: String
+  totalEstimated: Int
+}
+
+type SearchResult {
+  items: [SearchCard!]!
+  facets: [Facet!]!
+  page: SearchPageInfo!
+  appliedFilters: AWSJSON
+  promotions: AWSJSON
+}
+
+type SuggestItem {
+  text: String!
+  surface: SearchSurface!
+  role: RoleType
+  city: String
+  payload: AWSJSON
+}
+
+input GeoInput {
+  lat: Float!
+  lon: Float!
+  radiusKm: Int = 50
+}
+
+input DateRangeInput {
+  start: AWSDate!
+  end: AWSDate!
+}
+
+input ModelFiltersInput {
+  heightMin: Int
+  heightMax: Int
+  genres: [String!]
+  experienceYearsMin: Int
+  travelReady: Boolean
+}
+
+input PhotographerFiltersInput {
+  specialties: [String!]
+  studioAccess: Boolean
+  turnaroundDaysMax: Int
+  insurance: Boolean
+}
+
+input VideographerFiltersInput {
+  specialties: [String!]
+  audioCapability: Boolean
+  deliverableFormats: [String!]
+}
+
+input CreatorFiltersInput {
+  platforms: [String!]
+  category: [String!]
+  verifiedSocial: Boolean
+  followersMin: Int
+}
+
+input StudiosFiltersInput {
+  amenities: [String!]
+  depositRequired: Boolean
+  capacityMin: Int
+  capacityMax: Int
+  naturalLight: Boolean
+  parking: Boolean
+  hourlyMaxCents: Int
+}
+
+input SearchInput {
+  surface: SearchSurface!
+  role: RoleType
+  city: String!
+  geo: GeoInput
+  date: AWSDate
+  dateRange: DateRangeInput
+  budgetMinCents: Int
+  budgetMaxCents: Int
+  ratingMin: Float
+  verifiedOnly: Boolean
+  instantBookOnly: Boolean
+  safeMode: Boolean = true
+  model: ModelFiltersInput
+  photographer: PhotographerFiltersInput
+  videographer: VideographerFiltersInput
+  creator: CreatorFiltersInput
+  studios: StudiosFiltersInput
+  text: String
+  sort: SearchSort = DEFAULT
+  cursor: String
+  pageSize: Int = 20
+  personalizationKey: String
+}
+
+input SavedSearchInput {
+  name: String!
+  input: SearchInput!
+}
+
+type SavedSearch {
+  id: ID!
+  name: String!
+  surface: SearchSurface!
+  role: RoleType
+  city: String!
+  params: AWSJSON!
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+type SearchError {
+  code: String!
+  message: String!
+  hint: String
+  correlationId: String!
+}
+
+type SearchEnvelope {
+  result: SearchResult
+  error: SearchError
+  correlationId: String!
+  latencyMs: Int!
+  cached: Boolean!
+  version: String!
+}
+
+type MutationPayload {
+  success: Boolean!
+  correlationId: String!
+  error: SearchError
+}
+
+type Query {
+  search(input: SearchInput!): SearchEnvelope! @rateLimit(name: "search", window: "PT1M", max: 60)
+  searchSuggest(text: String!, surface: SearchSurface!, role: RoleType, city: String!): [SuggestItem!]! @rateLimit(name: "suggest", window: "PT1M", max: 120)
+  savedSearches: [SavedSearch!]! @auth(role: "user")
+}
+
+type Mutation {
+  saveSearch(name: String!, input: SearchInput!): SavedSearch! @auth(role: "user")
+  deleteSavedSearch(id: ID!): Boolean! @auth(role: "user")
+  adminReindex(surface: SearchSurface!, city: String!, role: RoleType): MutationPayload! @auth(role: "admin")
+  adminSyncSynonyms(payload: AWSJSON!): MutationPayload! @auth(role: "admin")
+}
+
+directive @auth(role: String!) on FIELD_DEFINITION
+directive @rateLimit(name: String!, window: String!, max: Int!) on FIELD_DEFINITION

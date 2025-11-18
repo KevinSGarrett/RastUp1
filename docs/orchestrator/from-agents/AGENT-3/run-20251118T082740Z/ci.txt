@@ -1,0 +1,3 @@
+Command: `make ci`
+- Exit code: 2
+- Output: `make: *** No rule to make target 'ci'.  Stop.`

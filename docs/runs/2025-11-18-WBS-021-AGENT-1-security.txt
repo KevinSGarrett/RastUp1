@@ -1,0 +1,6 @@
+Security & Compliance Notes:
+- Delivered comprehensive documentation for IAM/KMS controls, WAF/BotControl, immutable audit logging, privacy/DSAR workflows, PCI DSS posture, RBAC/MFA policy, and training cadence (`docs/security/**`, `observability/*.md`, `privacy/data_lifecycle.md`).
+- Authored runbooks for secret rotation and incident response, including severity ladder, evidence capture, and escalation paths (`ops/runbooks/*.md`).
+- Added automated validation tests (`tests/security/test_controls.py`) covering registry completeness, WAF rules, PCI scope, retention policies, and log schema JSON integrity; `python -m unittest discover tests/security` passes (11 tests).
+- Logging pipeline enforces JSON schema, PII redaction, KMS encryption, and chain hashing as prerequisites for immutable audit and legal hold evidence.
+- Outstanding work: implement automation scripts (audit chain validator, unused secret scanner, DSAR propagation worker) and establish CI target for `make ci` to run security scans.

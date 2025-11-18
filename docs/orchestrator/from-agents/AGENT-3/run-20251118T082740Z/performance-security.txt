@@ -1,0 +1,4 @@
+Performance & Security Status:
+- Performance tests: Not run (frontend UI not yet scaffolded; pending WBS-019/WBS-022 deliverables).
+- Security scans: Not run (no CI tooling / make target available); policy modules implemented but integration tests pending.
+- Recommended follow-up: bootstrap `make ci` pipeline with linting, Lighthouse CI, and security checks once tooling exists.

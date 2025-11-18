@@ -1,0 +1,20 @@
+local_root_path: C:\RastUp1
+blueprints:
+  non_tech: ProjectPlans/Combined_Master_PLAIN_Non_Tech_001.docx
+  tech: ProjectPlans/TechnicalDevelopmentPlan.odt
+models:
+  openai_model: gpt-4.1-mini
+  embedding_model: text-embedding-3-large
+  anthropic_model: null
+cursor:
+  cli_command: cursor-agent
+  project_root: C:\RastUp1
+  agents:
+    AGENT-1:
+      role: Bootstrap & DevOps
+    AGENT-2:
+      role: Backend & Services
+    AGENT-3:
+      role: Frontend & Developer Experience
+    AGENT-4:
+      role: QA / Security / Docs / Release

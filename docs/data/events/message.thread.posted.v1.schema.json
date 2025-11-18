@@ -1,0 +1,164 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://docs.rastup.internal/events/message.thread.posted.v1.schema.json",
+  "title": "message.thread.posted",
+  "description": "Emitted whenever a message is added to a booking conversation thread.",
+  "type": "object",
+  "properties": {
+    "event": {
+      "const": "message.thread.posted"
+    },
+    "version": {
+      "const": 1
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "emitted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 100
+    },
+    "privacy_tier": {
+      "type": "string",
+      "enum": ["tier2"]
+    },
+    "retention_class": {
+      "type": "string",
+      "enum": ["messaging_core"]
+    },
+    "pii_fields": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-zA-Z0-9_.]+$"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "thread": {
+      "type": "object",
+      "properties": {
+        "thread_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "booking_id": {
+          "type": ["string", "null"],
+          "format": "uuid"
+        },
+        "participant_roles": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["buyer", "seller", "support", "system"]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "safe_mode_band": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2
+        }
+      },
+      "required": ["thread_id", "participant_roles", "safe_mode_band"],
+      "additionalProperties": false
+    },
+    "message": {
+      "type": "object",
+      "properties": {
+        "message_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sender_id_hash": {
+          "type": "string",
+          "pattern": "^[A-Fa-f0-9]{64}$"
+        },
+        "visibility": {
+          "type": "string",
+          "enum": ["everyone", "internal", "system"]
+        },
+        "body_checksum": {
+          "type": "string",
+          "pattern": "^[A-Fa-f0-9]{64}$"
+        },
+        "body_redacted": {
+          "type": "boolean"
+        },
+        "attachments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "attachment_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "media_type": {
+                "type": "string"
+              },
+              "safe_mode_band": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 2
+              }
+            },
+            "required": ["attachment_id", "media_type", "safe_mode_band"],
+            "additionalProperties": false
+          },
+          "default": []
+        }
+      },
+      "required": [
+        "message_id",
+        "sender_id_hash",
+        "visibility",
+        "body_checksum",
+        "body_redacted"
+      ],
+      "additionalProperties": false
+    },
+    "context": {
+      "type": "object",
+      "properties": {
+        "ingest_app": {
+          "type": "string"
+        },
+        "request_id": {
+          "type": "string"
+        },
+        "moderation_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "auto_flagged": {
+          "type": "boolean"
+        }
+      },
+      "required": ["ingest_app", "request_id"],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "event",
+    "version",
+    "occurred_at",
+    "emitted_at",
+    "source",
+    "privacy_tier",
+    "retention_class",
+    "pii_fields",
+    "thread",
+    "message",
+    "context"
+  ],
+  "additionalProperties": false
+}

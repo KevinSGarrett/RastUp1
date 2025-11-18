@@ -1,0 +1,144 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://docs.rastup.internal/events/user.account.created.v1.schema.json",
+  "title": "user.account.created",
+  "description": "Emitted when a user completes onboarding and their account transitions to active.",
+  "type": "object",
+  "properties": {
+    "event": {
+      "const": "user.account.created"
+    },
+    "version": {
+      "const": 1
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "emitted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 100
+    },
+    "privacy_tier": {
+      "type": "string",
+      "enum": ["tier2"]
+    },
+    "retention_class": {
+      "type": "string",
+      "enum": ["user_core"]
+    },
+    "pii_fields": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-zA-Z0-9_.]+$"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "user": {
+      "type": "object",
+      "properties": {
+        "user_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "external_id": {
+          "type": ["string", "null"],
+          "maxLength": 64
+        },
+        "hashed_email": {
+          "type": "string",
+          "pattern": "^[A-Fa-f0-9]{64}$"
+        },
+        "phone_digest": {
+          "type": ["string", "null"],
+          "pattern": "^[A-Fa-f0-9]{64}$"
+        },
+        "country": {
+          "type": "string",
+          "pattern": "^[A-Z]{2}$"
+        },
+        "locale": {
+          "type": "string",
+          "pattern": "^[a-z]{2}_[A-Z]{2}$"
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["buyer", "provider", "admin", "support", "trust"]
+          },
+          "minItems": 1,
+          "maxItems": 6,
+          "uniqueItems": true
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "active", "suspended"]
+        }
+      },
+      "required": ["user_id", "hashed_email", "country", "locale", "roles", "status"],
+      "additionalProperties": false
+    },
+    "consents": {
+      "type": "object",
+      "properties": {
+        "marketing_opt_in": {
+          "type": "boolean"
+        },
+        "terms_version": {
+          "type": "string"
+        },
+        "privacy_version": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["marketing_opt_in", "terms_version", "privacy_version", "timestamp"],
+      "additionalProperties": false
+    },
+    "context": {
+      "type": "object",
+      "properties": {
+        "request_id": {
+          "type": "string"
+        },
+        "ingest_app": {
+          "type": "string"
+        },
+        "ip_hash": {
+          "type": ["string", "null"],
+          "pattern": "^[A-Fa-f0-9]{64}$"
+        },
+        "user_agent": {
+          "type": ["string", "null"]
+        }
+      },
+      "required": ["request_id", "ingest_app"],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "event",
+    "version",
+    "occurred_at",
+    "emitted_at",
+    "source",
+    "privacy_tier",
+    "retention_class",
+    "pii_fields",
+    "user",
+    "consents",
+    "context"
+  ],
+  "additionalProperties": false
+}

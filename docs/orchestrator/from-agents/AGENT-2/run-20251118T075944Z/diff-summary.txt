@@ -1,0 +1,14 @@
+Created:
+- docs/data/search/implementation_plan.md
+- ops/typesense/collections.json
+- db/migrations/025_search_outbox.sql
+- api/schema/search.graphql
+- services/search/{types.ts,ranking.js,ranking.ts,query.js,query.ts,pagination.js,pagination.ts,promotions.js,promotions.ts,config.ts,indexer.ts}
+- observability/dashboards/search.md
+- ops/runbooks/search-index.md
+- tests/search/{ranking.test.mjs,query_filters.test.mjs,pagination.test.mjs,promotions.test.mjs,test_collections_json.py}
+- docs/runs/2025-11-18-WBS-003-AGENT-2.md
+
+Modified:
+- docs/PROGRESS.md
+- ops/locks/AGENT-2.lock

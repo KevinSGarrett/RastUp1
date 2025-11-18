@@ -1,0 +1,39 @@
+{
+  "generated_at": "2025-11-18T07:30:00Z",
+  "agent": "AGENT-1",
+  "wbs_id": "WBS-002",
+  "events": [
+    {
+      "event_name": "user.account.created",
+      "version": 1,
+      "schema_file": "user.account.created.v1.schema.json",
+      "privacy_tier": "tier2",
+      "retention_class": "user_core",
+      "sha256": "ff0f79a1501961bb2300ab5c327cdc9ff6553f14e9cb3fd5bcebabb0177d8de7"
+    },
+    {
+      "event_name": "booking.leg.confirmed",
+      "version": 1,
+      "schema_file": "booking.leg.confirmed.v1.schema.json",
+      "privacy_tier": "tier1",
+      "retention_class": "booking_core",
+      "sha256": "e7325124333316242c4412d23222dd63506b16cfc68b2bff2dde5c464e49820b"
+    },
+    {
+      "event_name": "payment.refund.processed",
+      "version": 1,
+      "schema_file": "payment.refund.processed.v1.schema.json",
+      "privacy_tier": "tier1",
+      "retention_class": "payments_core",
+      "sha256": "931512de4a8110834f831b1010bb5f7c7b95e46a3f21a8a70e3e77cf301d5139"
+    },
+    {
+      "event_name": "message.thread.posted",
+      "version": 1,
+      "schema_file": "message.thread.posted.v1.schema.json",
+      "privacy_tier": "tier2",
+      "retention_class": "messaging_core",
+      "sha256": "6f09707be4683a60e2652b5d75485b4b5c3b767aa4f24cf31fc74fa1e5c7c59e"
+    }
+  ]
+}

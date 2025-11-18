@@ -1,0 +1,1 @@
+No dedicated performance or security scans executed in this run. Node unit tests cover ranking fairness and promotions integrity; follow-up task should integrate load tests and security scans once runtime exists.

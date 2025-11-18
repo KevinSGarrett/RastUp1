@@ -1,0 +1,220 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://docs.rastup.internal/events/booking.leg.confirmed.v1.schema.json",
+  "title": "booking.leg.confirmed",
+  "description": "Emitted when a booking leg transitions to confirmed status after payment authorization.",
+  "type": "object",
+  "properties": {
+    "event": {
+      "const": "booking.leg.confirmed"
+    },
+    "version": {
+      "const": 1
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "emitted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 100
+    },
+    "privacy_tier": {
+      "type": "string",
+      "enum": ["tier1"]
+    },
+    "retention_class": {
+      "type": "string",
+      "enum": ["booking_core"]
+    },
+    "pii_fields": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-zA-Z0-9_.]+$"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "booking_leg": {
+      "type": "object",
+      "properties": {
+        "leg_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "booking_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "service_profile_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "seller_user_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "buyer_user_hash": {
+          "type": "string",
+          "pattern": "^[A-Fa-f0-9]{64}$"
+        },
+        "start_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "end_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "time_zone": {
+          "type": "string"
+        },
+        "currency": {
+          "type": "string",
+          "pattern": "^[A-Z]{3}$"
+        },
+        "subtotal_cents": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tax_cents": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fees_cents": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "total_cents": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "policy_snapshot": {
+          "type": "object",
+          "properties": {
+            "cancellation_policy_version": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "allow_back_to_back_buffer_min": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 240
+            },
+            "safe_mode_required": {
+              "type": "boolean"
+            }
+          },
+          "required": ["cancellation_policy_version", "safe_mode_required"],
+          "additionalProperties": true
+        },
+        "addons": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "quantity": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "unit_price_cents": {
+                "type": "integer",
+                "minimum": 100
+              }
+            },
+            "required": ["name", "quantity", "unit_price_cents"],
+            "additionalProperties": false
+          },
+          "default": []
+        }
+      },
+      "required": [
+        "leg_id",
+        "booking_id",
+        "service_profile_id",
+        "seller_user_id",
+        "buyer_user_hash",
+        "start_at",
+        "end_at",
+        "time_zone",
+        "currency",
+        "subtotal_cents",
+        "tax_cents",
+        "fees_cents",
+        "total_cents",
+        "policy_snapshot"
+      ],
+      "additionalProperties": false
+    },
+    "payment": {
+      "type": "object",
+      "properties": {
+        "payment_intent_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "provider": {
+          "type": "string"
+        },
+        "capture_method": {
+          "type": "string",
+          "enum": ["automatic", "manual", "incremental"]
+        },
+        "status": {
+          "type": "string",
+          "enum": ["authorized", "captured"]
+        },
+        "amount_cents": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": ["payment_intent_id", "provider", "capture_method", "status", "amount_cents"],
+      "additionalProperties": false
+    },
+    "context": {
+      "type": "object",
+      "properties": {
+        "request_id": {
+          "type": "string"
+        },
+        "workflow": {
+          "type": "string",
+          "enum": ["instant_book", "manual_accept", "auto_confirm"]
+        },
+        "ingest_app": {
+          "type": "string"
+        },
+        "derived_conflict_check_ms": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": ["request_id", "workflow", "ingest_app"],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "event",
+    "version",
+    "occurred_at",
+    "emitted_at",
+    "source",
+    "privacy_tier",
+    "retention_class",
+    "pii_fields",
+    "booking_leg",
+    "payment",
+    "context"
+  ],
+  "additionalProperties": false
+}

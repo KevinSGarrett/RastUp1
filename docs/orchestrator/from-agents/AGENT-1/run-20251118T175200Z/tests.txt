@@ -1,0 +1,9 @@
+Command Results:
+
+1. `python -m unittest discover tests/security`
+   - Output: `...........` (11 tests) and `OK`
+   - Exit code: 0
+
+2. `make ci`
+   - Output: `make: *** No rule to make target 'ci'.  Stop.`
+   - Exit code: 2

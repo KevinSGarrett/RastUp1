@@ -1,0 +1,58 @@
+TAP version 13
+# Subtest: encodeCursor and decodeCursor round-trip with checksum
+ok 1 - encodeCursor and decodeCursor round-trip with checksum
+  ---
+  duration_ms: 1.414927
+  type: 'test'
+  ...
+# Subtest: decodeCursor detects tampering
+ok 2 - decodeCursor detects tampering
+  ---
+  duration_ms: 0.455387
+  type: 'test'
+  ...
+# Subtest: allocatePromotions enforces density caps and invalid-click filtering
+ok 3 - allocatePromotions enforces density caps and invalid-click filtering
+  ---
+  duration_ms: 1.699429
+  type: 'test'
+  ...
+# Subtest: normalizeSearchInput enforces safe-mode and role filter gating
+ok 4 - normalizeSearchInput enforces safe-mode and role filter gating
+  ---
+  duration_ms: 1.855971
+  type: 'test'
+  ...
+# Subtest: buildCacheKey produces stable digest for identical filters
+ok 5 - buildCacheKey produces stable digest for identical filters
+  ---
+  duration_ms: 0.986382
+  type: 'test'
+  ...
+# Subtest: canOverrideSafeMode respects role and verification
+ok 6 - canOverrideSafeMode respects role and verification
+  ---
+  duration_ms: 0.332038
+  type: 'test'
+  ...
+# Subtest: rankDocuments enforces owner diversity and new-seller floor
+ok 7 - rankDocuments enforces owner diversity and new-seller floor
+  ---
+  duration_ms: 2.465442
+  type: 'test'
+  ...
+# Subtest: enforceOrganicShare keeps organic ratio within guardrail
+ok 8 - enforceOrganicShare keeps organic ratio within guardrail
+  ---
+  duration_ms: 0.318515
+  type: 'test'
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 123.863648

@@ -1,0 +1,17 @@
+Command Results:
+
+1. `node --test tests/frontend/**/*.test.mjs`
+   - Exit code: 0
+   - Summary: 20 frontend policy tests passed (password rules, lockout/CAPTCHA, MFA, onboarding, SEO).
+
+2. `node --test tests/search/*.test.mjs`
+   - Exit code: 0
+   - Summary: 8 search regression tests passed (pagination, safe-mode, promotions).
+
+3. `python -m unittest tests.search.test_collections_json`
+   - Exit code: 0
+   - Summary: 3 Python schema checks passed (Typesense collections integrity).
+
+4. `make ci`
+   - Exit code: 2
+   - Summary: `make: *** No rule to make target 'ci'.  Stop.` (CI scaffolding not yet bootstrapped).

@@ -1,0 +1,1 @@
+No automated security or performance scans executed in this run. Focus was on documentation and helper utilities; CI target (`make ci`) remains unavailable. Privacy controls documented in `docs/data/analytics/data_quality.md` and `runbooks.md` for follow-up implementation.

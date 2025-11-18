@@ -1,0 +1,73 @@
+version: 1
+capabilities:
+  blueprint_concordance:
+    status: planned          # planned | in_progress | done
+    description: >
+      Index NT/TD blueprints, maintain a crosswalk, and enforce coverage via CI.
+    files:
+      - docs/blueprints/nt-index.json
+      - docs/blueprints/td-index.json
+      - docs/blueprints/crosswalk.json
+      - ci/concordance-check.yml
+
+  access_readiness:
+    status: planned
+    description: >
+      Access Readiness Matrix, smoke tests, entitlements, and autopilot gating.
+    files:
+      - docs/runbooks/access-readiness-matrix.md
+      - scripts/smoke/
+      - ci/smoke.yml
+      - ops/access/entitlements.yaml
+
+  progress_model:
+    status: planned
+    description: >
+      WBS-based progress computation, PROGRESS.md, and OUTLINE.md updates.
+    files:
+      - docs/PROGRESS.md
+      - ops/por.json
+      - docs/OUTLINE.md
+
+  run_review:
+    status: planned
+    description: >
+      CLI commands for reviewing latest agent runs and updating queue/progress.
+    commands:
+      - python -m orchestrator.cli review-latest
+      - python -m orchestrator.cli update-progress
+
+  security_and_secrets:
+    status: planned
+    description: >
+      Secrets policy, rotation ledger, and security/dependency CI gates.
+    files:
+      - ops/secrets/rotation.jsonl
+      - docs/security/threat-model.md
+      - ci/security.yml
+      - ci/deps-license.yml
+
+  lock_and_ownership:
+    status: planned
+    description: >
+      Lock files, ownership map, and CODEOWNERS mapping for non-interference.
+    files:
+      - ops/locks/
+      - ops/ownership.yaml
+      - .github/CODEOWNERS
+
+  model_and_tools_logging:
+    status: planned
+    description: >
+      Record which models/tools/plugins were used for which WBS items and why.
+    files:
+      - ops/model-decisions.jsonl
+      - ops/tools-manifest.json
+
+  recovery_and_rotation:
+    status: planned
+    description: >
+      Orchestrator/agent recovery SOPs, session rotation, and attach-pack usage.
+    files:
+      - docs/orchestrator/primer.md
+      - docs/orchestrator/rotations/

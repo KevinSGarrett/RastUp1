@@ -1,0 +1,66 @@
+# Feature Flags Registry
+# Keys follow kebab-case; each entry documents owner, rollout guardrails, and kill-switch behaviour.
+
+flags:
+  global-readonly:
+    owner: platform
+    description: Freeze writes during incident response or maintenance windows.
+    default_state: off
+    environments:
+      dev: off
+      stage: off
+      prod: off
+    guardrails:
+      - Announce maintenance window in status page before enabling.
+      - Confirm background jobs paused before toggling on.
+    kill_switch: manual
+    audit_event: feature_flag.global_readonly.toggled
+  instant-book:
+    owner: marketplace
+    description: Enables instant booking checkout flow for vetted studios.
+    default_state: off
+    rollout: canary-10
+    environments:
+      dev: on
+      stage: canary-25
+      prod: off
+    guardrails:
+      - Monitor conversion and chargeback metrics.
+      - Require studio verification status = verified.
+    kill_switch: auto-on-error-rate
+    alert_thresholds:
+      error_rate_pct: 2.0
+  safe-mode-hardening:
+    owner: safety
+    description: Forces NSFW filtering and thumbnail blur on anonymous sessions.
+    default_state: on
+    environments:
+      dev: on
+      stage: on
+      prod: on
+    guardrails:
+      - Validate CDN cache variants to prevent stale public content.
+    kill_switch: manual
+  search-rate-limit-tighten:
+    owner: security
+    description: Applies stricter per-IP search throttles when abuse detected.
+    default_state: off
+    environments:
+      dev: off
+      stage: off
+      prod: off
+    activation_conditions:
+      - waf_signal: botcontrol_challenge_spike
+      - abuse_ticket: >= SEV3
+    kill_switch: manual
+
+metadata:
+  approvals_required:
+    - security@rastup.com
+    - platform-lead@rastup.com
+  update_process:
+    - Submit PR updating this file with rollout notes.
+    - Obtain approvals from owner + security.
+    - Merge; CI publishes change event to audit log stream.
+  evidence:
+    change_log_bucket: rastup-feature-flag-audit
