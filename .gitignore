@@ -4,3 +4,17 @@ __pycache__/
 node_modules/
 .env
 .DS_Store
+# Python / env
+.venv/
+__pycache__/
+*.pyc
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+
+# Orchestrator runtime artifacts (not committed)
+docs/orchestrator/from-agents/
+ops/tasks/
+ops/locks/*.lock
