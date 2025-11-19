@@ -144,6 +144,19 @@
   - `node --test tests/booking/*.test.mjs` → pass (65 tests).
 - `make ci` → pass (Python booking schema + Node booking suites).
 
+## 2025-11-19 — AGENT-3 (WBS-006) Part 6
+
+- Added UI timeline helpers (`tools/frontend/messaging/ui_helpers.mjs`) with targeted unit coverage for Safe-Mode redaction, presence summaries, and relative timestamps, exporting through the messaging index for downstream reuse.
+- Implemented frontend scaffolding under `web/components/Messaging/**` (`MessagingInbox`, `MessagingThread`, `ProjectPanelTabs`) wired to the provider/hooks surface—covering inbox folders, message request actions, policy-aware composer flows, grouped timelines, action card transitions, and project panel snapshots.
+- Refreshed messaging documentation (`docs/data/messaging/{implementation_plan,test_plan,ui_flows}.md`) to describe the new helpers/components, update coverage tables, and clarify integration guidance.
+- Tests:
+  - `node --test tests/frontend/messaging/*.test.mjs` → pass (60 tests including new UI helper coverage).
+  - `node --test tests/frontend/**/*.test.mjs` → pass (93 tests).
+  - `node --test tests/search/*.test.mjs` → pass (8 tests).
+  - `python -m unittest tests.search.test_collections_json` → pass (3 tests).
+  - `node --test tests/booking/*.test.mjs` → pass (65 tests).
+- `make ci` → pass (Python booking schema + Node booking suites).
+
 ## 2025-11-19 — AGENT-1 (WBS-015)
 
 - Authored end-to-end communications blueprint (`docs/ops/communications/communications_system.md`) covering architecture, data models, routing rules, deliverability, admin tooling, observability, and phase plan mapped to TD-0050 – TD-0056.

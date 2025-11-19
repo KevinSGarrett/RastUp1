@@ -7,8 +7,9 @@
    - Preferred: call `createMessagingClient.refreshInbox()` which handles normalization + controller hydration (internally invokes `normalizeInboxPayload`).
    - If bypassing the client helper, run result through `normalizeInboxPayload` (`tools/frontend/messaging/normalizers.mjs`) before calling `MessagingController.hydrateInbox()` to guarantee consistent shapes.
    - For thread detail queries, use `createMessagingClient.hydrateThread(threadId, { subscribe: true })` to normalize via `normalizeThreadPayload`, hydrate controller, and start subscriptions. Manual path still available via direct controller calls when needed.
-   - Wrap Next.js layouts with `MessagingProvider` (`web/components/MessagingProvider`) so the controller/client are available via context; call `useInboxThreads`, `useInboxSummary`, and `useNotifications` inside inbox surfaces to obtain reactive slices without manually wiring subscriptions.
-   - For thread pages, call `useThread(threadId)` (optionally pairing with `startThreadSubscription`) to receive live message/action card state and `useMessagingActions()` for mutation helpers.
+    - Wrap Next.js layouts with `MessagingProvider` (`web/components/MessagingProvider`) so the controller/client are available via context; call `useInboxThreads`, `useInboxSummary`, and `useNotifications` inside inbox surfaces to obtain reactive slices without manually wiring subscriptions.
+    - `MessagingInbox` (`web/components/Messaging/MessagingInbox.tsx`) provides a default inbox surface covering pinned/default/archived folders, message request actions (accept/decline/block), and credit/rate limit affordances—pass `onSelectThread` to drive the active thread view.
+    - For thread pages, call `useThread(threadId)` (optionally pairing with `startThreadSubscription`) to receive live message/action card state and `useMessagingActions()` for mutation helpers.
    - Compute folders: `default`, `pinned`, `archived`, `requests`.
 2. **Message request handling**
    - Each request entry carries `requestId`, `creditCost`, `expiresAt`.
@@ -30,7 +31,8 @@
 2. **Realtime updates**
    - `createMessagingClient.startInboxSubscription()` and `startThreadSubscription(threadId)` wrap AppSync subscriptions, translating envelopes with `mapInboxEventEnvelope` / `mapThreadEventEnvelope` and applying them to the controller.
    - Manual flow: `Subscription.threadEvents(threadId)` yields envelopes `{type: "MESSAGE_CREATED"|"MESSAGE_UPDATED"|"ACTION_UPDATED"|"PRESENCE"|"THREAD_LOCKED", payload}` which reducers merge by `messageId` / `actionId`; ensures chronological insertion using `createdAt` + tie breaker on `messageId`.
-   - Optimistic messages with `clientId` are reconciled by `createMessagingClient.sendMessage()` (auto resolves) or the direct controller helpers (`resolveOptimisticMessage`, `failOptimisticMessage`).
+    - Optimistic messages with `clientId` are reconciled by `createMessagingClient.sendMessage()` (auto resolves) or the direct controller helpers (`resolveOptimisticMessage`, `failOptimisticMessage`).
+    - `MessagingThread` (`web/components/Messaging/MessagingThread.tsx`) hydrates/ subscribes automatically, renders day-grouped timelines with Safe-Mode aware bodies/attachments, surfaces action card transitions, and exposes a policy-aware composer (nudges vs hard blocks).
 3. **Read receipts**
    - On focus, call `markThreadRead(threadId, lastMessageId)` and update local `participants[].lastReadMsgId`.
    - Show avatars stacked under the last read message.
@@ -65,9 +67,10 @@
    - Read-only statuses; if `status !== SIGNED`, surface call-to-action action card.
 5. **Expenses**
    - Display aggregated `extras`, `overtime`, `refunds` with totals pulled from `ActionCard` states; re-computed client-side each update.
-6. **Actions**
-   - List open action cards sorted by urgency (state + createdAt).  
-   - Buttons delegate to `ThreadStore.transitionActionCard(actionId, intent)` which wraps the correct mutation.
+  6. **Actions**
+     - List open action cards sorted by urgency (state + createdAt).  
+     - Buttons delegate to `ThreadStore.transitionActionCard(actionId, intent)` which wraps the correct mutation.
+     - `ProjectPanelTabs` (`web/components/Messaging/ProjectPanelTabs.tsx`) provides a JSON-friendly fallback renderer for tab snapshots while design system components are being built.
 
 ## 4. Presence & Typing UX
 
