@@ -9,7 +9,7 @@ import {
   DEFAULT_QUERY_KEYS,
   isFilterStateEqual,
   parseMessagingQueryState
-} from '../../tools/frontend/messaging/filter_params.mjs';
+} from '../../../tools/frontend/messaging/filter_params.mjs';
 import type { MessagingInboxFilterState } from './MessagingInbox';
 
 type HistoryMode = 'replace' | 'push';

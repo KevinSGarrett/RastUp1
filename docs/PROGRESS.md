@@ -226,6 +226,20 @@
   - `node --test tests/booking/*.test.mjs`
   - `make ci`
 
+## 2025-11-19 — AGENT-3 (WBS-006) Part 10
+
+- Stood up the messaging workspace App Router entrypoint (`web/app/messaging/page.tsx`) that prefetches inbox/thread snapshots via `createMessagingNextAdapter` and hands state to the client-only `MessagingWorkspaceClient.tsx`, preserving query-derived filters, search, and thread selection across navigation.
+- Added shared GraphQL/stub data sources (`web/lib/messaging/dataSources.mjs`) powering both server prefetch and client hydration, falling back to Safe-Mode aware stub payloads until the messaging API is available.
+- Extended messaging documentation (implementation plan, UI flows, test plan) with the new server/client hand-off and added unit coverage for data sources (`tests/frontend/messaging/dataSources.test.mjs`) validating GraphQL dispatch and graceful stub fallback.
+- Tests:
+  - `node --test tests/frontend/messaging/dataSources.test.mjs`
+  - `node --test tests/frontend/messaging/*.test.mjs`
+  - `node --test tests/frontend/**/*.test.mjs`
+  - `node --test tests/search/*.test.mjs`
+  - `python -m unittest tests.search.test_collections_json`
+  - `node --test tests/booking/*.test.mjs`
+  - `make ci`
+
 ## 2025-11-19 — AGENT-3 (WBS-017) Part 3
 
 - Implemented `createCalendarController` orchestrating availability, calendar connect, and reschedule stores with hold/event lifecycle hooks, external busy updates, telemetry sync, and preview refresh helpers (`tools/frontend/calendar/controller.mjs`).
