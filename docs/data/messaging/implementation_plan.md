@@ -51,6 +51,7 @@
 - **Normalization**: Clients store threads keyed by `threadId`, participants keyed by `userId`, and messages keyed by `messageId` with stable ordering on `createdAt`.
 - **Optimistic writes**: Compose helper ensures temp IDs with prefix `temp_` replaced on ack. Conflict detection uses `version` for action cards and `updatedAt` for tabs.
 - **Side effects**: Local analytics/telemetry emit events mirroring §1.4.K for UX instrumentation.
+- **Client orchestration**: `createMessagingClient` (tools/frontend/messaging/client.mjs) hydrates the controller from GraphQL queries, manages AppSync subscriptions, and coordinates optimistic mutations with retry/resync safeguards.
 
 ### State & Caching Strategy
 - Plan to leverage **React Query** (or Apollo) with suspense-friendly caches; headless utilities expose deterministic reducers to manage state outside of any framework.
@@ -82,6 +83,7 @@
 ## Developer Experience Guidelines
 - Package headless logic under `tools/frontend/messaging/` (pure functions, deterministic reducers, serializable state).  
 - Introduce `createMessagingController` (framework-neutral orchestrator) to combine inbox/thread/notification stores with subscription hooks for React/Next.js contexts; surface helpers for optimistic send, action cards, message requests, and quiet-hour notifications.  
+- Layer `createMessagingClient` on top of the controller to wrap GraphQL fetch/mutation/subscribe plumbing, applying `normalize*` helpers, bridging optimistic sends, and auto-refreshing inbox/thread state on transport failures.  
 - Provide TypeScript declaration files (`.d.ts`) once the Next.js scaffold materialises; for now, JSDoc shapes near functions for editor IntelliSense.  
 - Aim for idempotent helpers to ease unit testing in Node; mirror these in future React hooks (e.g., `useThreadState` delegates to `ThreadStore` reducers).  
 - Document event payload shapes and integration steps in `ui_flows.md` and `test_plan.md` for continuity across agents.  

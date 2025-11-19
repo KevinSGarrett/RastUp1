@@ -122,3 +122,11 @@
 - Authored observability dashboard spec (`observability/dashboards/calendar.md`) and ICS poller runbook (`ops/runbooks/calendar-ics-errors.md`); refreshed calendar test plan with executed coverage notes.
 - Implemented and ran calendar unit suites `node --test tests/frontend/calendar/*.test.mjs` (feasibility engine, ICS poller, stores, DX helpers) plus full regression (`node --test tests/frontend/**/*.test.mjs`, `node --test tests/search/*.test.mjs`, `python -m unittest tests.search.test_collections_json`, `node --test tests/booking/*.test.mjs`) → all green.
 - `make ci` → pass (Python booking schema + Node booking suites).
+
+## 2025-11-19 — AGENT-3 (WBS-006) Part 4
+
+- Added `createMessagingClient` (`tools/frontend/messaging/client.mjs`) to orchestrate GraphQL inbox/thread hydration, AppSync-style subscriptions, optimistic send resolution/failure, and message request mutations on top of the controller.
+- Introduced targeted unit coverage (`tests/frontend/messaging/client.test.mjs`) validating client hydration, subscription propagation, optimistic ack/error handling, and inbox request workflows; exported the client via `tools/frontend/messaging/index.mjs`.
+- Updated messaging documentation (`docs/data/messaging/{implementation_plan,test_plan,ui_flows}.md`) to describe the new client bridge, coverage expectations, and UI flow usage guidance.
+- Regression suite: `node --test tests/frontend/messaging/*.test.mjs`, `node --test tests/frontend/**/*.test.mjs`, `node --test tests/search/*.test.mjs`, `python -m unittest tests.search.test_collections_json`, `node --test tests/booking/*.test.mjs` → all passing.
+- `make ci` → pass (Python booking schema + Node booking suites).

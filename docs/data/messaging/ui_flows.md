@@ -4,8 +4,9 @@
 
 1. **Initial load**
    - Fire `Query.inbox(limit, cursor)` → returns ordered thread edges and `newRequestCount`.
-   - Run result through `normalizeInboxPayload` (`tools/frontend/messaging/normalizers.mjs`) before calling `MessagingController.hydrateInbox()` to guarantee consistent shapes.
-   - Normalize thread detail queries with `normalizeThreadPayload` and hydrate controller via `hydrateThread` to keep inbox/thread projections in sync for subscriptions.
+   - Preferred: call `createMessagingClient.refreshInbox()` which handles normalization + controller hydration (internally invokes `normalizeInboxPayload`).
+   - If bypassing the client helper, run result through `normalizeInboxPayload` (`tools/frontend/messaging/normalizers.mjs`) before calling `MessagingController.hydrateInbox()` to guarantee consistent shapes.
+   - For thread detail queries, use `createMessagingClient.hydrateThread(threadId, { subscribe: true })` to normalize via `normalizeThreadPayload`, hydrate controller, and start subscriptions. Manual path still available via direct controller calls when needed.
    - Compute folders: `default`, `pinned`, `archived`, `requests`.
 2. **Message request handling**
    - Each request entry carries `requestId`, `creditCost`, `expiresAt`.
@@ -25,9 +26,9 @@
    - Use `ThreadStore.hydrate()` to store base state (`messages`, `readReceipts`, `typing` set empty).
    - Set `activeTab` using `safeModeRequired` (default to `Brief`).
 2. **Realtime updates**
-   - `Subscription.threadEvents(threadId)` yields envelopes: `{type: "MESSAGE_CREATED"|"MESSAGE_UPDATED"|"ACTION_UPDATED"|"PRESENCE"|"THREAD_LOCKED", payload}`.
-   - Reducer merges by `messageId` / `actionId`; ensures chronological insertion using `createdAt` + tie breaker on `messageId`.
-   - For optimistic messages with `clientId`, match ack and replace placeholder.
+   - `createMessagingClient.startInboxSubscription()` and `startThreadSubscription(threadId)` wrap AppSync subscriptions, translating envelopes with `mapInboxEventEnvelope` / `mapThreadEventEnvelope` and applying them to the controller.
+   - Manual flow: `Subscription.threadEvents(threadId)` yields envelopes `{type: "MESSAGE_CREATED"|"MESSAGE_UPDATED"|"ACTION_UPDATED"|"PRESENCE"|"THREAD_LOCKED", payload}` which reducers merge by `messageId` / `actionId`; ensures chronological insertion using `createdAt` + tie breaker on `messageId`.
+   - Optimistic messages with `clientId` are reconciled by `createMessagingClient.sendMessage()` (auto resolves) or the direct controller helpers (`resolveOptimisticMessage`, `failOptimisticMessage`).
 3. **Read receipts**
    - On focus, call `markThreadRead(threadId, lastMessageId)` and update local `participants[].lastReadMsgId`.
    - Show avatars stacked under the last read message.
