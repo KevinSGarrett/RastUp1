@@ -10,19 +10,19 @@
   - Stripe Connect is the launch processor; adapters must isolate Stripe-specific fields.
   - DocuSign / Dropbox Sign integration handled via adapter contract defined here but implemented collaboratively with Integrations lane.
 
-## Plan vs Done vs Pending (2025-11-19 Run — Part 2 Focus)
+## Plan vs Done vs Pending (2025-11-19 Run — Part 3 Focus)
 
 - **Plan**
-  - Extend Aurora schema (`026_booking_core.sql`) with Part-2 entities: amendment line JSON, deposit claim ledger, receipt manifests, and webhook dedupe table.
-  - Add Part-2 domain modules under `services/booking/**` for change orders & overtime orchestration, cancellation execution (policy + refund wiring), acceptance window helpers, deposit claim handling, receipt assembly, and normalized webhook mapping.
-  - Broaden unit test suite (`tests/booking/**`) to cover change order math, incremental capture decisions, cancellation bands, acceptance windows, deposit claims, and webhook idempotency plus update Python schema checks.
-  - Refresh operational docs (runbook + observability) with deposit claim workflow, cancellation policy monitoring, receipt generation, and webhook processing notes.
-  - Capture scope paths, execute Node + Python tests, attempt `make ci`, and prepare run report with attach pack.
+  - Extend booking core schema with reserve ledgers, finance daily close, and idempotency record tables.
+  - Deliver Part-3 domain modules: Step Functions saga orchestration, payout/reserve computations, dispute evidence handling, finance reconciliation, and idempotency helpers.
+  - Expand GraphQL contract for finance ops (reserve policies, payout queue, daily close) and trust tooling (dispute evidence submission).
+  - Add Node unit tests for saga/idempotency/payout/dispute/reconciliation flows plus refresh Python schema validation.
+  - Update documentation (implementation plan, runbook, observability) and execute required test commands (`node --test`, `python -m unittest`, `make ci`).
 - **Done**
-  - Part-1 artefacts shipped in prior run: implementation plan baseline, core migration skeleton, GraphQL contract, state/policy/payment domain modules, booking runbook, booking observability spec, and unit tests for foundational flows.
+  - Part-1 artefacts (schema baseline, GraphQL contract, state/policy/payment modules) and Part-2 deliverables (amendments, cancellations, deposits, receipts, webhooks) completed in prior runs.
 - **Pending / Out of Scope for This Run**
-  - Step Functions saga, payout scheduler, reserves, disputes evidence kits, and admin consoles (Part 3 deliverables).
   - Real Stripe/Tax/Doc Pack integrations, secrets management, and infra provisioning.
+  - Admin UI wiring for finance/trust consoles and production deployment of saga orchestrator.
   - Automated CI/Makefile bootstrap and end-to-end integration environments.
 
 ## Declared Scope Paths (anticipated)

@@ -9,6 +9,7 @@
   - p50/p95 for `startCheckout → confirmPayment`.
   - Docs-before-pay latency (`createDocPack → markDocSigned`).
   - Stripe PaymentIntent confirmation latency.
+    - Saga step transitions (`ValidateDraft`, `ConfirmPayment`, `QueuePayouts`) stitched via Step Functions metrics.
   - **Acceptance Window**
     - Countdown vs actual acceptance event (`acceptance.window.start`, `acceptance.buyer.accept`, `acceptance.auto_accept`).
     - Auto-complete rate and manual overrides per city.
@@ -18,6 +19,7 @@
 - **Idempotency**
   - Count of idempotent replays (Stripe PI, refunds) vs new requests.
   - Dedup store depth (records > 24h).
+    - Saga idempotency hit rate per step (validate/docs/payment/payout).
   - **Receipt Generation**
     - Successful vs failed renders (`receipt.render.succeeded|failed`).
     - Aging receipts without storage URL in `booking.receipt_manifest`.
@@ -31,10 +33,16 @@
 - **Payout Pipeline**
   - Items queued by reserve status (normal, reserve, paused).
   - Transfer success vs failure (grouped by Stripe Connect response).
+    - Instant payout attempts vs approvals; instant fee totals.
+    - Reserve ledger state (`held` vs `pending_release` vs `released`).
 - **Deposits**
   - Authorized vs captured vs expired SetupIntents.
     - Claims funnel: pending, approved, denied, voided (`booking.deposit_claim.status`).
     - Average capture amount vs authorization and decision SLA (submitted → decided).
+  - **Daily Close**
+    - Latest `booking.finance_daily_close` variance (absolute + basis points).
+    - Outstanding close items grouped by category (payouts, tax, refunds).
+    - Close status timeline (`open`→`in_progress`→`succeeded/failed`).
 - **Variance Checks**
   - Booking ledger vs payment ledger delta (USD).
   - Tax commitment mismatches (per provider).
@@ -47,6 +55,7 @@
 - **Evidence SLA**
   - Time to assemble evidence kit.
   - Doc pack retrieval failures.
+    - Dispute outcomes vs reserve actions (release/forfeit).
 - **Policy Overrides**
   - Count of admin overrides (cancellation refunds, deposit captures).
   - Override reasons and approving admin.
@@ -64,6 +73,8 @@
 - `deposit.claim.pending` > 15 for >30 min (possible backlog).
 - `receipt.render.error_rate` > 2% over 10 min.
 - `webhook.event.unprocessed` > 25 (across providers) for >15 min.
+  - `finance.close.variance_bps` > 50 triggers finance paging.
+  - `booking.saga.failed` > 0 per 15 min (severity critical).
 
 ## Logging & Tracing
 
@@ -73,9 +84,12 @@
   - `checkout.start`
   - `docs.envelope.create` / `docs.envelope.signed`
   - `stripe.payment_intent.confirm`
+    - `saga.queue_payouts`
+    - `payout.transfer.create`
   - `refund.kernel.evaluate`
   - `deposit.claim.evaluate` / `deposit.claim.capture`
   - `receipt.render.execute`
+    - `finance.daily_close.evaluate`
 
 ## Data Sources
 

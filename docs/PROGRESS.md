@@ -57,3 +57,12 @@
 - Refreshed Python schema validation for new tables/enums (`python -m unittest tests.python.test_booking_schema` → pass, 4 tests).
 - Updated ops runbook & observability dashboards for deposit claims, acceptance windows, receipts, webhook monitoring.
 - `make ci` → failed (`No rule to make target 'ci'`). CI target still absent; failure recorded for traceability.
+
+## 2025-11-19 — AGENT-2 (WBS-005) Part 3
+
+- Added reserve policy/ledger, finance daily close, and idempotency tables to `db/migrations/026_booking_core.sql`; expanded GraphQL contract with finance/trust operations and new enums (`api/schema/booking.graphql`).
+- Delivered Part-3 backend modules (`services/booking/{payouts,disputes,reconciliation,saga,idempotency}.{js,ts}`) with accompanying unit tests for saga orchestration, idempotency, payouts/reserves, disputes, and daily close reconciliation.
+- Updated booking implementation plan, runbook, and observability dashboards to cover saga recovery, payout queue, reserves, disputes, and daily close workflows.
+- `node --test tests/booking/*.test.mjs` → pass (59 tests including new Part 3 suites).  
+- `python -m unittest tests.python.test_booking_schema` → pass (4 tests validating new enums/tables).  
+- `make ci` → failed (`No rule to make target 'ci'`). Target still missing; documented for continuity.

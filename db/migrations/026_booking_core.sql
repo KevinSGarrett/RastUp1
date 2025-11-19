@@ -81,6 +81,20 @@ create type booking.payout_status as enum (
   'paused'
 );
 
+create type booking.reserve_status as enum (
+  'held',
+  'pending_release',
+  'released',
+  'forfeited'
+);
+
+create type booking.finance_close_status as enum (
+  'open',
+  'in_progress',
+  'succeeded',
+  'failed'
+);
+
 create type booking.tax_provider as enum ('taxjar', 'avalara', 'stripe_tax');
 
 create type booking.receipt_kind as enum ('leg', 'group', 'refund');
@@ -245,6 +259,39 @@ create table if not exists booking.payout (
 create index if not exists idx_payout_leg on booking.payout (leg_id);
 create index if not exists idx_payout_status on booking.payout (status);
 
+create table if not exists booking.reserve_policy (
+  policy_id text primary key,
+  seller_user_id text not null,
+  reserve_bps integer not null check (reserve_bps between 0 and 10000),
+  minimum_cents integer not null default 0 check (minimum_cents >= 0),
+  rolling_days integer not null default 0 check (rolling_days >= 0),
+  instant_payout_enabled boolean not null default false,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  version bigint not null default 0,
+  unique (seller_user_id)
+);
+
+create table if not exists booking.reserve_ledger (
+  entry_id text primary key,
+  seller_user_id text not null,
+  leg_id text references booking.booking_leg(leg_id) on delete set null,
+  payout_id text references booking.payout(payout_id) on delete set null,
+  reserve_cents integer not null check (reserve_cents >= 0),
+  status booking.reserve_status not null default 'held',
+  held_at timestamptz not null default now(),
+  release_after timestamptz,
+  released_at timestamptz,
+  notes text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  version bigint not null default 0
+);
+
+create index if not exists idx_reserve_ledger_seller on booking.reserve_ledger (seller_user_id);
+create index if not exists idx_reserve_ledger_status on booking.reserve_ledger (status);
+create index if not exists idx_reserve_ledger_release_after on booking.reserve_ledger (release_after) where release_after is not null;
+
 create table if not exists booking.tax_txn (
   tax_txn_id text primary key,
   leg_id text not null references booking.booking_leg(leg_id) on delete cascade,
@@ -320,6 +367,47 @@ create table if not exists booking.webhook_event (
 create index if not exists idx_webhook_event_type on booking.webhook_event (event_type);
 create index if not exists idx_webhook_event_received_at on booking.webhook_event (received_at);
 
+create table if not exists booking.finance_daily_close (
+  close_id text primary key,
+  close_date date not null,
+  status booking.finance_close_status not null default 'open',
+  variance_cents integer not null default 0,
+  variance_summary jsonb not null default '{}'::jsonb,
+  started_at timestamptz not null default now(),
+  completed_at timestamptz,
+  actor_admin text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  version bigint not null default 0,
+  unique (close_date)
+);
+
+create table if not exists booking.finance_daily_close_item (
+  item_id text primary key,
+  close_id text not null references booking.finance_daily_close(close_id) on delete cascade,
+  category text not null,
+  expected_cents integer,
+  actual_cents integer,
+  variance_cents integer,
+  context jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_finance_daily_close_item_close on booking.finance_daily_close_item (close_id);
+create index if not exists idx_finance_daily_close_item_category on booking.finance_daily_close_item (category);
+
+create table if not exists booking.idempotency_record (
+  scope text not null,
+  idempotency_key text not null,
+  status text not null default 'consumed',
+  response jsonb,
+  created_at timestamptz not null default now(),
+  expires_at timestamptz,
+  primary key (scope, idempotency_key)
+);
+
+create index if not exists idx_idempotency_expires_at on booking.idempotency_record (expires_at) where expires_at is not null;
+
 drop trigger if exists trg_booking_lbg_touch on booking.lbg;
 create trigger trg_booking_lbg_touch
 before update on booking.lbg
@@ -356,6 +444,18 @@ before update on booking.payout
 for each row
 execute function booking.touch_version();
 
+drop trigger if exists trg_booking_reserve_policy_touch on booking.reserve_policy;
+create trigger trg_booking_reserve_policy_touch
+before update on booking.reserve_policy
+for each row
+execute function booking.touch_version();
+
+drop trigger if exists trg_booking_reserve_ledger_touch on booking.reserve_ledger;
+create trigger trg_booking_reserve_ledger_touch
+before update on booking.reserve_ledger
+for each row
+execute function booking.touch_version();
+
 drop trigger if exists trg_booking_tax_txn_touch on booking.tax_txn;
 create trigger trg_booking_tax_txn_touch
 before update on booking.tax_txn
@@ -368,6 +468,12 @@ before update on booking.receipt_manifest
 for each row
 execute function booking.touch_version();
 
+drop trigger if exists trg_booking_finance_daily_close_touch on booking.finance_daily_close;
+create trigger trg_booking_finance_daily_close_touch
+before update on booking.finance_daily_close
+for each row
+execute function booking.touch_version();
+
 comment on table booking.lbg is 'Linked Booking Group container (atomic booking across talent/studio legs).';
 comment on table booking.booking_leg is 'Individual booking leg with independent policy, taxes, and payouts.';
 comment on table booking.charge is 'LBG-level charge capturing buyer funds.';
@@ -376,10 +482,15 @@ comment on table booking.deposit_auth is 'Studio deposit authorizations via Setu
 comment on table booking.deposit_claim is 'Studio deposit claim ledger with approval and capture metadata.';
 comment on table booking.amendment is 'Change orders, overtime, refunds, and admin adjustments per leg.';
 comment on table booking.payout is 'Stripe Connect payouts for legs, including reserves and scheduling metadata.';
+comment on table booking.reserve_policy is 'Seller-level reserve configuration including rolling reserve parameters and instant payout eligibility.';
+comment on table booking.reserve_ledger is 'Reserve hold ledger entries linking seller balances to specific legs/payouts with release schedules.';
 comment on table booking.tax_txn is 'Tax provider transactions per leg.';
 comment on table booking.refund is 'Refund executions per leg with Stripe references.';
 comment on table booking.dispute is 'Stripe dispute records with evidence windows and outcomes.';
 comment on table booking.receipt_manifest is 'Immutable receipt payloads (leg, group, refund) with document hashes and storage references.';
 comment on table booking.webhook_event is 'External webhook events captured for idempotent processing and audit.';
+comment on table booking.finance_daily_close is 'Finance daily close status including aggregated variances and audit metadata.';
+comment on table booking.finance_daily_close_item is 'Variance line items captured during finance daily close comparisons.';
+comment on table booking.idempotency_record is 'Server-side idempotency keys for booking financial operations with optional serialized responses.';
 
 commit;

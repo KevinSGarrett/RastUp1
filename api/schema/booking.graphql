@@ -75,6 +75,20 @@ enum DisputeStatus {
   WARNING_CLOSED
 }
 
+enum ReserveStatus {
+  HELD
+  PENDING_RELEASE
+  RELEASED
+  FORFEITED
+}
+
+enum FinanceCloseStatus {
+  OPEN
+  IN_PROGRESS
+  SUCCEEDED
+  FAILED
+}
+
 enum PaymentMethodKind {
   CARD
   ACH_DEBIT
@@ -259,6 +273,8 @@ type PayoutSummary {
   amountCents: Int!
   currency: String!
   scheduledFor: AWSDateTime
+  reserveHoldCents: Int!
+  instantPayoutEligible: Boolean!
 }
 
 type LinkedBookingGroup {
@@ -273,6 +289,7 @@ type LinkedBookingGroup {
   charge: ChargeSummary
   deposits: [DepositSummary!]!
   payouts: [PayoutSummary!]!
+  reserves: [ReserveEntry!]!
   createdAt: AWSDateTime!
   updatedAt: AWSDateTime!
 }
@@ -349,6 +366,99 @@ type CompletionReceipt {
   docHashes: [String!]!
 }
 
+type ReservePolicy {
+  policyId: ID!
+  sellerUserId: ID!
+  reserveBps: Int!
+  minimumCents: Int!
+  rollingDays: Int!
+  instantPayoutEnabled: Boolean!
+  updatedAt: AWSDateTime!
+  createdAt: AWSDateTime!
+}
+
+type ReserveEntry {
+  entryId: ID!
+  sellerUserId: ID!
+  legId: ID
+  payoutId: ID
+  status: ReserveStatus!
+  reserveCents: Int!
+  releaseAfter: AWSDateTime
+  releasedAt: AWSDateTime
+  notes: String
+}
+
+type DisputeEvidence {
+  kind: String!
+  label: String
+  url: AWSURL
+  content: String
+  capturedAt: AWSDateTime
+}
+
+type DisputeDetail {
+  disputeId: ID!
+  legId: ID!
+  status: DisputeStatus!
+  reason: String!
+  evidenceDueAt: AWSDateTime
+  evidence: [DisputeEvidence!]!
+}
+
+type FinanceCloseItem {
+  itemId: ID!
+  category: String!
+  expectedCents: Int
+  actualCents: Int
+  varianceCents: Int
+  context: AWSJSON!
+}
+
+type FinanceDailyClose {
+  closeId: ID!
+  closeDate: AWSDate!
+  status: FinanceCloseStatus!
+  varianceCents: Int!
+  varianceSummary: AWSJSON!
+  startedAt: AWSDateTime!
+  completedAt: AWSDateTime
+  actorAdmin: ID
+  items: [FinanceCloseItem!]!
+}
+
+input OverrideReservePolicyInput {
+  sellerUserId: ID!
+  reserveBps: Int!
+  minimumCents: Int = 0
+  rollingDays: Int = 0
+  instantPayoutEnabled: Boolean = false
+  idempotencyKey: String!
+}
+
+input ReleaseReserveInput {
+  entryId: ID!
+  idempotencyKey: String!
+  reason: String
+}
+
+input QueuePayoutInput {
+  lbgId: ID!
+  idempotencyKey: String!
+}
+
+input SubmitDisputeEvidenceInput {
+  disputeId: ID!
+  evidence: [AWSJSON!]
+  narrative: String!
+  idempotencyKey: String!
+}
+
+input StartDailyCloseInput {
+  closeDate: AWSDate!
+  idempotencyKey: String!
+}
+
 type CheckoutEvent {
   lbgId: ID!
   eventType: String!
@@ -368,6 +478,9 @@ extend type Query {
   booking(lbgId: ID!): LinkedBookingGroup! @auth(role: "user")
   bookingTimeline(lbgId: ID!): [CheckoutEvent!]! @auth(role: "user")
   financeBooking(lbgId: ID!): LinkedBookingGroup! @auth(role: "finance_ops")
+  financeReserveLedger(sellerUserId: ID!): [ReserveEntry!]! @auth(role: "finance_ops")
+  financeDailyClose(date: AWSDate!): FinanceDailyClose! @auth(role: "finance_ops")
+  trustDispute(disputeId: ID!): DisputeDetail! @auth(role: "trust_safety")
 }
 
 extend type Mutation {
@@ -387,6 +500,11 @@ extend type Mutation {
   denyDepositClaim(claimId: ID!, decisionReason: String, idempotencyKey: String!): DepositClaimResult! @auth(role: "finance_ops")
   voidDepositClaim(claimId: ID!, decisionReason: String, idempotencyKey: String!): DepositClaimResult! @auth(role: "finance_ops")
   markCompleted(lbgId: ID!, note: String): CompletionReceipt! @auth(role: "user")
+  overrideReservePolicy(input: OverrideReservePolicyInput!): ReservePolicy! @auth(role: "finance_ops")
+  releaseReserveHold(input: ReleaseReserveInput!): ReserveEntry! @auth(role: "finance_ops")
+  queuePayouts(input: QueuePayoutInput!): [PayoutSummary!]! @auth(role: "finance_ops")
+  submitDisputeEvidence(input: SubmitDisputeEvidenceInput!): DisputeDetail! @auth(role: "trust_safety")
+  startFinanceDailyClose(input: StartDailyCloseInput!): FinanceDailyClose! @auth(role: "finance_ops")
 }
 
 extend type Subscription {

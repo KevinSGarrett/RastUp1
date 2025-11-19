@@ -124,6 +124,11 @@ export interface ChargeLegContext extends ChargeSplit {
   sellerUserId: string;
   connectAccountId?: string;
   reservePercent?: number;
+  platformFeesCents?: number;
+  refundCents?: number;
+  adjustmentsCents?: number;
+  reservePolicy?: ReservePolicy | null;
+  supportsInstantPayout?: boolean;
 }
 
 export interface PaymentIntentRequest {
@@ -307,5 +312,129 @@ export interface NormalizedWebhookEvent {
   legIds: string[];
   payload: Record<string, unknown>;
   metadata: Record<string, unknown>;
+}
+
+export type ReserveStatus = 'held' | 'pending_release' | 'released' | 'forfeited';
+
+export interface ReservePolicy {
+  policyId: string;
+  sellerUserId: string;
+  reserveBps: number;
+  minimumCents: number;
+  rollingDays: number;
+  instantPayoutEnabled: boolean;
+  updatedAt: string;
+  createdAt: string;
+}
+
+export interface ReserveLedgerEntry {
+  entryId: string;
+  sellerUserId: string;
+  legId: string | null;
+  payoutId: string | null;
+  reserveCents: number;
+  status: ReserveStatus;
+  heldAt: string;
+  releaseAfter?: string | null;
+  releasedAt?: string | null;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ReserveComputationResult {
+  reserveHoldCents: number;
+  transferNowCents: number;
+  sellerNetCents: number;
+  reserveReleaseAt?: string | null;
+  reserveReason?: string;
+}
+
+export interface PayoutInstruction {
+  payoutId: string;
+  legId: string;
+  sellerUserId: string;
+  amountCents: number;
+  currency: string;
+  scheduledFor: string;
+  reserveHoldCents: number;
+  instantPayoutEligible: boolean;
+  idempotencyKey: string;
+  metadata: Record<string, unknown>;
+}
+
+export interface PayoutComputationContext {
+  legId: string;
+  sellerUserId: string;
+  totalCents: number;
+  platformFeesCents?: number;
+  refundCents?: number;
+  adjustmentsCents?: number;
+  currency?: string;
+  reservePolicy?: ReservePolicy | null;
+  chargebackReserveCents?: number;
+  supportsInstantPayout?: boolean;
+  nowIso?: string;
+  payoutDelayDays?: number;
+  instantPayoutRequested?: boolean;
+}
+
+export interface PayoutComputationResult extends ReserveComputationResult {
+  payoutAmountCents: number;
+  payoutScheduledFor: string;
+  instantFeeCents?: number;
+}
+
+export type FinanceCloseStatus = 'open' | 'in_progress' | 'succeeded' | 'failed';
+
+export interface FinanceDailyCloseItem {
+  itemId: string;
+  category: string;
+  expectedCents?: number | null;
+  actualCents?: number | null;
+  varianceCents?: number | null;
+  context: Record<string, unknown>;
+}
+
+export interface FinanceDailyCloseSnapshot {
+  closeId: string;
+  closeDate: string;
+  status: FinanceCloseStatus;
+  varianceCents: number;
+  varianceSummary: Record<string, unknown>;
+  startedAt: string;
+  completedAt?: string | null;
+  actorAdmin?: string | null;
+  items: FinanceDailyCloseItem[];
+}
+
+export interface DisputeEvidenceItem {
+  kind: 'doc' | 'message' | 'photo' | 'receipt' | 'timeline' | 'custom';
+  label?: string;
+  url?: string;
+  content?: string;
+  capturedAt?: string;
+}
+
+export interface DisputeRecord {
+  disputeId: string;
+  legId: string;
+  processor: string;
+  processorDispute?: string | null;
+  status: string;
+  reason: string;
+  evidenceDueAt?: string | null;
+  createdAt: string;
+  updatedAt?: string;
+  evidence?: DisputeEvidenceItem[];
+}
+
+export interface IdempotencyRecord {
+  scope: string;
+  key: string;
+  status: string;
+  response?: Record<string, unknown>;
+  createdAt: string;
+  expiresAt?: string | null;
 }
 

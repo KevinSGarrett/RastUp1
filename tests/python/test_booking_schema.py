@@ -25,6 +25,8 @@ class BookingSchemaTest(unittest.TestCase):
             "deposit_claim_status": {"pending", "approved", "denied", "captured", "voided"},
             "refund_status": {"pending", "succeeded", "failed"},
             "dispute_status": {"needs_response", "under_review", "won", "lost", "warning_closed"},
+            "reserve_status": {"held", "pending_release", "released", "forfeited"},
+            "finance_close_status": {"open", "in_progress", "succeeded", "failed"},
             "receipt_kind": {"leg", "group", "refund"}
         }
 
@@ -46,11 +48,16 @@ class BookingSchemaTest(unittest.TestCase):
             "booking.deposit_claim",
             "booking.amendment",
             "booking.payout",
+            "booking.reserve_policy",
+            "booking.reserve_ledger",
             "booking.tax_txn",
             "booking.refund",
             "booking.dispute",
             "booking.receipt_manifest",
-            "booking.webhook_event"
+            "booking.webhook_event",
+            "booking.finance_daily_close",
+            "booking.finance_daily_close_item",
+            "booking.idempotency_record"
         ]
         for table in required_tables:
             with self.subTest(table=table):
