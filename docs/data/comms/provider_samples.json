@@ -1,0 +1,71 @@
+{
+  "ses": {
+    "bounce": {
+      "notificationType": "Bounce",
+      "bounce": {
+        "bounceType": "Permanent",
+        "bounceSubType": "General",
+        "bouncedRecipients": [
+          {
+            "emailAddress": "user@example.invalid",
+            "action": "failed",
+            "status": "5.1.1",
+            "diagnosticCode": "smtp; 550 5.1.1 User unknown"
+          }
+        ],
+        "timestamp": "2025-11-19T00:00:00Z",
+        "feedbackId": "0100018f5f3bexample"
+      },
+      "mail": {
+        "messageId": "0100018f5f3bexample"
+      }
+    },
+    "complaint": {
+      "notificationType": "Complaint",
+      "complaint": {
+        "complainedRecipients": [
+          {
+            "emailAddress": "buyer@example.invalid"
+          }
+        ],
+        "complaintFeedbackType": "abuse",
+        "arrivalDate": "2025-11-19T00:01:00Z"
+      },
+      "mail": {
+        "messageId": "0100018f5f4cexample"
+      }
+    }
+  },
+  "twilio": {
+    "sms_status": {
+      "MessageStatus": "failed",
+      "ErrorCode": "30007",
+      "ErrorMessage": "Carrier violation",
+      "MessageSid": "SMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "To": "+15555550123",
+      "From": "+15555559876",
+      "EventType": "DELIVERY",
+      "Timestamp": "2025-11-19T00:02:00Z"
+    }
+  },
+  "pinpoint": {
+    "endpoint_event": {
+      "EventType": "_session.stop",
+      "Client": {
+        "ClientId": "appId",
+        "AppPackageName": "com.rastup.app"
+      },
+      "Endpoint": {
+        "Address": "ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]",
+        "ChannelType": "APNS"
+      },
+      "Attributes": {
+        "status": "Success"
+      },
+      "Metrics": {
+        "deliveryLatencyMs": 220.0
+      },
+      "Timestamp": "2025-11-19T00:03:30Z"
+    }
+  }
+}

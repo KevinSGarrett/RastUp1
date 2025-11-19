@@ -143,3 +143,11 @@
   - `python -m unittest tests.search.test_collections_json` → pass (3 tests).
   - `node --test tests/booking/*.test.mjs` → pass (65 tests).
 - `make ci` → pass (Python booking schema + Node booking suites).
+
+## 2025-11-19 — AGENT-1 (WBS-015)
+
+- Authored end-to-end communications blueprint (`docs/ops/communications/communications_system.md`) covering architecture, data models, routing rules, deliverability, admin tooling, observability, and phase plan mapped to TD-0050 – TD-0056.
+- Added operations runbook and QA strategy (`docs/ops/communications/{runbook,test_plan}.md`) plus seeded data fixtures and tooling guidelines under `docs/data/comms/**` and `tools/comms/README.md`.
+- Introduced documentation guardrail tests (`tests/python/test_comms_docs.py`) to enforce section completeness and prevent placeholder regressions.
+- `python -m unittest tests.python.test_comms_docs` → pass (3 tests).
+- `make ci` → pass (Python booking schema + Node booking suites).

@@ -1,0 +1,9 @@
+user_id,channel,category,opted_in,quiet_hours_tz,quiet_hours_start,quiet_hours_end
+usr_demo_buyer,email,booking,true,America/Los_Angeles,21:00,08:00
+usr_demo_buyer,email,promotions,false,America/Los_Angeles,21:00,08:00
+usr_demo_buyer,push,booking,true,America/Los_Angeles,21:00,08:00
+usr_demo_buyer,sms,security,true,America/Los_Angeles,00:00,00:00
+usr_demo_seller,email,booking,true,America/New_York,22:00,07:00
+usr_demo_seller,email,promotions,false,America/New_York,22:00,07:00
+usr_demo_seller,push,messages,true,America/New_York,22:00,07:00
+usr_demo_seller,sms,booking,false,America/New_York,22:00,07:00
