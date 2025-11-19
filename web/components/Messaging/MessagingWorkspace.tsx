@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { MessagingProvider, useThread } from '../MessagingProvider';
 import type { MessagingProviderProps } from '../MessagingProvider';
@@ -12,6 +12,7 @@ export interface MessagingWorkspaceProps extends MessagingProviderProps {
   className?: string;
   layout?: 'split' | 'stacked';
   initialThreadId?: string | null;
+  selectedThreadId?: string | null;
   header?: React.ReactNode;
   sidebar?: React.ReactNode;
   onThreadChange?: (threadId: string | null) => void;
@@ -58,6 +59,7 @@ export const MessagingWorkspace: React.FC<MessagingWorkspaceProps> = ({
   className,
   layout = 'split',
   initialThreadId = null,
+  selectedThreadId: controlledThreadId,
   header,
   sidebar,
   onThreadChange,
@@ -69,14 +71,25 @@ export const MessagingWorkspace: React.FC<MessagingWorkspaceProps> = ({
   viewerUserId,
   ...providerProps
 }) => {
-  const [selectedThreadId, setSelectedThreadId] = useState<string | null>(initialThreadId);
+  const [uncontrolledThreadId, setUncontrolledThreadId] = useState<string | null>(initialThreadId);
+
+  useEffect(() => {
+    if (controlledThreadId === undefined) {
+      setUncontrolledThreadId(initialThreadId);
+    }
+  }, [initialThreadId, controlledThreadId]);
+
+  const threadControlled = controlledThreadId !== undefined;
+  const activeThreadId = threadControlled ? controlledThreadId ?? null : uncontrolledThreadId;
 
   const handleSelectThread = useCallback(
     (threadId: string) => {
-      setSelectedThreadId(threadId);
+      if (!threadControlled) {
+        setUncontrolledThreadId(threadId);
+      }
       onThreadChange?.(threadId);
     },
-    [onThreadChange]
+    [threadControlled, onThreadChange]
   );
 
   const resolvedViewerId = useMemo(() => {
@@ -100,26 +113,26 @@ export const MessagingWorkspace: React.FC<MessagingWorkspaceProps> = ({
     <MessagingProvider viewerUserId={viewerUserId ?? resolvedViewerId} {...providerProps}>
       <div className={workspaceClass}>
         {header ? <div className="messaging-workspace__header">{header}</div> : null}
-        <div className="messaging-workspace__body">
-          <aside className="messaging-workspace__sidebar">
-            {sidebar}
-            <MessagingInbox
-              {...inboxProps}
-              activeThreadId={selectedThreadId}
-              onSelectThread={handleSelectThread}
-            />
-          </aside>
-          <section className="messaging-workspace__content">
-            <ThreadRegion
-              threadId={selectedThreadId}
-              viewerUserId={resolvedViewerId}
-              threadProps={threadProps}
-              panelProps={projectPanelProps}
-              emptyState={emptyThreadState}
-            />
-            {children}
-          </section>
-        </div>
+          <div className="messaging-workspace__body">
+            <aside className="messaging-workspace__sidebar">
+              {sidebar}
+              <MessagingInbox
+                {...inboxProps}
+                activeThreadId={activeThreadId}
+                onSelectThread={handleSelectThread}
+              />
+            </aside>
+            <section className="messaging-workspace__content">
+              <ThreadRegion
+                threadId={activeThreadId}
+                viewerUserId={resolvedViewerId}
+                threadProps={threadProps}
+                panelProps={projectPanelProps}
+                emptyState={emptyThreadState}
+              />
+              {children}
+            </section>
+          </div>
       </div>
     </MessagingProvider>
   );

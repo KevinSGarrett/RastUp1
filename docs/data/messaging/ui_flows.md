@@ -13,6 +13,7 @@
     - For thread pages, call `useThread(threadId)` (optionally pairing with `startThreadSubscription`) to receive live message/action card state and `useMessagingActions()` for mutation helpers.
 - `createMessagingNextAdapter` (`tools/frontend/messaging/next_adapter.mjs`) exposes `prefetch`, `createProviderProps`, and `createRuntime` helpers so Next.js routes can server-render inbox + thread payloads, then hydrate the same controller/client on the client. Pair these with `MessagingWorkspace` (`web/components/Messaging/MessagingWorkspace.tsx`) for a ready-made layout that composes provider, inbox list, thread timeline, and project panel snapshots.
    - Compute folders: `default`, `pinned`, `archived`, `requests`.
+- `MessagingWorkspaceRouteBridge` (`web/components/Messaging/MessagingWorkspaceRouteBridge.tsx`) keeps inbox filters/search/thread selection in sync with Next.js query params (`thread`, `unread`, `kinds`, `muted`, `safe`, `search`) using `filter_params.mjs`; changes update the URL via `router.replace`/`router.push` while reflecting back into the workspace.
 2. **Message request handling**
    - Each request entry carries `requestId`, `creditCost`, `expiresAt`.
    - Composer disabled until user accepts (unless same LBG).

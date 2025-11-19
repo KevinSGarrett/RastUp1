@@ -212,6 +212,20 @@
   - `node --test tests/booking/*.test.mjs` → pass (65 tests).
     - `make ci` → pass (Python booking schema + Node booking suites).
 
+## 2025-11-19 — AGENT-3 (WBS-006) Part 9
+
+- Added URL query persistence helpers for messaging inbox filters/search/thread selection (`tools/frontend/messaging/filter_params.mjs` with unit coverage) and introduced `MessagingWorkspaceRouteBridge` to sync `MessagingWorkspace` with Next.js routing.
+- Updated `MessagingInbox` to support controlled filter/search props, `MessagingWorkspace` to accept controlled thread IDs, and exported the new bridge via `web/components/Messaging/index.ts`.
+- Refreshed messaging docs (`implementation_plan.md`, `ui_flows.md`, `test_plan.md`) with routing persistence guidance and coverage expectations.
+- Tests:
+  - `node --test tests/frontend/messaging/filter_params.test.mjs`
+  - `node --test tests/frontend/messaging/*.test.mjs`
+  - `node --test tests/frontend/**/*.test.mjs`
+  - `node --test tests/search/*.test.mjs`
+  - `python -m unittest tests.search.test_collections_json`
+  - `node --test tests/booking/*.test.mjs`
+  - `make ci`
+
 ## 2025-11-19 — AGENT-3 (WBS-017) Part 3
 
 - Implemented `createCalendarController` orchestrating availability, calendar connect, and reschedule stores with hold/event lifecycle hooks, external busy updates, telemetry sync, and preview refresh helpers (`tools/frontend/calendar/controller.mjs`).

@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useInboxSummary, useInboxThreads, useMessagingActions } from '../MessagingProvider';
 import { formatRelativeTimestamp } from '../../../tools/frontend/messaging/ui_helpers.mjs';
@@ -55,8 +55,11 @@ export interface MessagingInboxProps {
   locale?: string;
   emptyState?: React.ReactNode;
   defaultFilters?: Partial<MessagingInboxFilterState>;
+  filters?: MessagingInboxFilterState;
   onFiltersChange?: (filters: MessagingInboxFilterState) => void;
   initialSearch?: string;
+  searchTerm?: string;
+  onSearchChange?: (value: string) => void;
   searchPlaceholder?: string;
 }
 
@@ -71,6 +74,28 @@ const MUTED_MODE_LABELS: Record<MessagingInboxMutedMode, string> = {
   muted: 'Muted: Only',
   hidden: 'Muted: Hide'
 };
+
+function normalizeFilters(input: Partial<MessagingInboxFilterState> | undefined): MessagingInboxFilterState {
+  const filters = {
+    onlyUnread: Boolean(input?.onlyUnread),
+    includeInquiries:
+      input?.includeInquiries !== undefined ? Boolean(input.includeInquiries) : true,
+    includeProjects:
+      input?.includeProjects !== undefined ? Boolean(input.includeProjects) : true,
+    mutedMode:
+      input?.mutedMode === 'muted' || input?.mutedMode === 'hidden'
+        ? input.mutedMode
+        : 'all',
+    safeModeOnly: Boolean(input?.safeModeOnly)
+  };
+
+  if (!filters.includeInquiries && !filters.includeProjects) {
+    filters.includeInquiries = true;
+    filters.includeProjects = true;
+  }
+
+  return filters;
+}
 
 function defaultFormatThreadLabel(thread: ThreadItem, timezone?: string): ThreadLabel {
   const titleCandidates = [
@@ -136,45 +161,86 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
   timezone = 'UTC',
   emptyState = <p className="messaging-inbox__empty">No threads yet.</p>,
   defaultFilters,
+  filters: controlledFilters,
   onFiltersChange,
   initialSearch = '',
+  searchTerm: controlledSearchTerm,
+  onSearchChange,
   searchPlaceholder = 'Search threads...'
 }) => {
   const summary = useInboxSummary();
   const messagingActions = useMessagingActions();
 
-  const [filters, setFilters] = useState<MessagingInboxFilterState>(() => ({
-    onlyUnread: defaultFilters?.onlyUnread ?? false,
-    includeInquiries: defaultFilters?.includeInquiries ?? true,
-    includeProjects: defaultFilters?.includeProjects ?? true,
-    mutedMode: defaultFilters?.mutedMode ?? 'all',
-    safeModeOnly: defaultFilters?.safeModeOnly ?? false
-  }));
-  const [searchTerm, setSearchTerm] = useState(initialSearch);
+  const [uncontrolledFilters, setUncontrolledFilters] = useState<MessagingInboxFilterState>(() =>
+    normalizeFilters(defaultFilters)
+  );
 
-  const setFiltersState = useCallback(
-    (updater: (prev: MessagingInboxFilterState) => MessagingInboxFilterState) => {
-      setFilters((previous) => {
-        const next = updater(previous);
-        if (onFiltersChange) {
-          onFiltersChange(next);
-        }
-        return next;
-      });
+  useEffect(() => {
+    if (controlledFilters === undefined) {
+      setUncontrolledFilters(normalizeFilters(defaultFilters));
+    }
+  }, [defaultFilters, controlledFilters]);
+
+  const filtersControlled = controlledFilters !== undefined;
+  const normalizedControlledFilters = filtersControlled ? normalizeFilters(controlledFilters) : undefined;
+  const effectiveFilters = filtersControlled
+    ? (normalizedControlledFilters as MessagingInboxFilterState)
+    : uncontrolledFilters;
+
+  const [uncontrolledSearch, setUncontrolledSearch] = useState(initialSearch);
+
+  useEffect(() => {
+    if (controlledSearchTerm === undefined) {
+      setUncontrolledSearch(initialSearch);
+    }
+  }, [initialSearch, controlledSearchTerm]);
+
+  const searchControlled = controlledSearchTerm !== undefined;
+  const effectiveSearchTerm = searchControlled ? controlledSearchTerm ?? '' : uncontrolledSearch;
+
+  const updateFilters = useCallback(
+    (
+      updater:
+        | MessagingInboxFilterState
+        | ((prev: MessagingInboxFilterState) => MessagingInboxFilterState)
+    ) => {
+      const base = filtersControlled
+        ? (normalizedControlledFilters as MessagingInboxFilterState)
+        : uncontrolledFilters;
+      const next = normalizeFilters(
+        typeof updater === 'function'
+          ? (updater as (prev: MessagingInboxFilterState) => MessagingInboxFilterState)(base)
+          : updater
+      );
+      if (!filtersControlled) {
+        setUncontrolledFilters(next);
+      }
+      onFiltersChange?.(next);
     },
-    [onFiltersChange]
+    [filtersControlled, normalizedControlledFilters, uncontrolledFilters, onFiltersChange]
+  );
+
+  const updateSearch = useCallback(
+    (value: string) => {
+      const next = typeof value === 'string' ? value : '';
+      if (!searchControlled) {
+        setUncontrolledSearch(next);
+      }
+      onSearchChange?.(next);
+    },
+    [searchControlled, onSearchChange]
   );
 
   const toggleUnread = useCallback(() => {
-    setFiltersState((previous) => ({
+    updateFilters((previous) => ({
       ...previous,
       onlyUnread: !previous.onlyUnread
     }));
-  }, [setFiltersState]);
+  }, [updateFilters]);
 
   const toggleKind = useCallback(
     (kind: 'INQUIRY' | 'PROJECT') => {
-      setFiltersState((previous) => {
+      updateFilters((previous) => {
         const key = kind === 'INQUIRY' ? 'includeInquiries' : 'includeProjects';
         const otherKey = kind === 'INQUIRY' ? 'includeProjects' : 'includeInquiries';
         const nextValue = !previous[key];
@@ -187,11 +253,11 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
         };
       });
     },
-    [setFiltersState]
+    [updateFilters]
   );
 
   const cycleMutedMode = useCallback(() => {
-    setFiltersState((previous) => {
+    updateFilters((previous) => {
       const order: MessagingInboxMutedMode[] = ['all', 'muted', 'hidden'];
       const currentIndex = order.indexOf(previous.mutedMode);
       const nextMode = order[(currentIndex + 1) % order.length];
@@ -203,38 +269,38 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
         mutedMode: nextMode
       };
     });
-  }, [setFiltersState]);
+  }, [updateFilters]);
 
   const toggleSafeMode = useCallback(() => {
-    setFiltersState((previous) => ({
+    updateFilters((previous) => ({
       ...previous,
       safeModeOnly: !previous.safeModeOnly
     }));
-  }, [setFiltersState]);
+  }, [updateFilters]);
 
   const handleSearchChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(event.target.value);
-  }, []);
+    updateSearch(event.target.value);
+  }, [updateSearch]);
 
-  const searchQuery = useMemo(() => searchTerm.trim(), [searchTerm]);
+  const searchQuery = useMemo(() => effectiveSearchTerm.trim(), [effectiveSearchTerm]);
 
   const normalizedKinds = useMemo(() => {
     const values: string[] = [];
-    if (filters.includeInquiries) {
+    if (effectiveFilters.includeInquiries) {
       values.push('INQUIRY');
     }
-    if (filters.includeProjects) {
+    if (effectiveFilters.includeProjects) {
       values.push('PROJECT');
     }
     return values;
-  }, [filters.includeInquiries, filters.includeProjects]);
+  }, [effectiveFilters.includeInquiries, effectiveFilters.includeProjects]);
 
   const mutedFilter = useMemo(() => {
-    if (filters.mutedMode === 'all') {
+    if (effectiveFilters.mutedMode === 'all') {
       return undefined;
     }
-    return filters.mutedMode === 'muted';
-  }, [filters.mutedMode]);
+    return effectiveFilters.mutedMode === 'muted';
+  }, [effectiveFilters.mutedMode]);
 
   const queryMatcher = useCallback(
     (thread: ThreadItem, normalized: string) => {
@@ -252,12 +318,12 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
     () => ({
       query: searchQuery,
       kinds: normalizedKinds,
-      onlyUnread: filters.onlyUnread,
+      onlyUnread: effectiveFilters.onlyUnread,
       muted: mutedFilter,
-      safeModeRequired: filters.safeModeOnly ? true : undefined,
+      safeModeRequired: effectiveFilters.safeModeOnly ? true : undefined,
       queryMatcher
     }),
-    [searchQuery, normalizedKinds, filters.onlyUnread, mutedFilter, filters.safeModeOnly, queryMatcher]
+    [searchQuery, normalizedKinds, effectiveFilters.onlyUnread, mutedFilter, effectiveFilters.safeModeOnly, queryMatcher]
   );
 
   const pinnedOptions = useMemo(
@@ -351,7 +417,7 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
   }, [messagingActions, onStartConversation]);
 
   const canStartConversation = summary.canStartConversation ?? { allowed: true };
-  const mutedModeLabel = MUTED_MODE_LABELS[filters.mutedMode];
+  const mutedModeLabel = MUTED_MODE_LABELS[effectiveFilters.mutedMode];
 
   return (
     <div className="messaging-inbox">
@@ -389,51 +455,55 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
         </div>
       </header>
 
-      <div className="messaging-inbox__filters">
-        <div className="messaging-inbox__search">
-          <input
-            type="search"
-            value={searchTerm}
-            onChange={handleSearchChange}
-            placeholder={searchPlaceholder}
-            aria-label="Search threads"
-          />
+        <div className="messaging-inbox__filters">
+          <div className="messaging-inbox__search">
+            <input
+              type="search"
+              value={effectiveSearchTerm}
+              onChange={handleSearchChange}
+              placeholder={searchPlaceholder}
+              aria-label="Search threads"
+            />
+          </div>
+          <div className="messaging-inbox__filter-chips">
+            <button type="button" className={chipClass(effectiveFilters.onlyUnread)} onClick={toggleUnread}>
+              Unread
+            </button>
+            <button
+              type="button"
+              className={chipClass(effectiveFilters.includeProjects)}
+              onClick={() => toggleKind('PROJECT')}
+            >
+              Projects
+            </button>
+            <button
+              type="button"
+              className={chipClass(effectiveFilters.includeInquiries)}
+              onClick={() => toggleKind('INQUIRY')}
+            >
+              Inquiries
+            </button>
+            <button
+              type="button"
+              className={chipClass(effectiveFilters.safeModeOnly)}
+              onClick={toggleSafeMode}
+            >
+              Safe mode
+            </button>
+            <button
+              type="button"
+              className="messaging-inbox__filter-chip messaging-inbox__filter-chip--cycle"
+              onClick={cycleMutedMode}
+            >
+              {mutedModeLabel}
+            </button>
+          </div>
+          <div className="messaging-inbox__results">
+            {totalVisibleThreads === 0
+              ? 'No threads match filters'
+              : `Showing ${totalVisibleThreads} ${totalVisibleThreads === 1 ? 'thread' : 'threads'}`}
+          </div>
         </div>
-        <div className="messaging-inbox__filter-chips">
-          <button type="button" className={chipClass(filters.onlyUnread)} onClick={toggleUnread}>
-            Unread
-          </button>
-          <button
-            type="button"
-            className={chipClass(filters.includeProjects)}
-            onClick={() => toggleKind('PROJECT')}
-          >
-            Projects
-          </button>
-          <button
-            type="button"
-            className={chipClass(filters.includeInquiries)}
-            onClick={() => toggleKind('INQUIRY')}
-          >
-            Inquiries
-          </button>
-          <button type="button" className={chipClass(filters.safeModeOnly)} onClick={toggleSafeMode}>
-            Safe mode
-          </button>
-          <button
-            type="button"
-            className="messaging-inbox__filter-chip messaging-inbox__filter-chip--cycle"
-            onClick={cycleMutedMode}
-          >
-            {mutedModeLabel}
-          </button>
-        </div>
-        <div className="messaging-inbox__results">
-          {totalVisibleThreads === 0
-            ? 'No threads match filters'
-            : `Showing ${totalVisibleThreads} ${totalVisibleThreads === 1 ? 'thread' : 'threads'}`}
-        </div>
-      </div>
 
       {Array.isArray(requests) && requests.length > 0 ? (
         <section className="messaging-inbox__section messaging-inbox__section--requests">
