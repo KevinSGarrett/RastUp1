@@ -1,4 +1,4 @@
 agent: AGENT-3
-timestamp: 2025-11-19T07:25:00Z
+timestamp: 2025-11-19T07:52:00Z
 status: locked
-notes: "Frontend & Developer Experience scope — WBS-006 messaging normalization + DX run"
+notes: "WBS-017 availability/calendar sync — frontend & DX scope (weekly rules, calendar connect, feasibility UI)"

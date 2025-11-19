@@ -5,18 +5,21 @@
 - **Blueprint IDs:** TD-0206 · TD-0207 · TD-0208 · TD-0209 · TD-0210
 - **Scope Highlights:** Availability editor UX, calendar connect UI, feasibility computation DX scaffolding, ICS touchpoints, observability coordination.
 
-### Plan · Done · Pending
+### Plan · Done · Pending (Pre-Implementation Checkpoint)
 
-- **Planned**
-  - Catalogue existing availability/calendar assets and identify gaps for frontend, shared logic, and tooling.
-  - Draft implementation, UI flow, and test blueprints aligned with §1.12 requirements.
-  - Deliver headless frontend modules (availability rules, feasibility engine, ICS helpers) with unit coverage to unblock UI work.
-  - Outline integration points with backend GraphQL schema, booking flows, and observability streams.
-- **Done**
-  - _None yet — initial planning for WBS-017._
-- **Pending**
-  - Confirm data contracts with API/Backend agents once calendar schema lands.
-  - Align observability dashboards with Ops agent for shared metrics/alerts.
+- **Planned (This Run)**
+  - Stand up calendar domain artifacts: SQL migration, GraphQL schema, headless feasibility/ICS modules, and shared types.
+  - Deliver frontend/DX scaffolding for availability editor, calendar connect, and reschedule picker backed by state stores.
+  - Extend documentation (observability dashboard spec, runbook pointers) and ensure progress/test logs are captured.
+  - Execute targeted unit suites plus node frontend regressions; document the known `make ci` gap and capture outputs.
+- **Done So Far**
+  - Reviewed prior AGENT-3 and AGENT-2 run reports (WBS-006, WBS-005) to align dependencies and contracts.
+  - Re-confirmed blueprint expectations (§1.12) and updated test strategy before authoring code.
+  - Secured `ops/locks/AGENT-3.lock` for WBS-017 scope.
+- **Pending / Deferred**
+  - Backend lambdas/resolvers, persistence wiring, and external webhook integrations (owned by Agents A/B).
+  - End-to-end UI integration in Next.js/React and mobile platforms (future WBS iterations).
+  - Performance benchmarking, telemetry wiring in production environments, and CI orchestration updates.
 
 ### Assumptions & Dependencies
 

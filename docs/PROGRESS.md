@@ -113,3 +113,12 @@
 - Expanded frontend messaging tests with controller coverage (`tests/frontend/messaging/controller.test.mjs`) validating unread sync, optimistic flows, message request handling, quiet-hour digesting, and analytics hooks; refreshed implementation/test plans to reference the controller.
 - Executed regression suites: `node --test tests/frontend/messaging/*.test.mjs`, `node --test tests/frontend/**/*.test.mjs`, `node --test tests/search/*.test.mjs`, `python -m unittest tests.search.test_collections_json`, `node --test tests/booking/*.test.mjs` → all passing.
 - `make ci` → pass (Python booking schema + Node booking suites).
+
+## 2025-11-19 — AGENT-3 (WBS-017)
+
+- Stood up calendar domain artefacts: created `db/migrations/020_calendar.sql` (weekly rules, exceptions, holds, events, external sources, ICS feeds) and `api/schema/calendar.graphql` with queries/mutations for availability management, feasibility, holds, and ICS feeds.
+- Delivered calendar services under `services/calendar/` (`timezone`, `feasibility`, `ics-poller`, shared `types`) plus TypeScript re-exports for downstream consumers; implemented headless polling helpers handling ETag, delta parsing, and all-day recurrence edges.
+- Added frontend DX scaffolding: availability editor/connect/reschedule stores (`tools/frontend/calendar/{editor_store,connect_store,reschedule_picker}.mjs` + index) and corresponding React component shells under `web/components/{AvailabilityEditor,CalendarConnect,ReschedulePicker}`.
+- Authored observability dashboard spec (`observability/dashboards/calendar.md`) and ICS poller runbook (`ops/runbooks/calendar-ics-errors.md`); refreshed calendar test plan with executed coverage notes.
+- Implemented and ran calendar unit suites `node --test tests/frontend/calendar/*.test.mjs` (feasibility engine, ICS poller, stores, DX helpers) plus full regression (`node --test tests/frontend/**/*.test.mjs`, `node --test tests/search/*.test.mjs`, `python -m unittest tests.search.test_collections_json`, `node --test tests/booking/*.test.mjs`) → all green.
+- `make ci` → pass (Python booking schema + Node booking suites).

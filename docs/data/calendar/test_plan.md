@@ -19,6 +19,7 @@
   - `feasibility/engine` — subtract holds, confirmed events, external busy blocks; enforce buffers and lead time.
   - `ics/helpers` — build ICS payloads (VEVENT + tokens), ensure deterministic UID generation.
   - `ui/state` — reducers/stores for availability editor panels, calendar connect status, reschedule picker selection.
+  - **Implemented suites:** `node --test tests/frontend/calendar/*.test.mjs` covering feasibility engine edge cases (DST, conflicts, booking window), ICS poller parsing/poller flows, availability editor store diff tracking, connect store telemetry, reschedule picker filtering, and DX utilities.
 - **Contract**
   - Mock GraphQL payload validations for `WeeklyRule`, `Exception`, `Hold`, `CalEvent`, `FeasibleSlot`.
   - Schema snapshot tests once `api/schema/calendar.graphql` lands (pending backend delivery).

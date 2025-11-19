@@ -1,0 +1,153 @@
+"""
+Calendar availability & feasibility contract (WBS-017).
+"""
+
+type WeeklyRule {
+  id: ID!
+  role: String!
+  weekdayMask: Int!
+  startLocal: String!
+  endLocal: String!
+  timezone: String!
+  minDurationMin: Int!
+  leadTimeHours: Int!
+  bookingWindowDays: Int!
+  bufferBeforeMin: Int!
+  bufferAfterMin: Int!
+  active: Boolean!
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+type Exception {
+  id: ID!
+  dateLocal: AWSDate!
+  timezone: String!
+  kind: String!
+  startLocal: String
+  endLocal: String
+  note: String
+  createdAt: AWSDateTime!
+}
+
+type Hold {
+  id: ID!
+  startUtc: AWSDateTime!
+  endUtc: AWSDateTime!
+  source: String!
+  orderId: ID
+  ttlExpiresAt: AWSDateTime!
+  createdAt: AWSDateTime!
+}
+
+type CalEvent {
+  id: ID!
+  orderId: ID!
+  startUtc: AWSDateTime!
+  endUtc: AWSDateTime!
+  status: String!
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+type ExternalCalendarSource {
+  id: ID!
+  kind: String!
+  urlOrRemoteId: String!
+  status: String!
+  lastPollAt: AWSDateTime
+  lastEtag: String
+  lastModified: String
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+type ExternalCalendarEvent {
+  id: ID!
+  sourceId: ID!
+  startUtc: AWSDateTime!
+  endUtc: AWSDateTime!
+  busy: Boolean!
+  summary: String
+  recurrenceId: String
+  updatedAt: AWSDateTime!
+}
+
+type FeasibleSlot {
+  startUtc: AWSDateTime!
+  endUtc: AWSDateTime!
+  sourceRuleId: ID
+  confidence: Float
+}
+
+type IcsFeed {
+  id: ID!
+  token: String!
+  includeHolds: Boolean!
+  createdAt: AWSDateTime!
+}
+
+input WeeklyRuleInput {
+  id: ID
+  role: String!
+  weekdayMask: Int!
+  startLocal: String!
+  endLocal: String!
+  timezone: String!
+  minDurationMin: Int
+  leadTimeHours: Int
+  bookingWindowDays: Int
+  bufferBeforeMin: Int
+  bufferAfterMin: Int
+  active: Boolean
+}
+
+input ExceptionInput {
+  id: ID
+  dateLocal: AWSDate!
+  timezone: String!
+  kind: String!
+  startLocal: String
+  endLocal: String
+  note: String
+}
+
+input HoldInput {
+  role: String!
+  startUtc: AWSDateTime!
+  endUtc: AWSDateTime!
+  source: String!
+  orderId: ID
+  ttlMinutes: Int = 30
+}
+
+input FeasibleSlotInput {
+  role: String!
+  dateFrom: AWSDateTime!
+  dateTo: AWSDateTime!
+  durationMin: Int!
+}
+
+type Query {
+  myWeeklyRules(role: String!): [WeeklyRule!]!
+  myExceptions(dateFrom: AWSDate!, dateTo: AWSDate!): [Exception!]!
+  myCalendar(dateFrom: AWSDateTime!, dateTo: AWSDateTime!): [CalEvent!]!
+  feasibleSlots(input: FeasibleSlotInput!): [FeasibleSlot!]!
+  myHoldSummaries(role: String!): [Hold!]!
+  myExternalCalendars: [ExternalCalendarSource!]!
+  myExternalBusy(dateFrom: AWSDateTime!, dateTo: AWSDateTime!): [ExternalCalendarEvent!]!
+  myIcsFeed: IcsFeed
+}
+
+type Mutation {
+  upsertWeeklyRule(input: WeeklyRuleInput!): ID!
+  archiveWeeklyRule(id: ID!): Boolean!
+  upsertException(input: ExceptionInput!): ID!
+  deleteException(id: ID!): Boolean!
+  createHold(input: HoldInput!): ID!
+  releaseHold(id: ID!): Boolean!
+  connectICS(url: AWSURL!): ID!
+  disconnectExternal(id: ID!): Boolean!
+  createIcsFeed(includeHolds: Boolean = false): String!
+  revokeIcsFeed: Boolean!
+}
