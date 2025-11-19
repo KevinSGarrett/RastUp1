@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { useInboxSummary, useInboxThreads, useMessagingActions } from '../MessagingProvider';
 import { formatRelativeTimestamp } from '../../../tools/frontend/messaging/ui_helpers.mjs';
@@ -29,6 +29,16 @@ type ThreadLabel = {
   meta?: string;
 };
 
+export type MessagingInboxMutedMode = 'all' | 'muted' | 'hidden';
+
+export interface MessagingInboxFilterState {
+  onlyUnread: boolean;
+  includeInquiries: boolean;
+  includeProjects: boolean;
+  mutedMode: MessagingInboxMutedMode;
+  safeModeOnly: boolean;
+}
+
 export interface MessagingInboxProps {
   activeThreadId?: string | null;
   onSelectThread?: (threadId: string) => void;
@@ -44,6 +54,10 @@ export interface MessagingInboxProps {
   timezone?: string;
   locale?: string;
   emptyState?: React.ReactNode;
+  defaultFilters?: Partial<MessagingInboxFilterState>;
+  onFiltersChange?: (filters: MessagingInboxFilterState) => void;
+  initialSearch?: string;
+  searchPlaceholder?: string;
 }
 
 const DEFAULT_REQUEST_ACTION_LABELS = {
@@ -52,15 +66,46 @@ const DEFAULT_REQUEST_ACTION_LABELS = {
   blockLabel: 'Block'
 };
 
+const MUTED_MODE_LABELS: Record<MessagingInboxMutedMode, string> = {
+  all: 'Muted: All',
+  muted: 'Muted: Only',
+  hidden: 'Muted: Hide'
+};
+
 function defaultFormatThreadLabel(thread: ThreadItem, timezone?: string): ThreadLabel {
-  const label: ThreadLabel = {
-    title: thread.threadId ?? 'Unknown thread',
-    subtitle: thread.kind === 'PROJECT' ? 'Project thread' : 'Inquiry thread'
-  };
-  if (thread.lastMessageAt) {
-    label.meta = formatRelativeTimestamp(thread.lastMessageAt, { timezone });
+  const titleCandidates = [
+    typeof (thread as any).title === 'string' ? (thread as any).title.trim() : null,
+    typeof (thread as any)?.metadata?.displayName === 'string' ? (thread as any).metadata.displayName.trim() : null,
+    thread.threadId
+  ].filter((value) => value && value.length > 0);
+  const title = titleCandidates[0] ?? 'Unknown thread';
+
+  const subtitleParts: string[] = [];
+  if (thread.kind === 'PROJECT') {
+    subtitleParts.push('Project thread');
+  } else if (thread.kind === 'INQUIRY') {
+    subtitleParts.push('Inquiry thread');
   }
-  return label;
+  if (thread.safeModeRequired) {
+    subtitleParts.push('Safe-Mode required');
+  }
+  if (thread.muted) {
+    subtitleParts.push('Muted');
+  }
+
+  const metaParts: string[] = [];
+  if (thread.lastMessageAt) {
+    metaParts.push(formatRelativeTimestamp(thread.lastMessageAt, { timezone }));
+  }
+  if (typeof thread.unreadCount === 'number' && thread.unreadCount > 0) {
+    metaParts.push(`${thread.unreadCount} unread`);
+  }
+
+  return {
+    title,
+    subtitle: subtitleParts.length > 0 ? subtitleParts.join(' · ') : undefined,
+    meta: metaParts.length > 0 ? metaParts.join(' · ') : undefined
+  };
 }
 
 function sortByUnreadPriority(threads: ThreadItem[]): ThreadItem[] {
@@ -76,6 +121,10 @@ function sortByUnreadPriority(threads: ThreadItem[]): ThreadItem[] {
   });
 }
 
+function chipClass(active: boolean) {
+  return `messaging-inbox__filter-chip${active ? ' messaging-inbox__filter-chip--active' : ''}`;
+}
+
 export const MessagingInbox: React.FC<MessagingInboxProps> = ({
   activeThreadId = null,
   onSelectThread,
@@ -85,14 +134,159 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
   formatThreadLabel = defaultFormatThreadLabel,
   requestActions,
   timezone = 'UTC',
-  emptyState = <p className="messaging-inbox__empty">No threads yet.</p>
+  emptyState = <p className="messaging-inbox__empty">No threads yet.</p>,
+  defaultFilters,
+  onFiltersChange,
+  initialSearch = '',
+  searchPlaceholder = 'Search threads...'
 }) => {
   const summary = useInboxSummary();
-  const defaultThreads = useInboxThreads();
-  const pinnedThreads = useInboxThreads({ folder: 'pinned' });
-  const archivedThreads = useInboxThreads({ folder: 'archived' });
-  const requests = useInboxThreads({ folder: 'requests' }) as MessageRequest[];
   const messagingActions = useMessagingActions();
+
+  const [filters, setFilters] = useState<MessagingInboxFilterState>(() => ({
+    onlyUnread: defaultFilters?.onlyUnread ?? false,
+    includeInquiries: defaultFilters?.includeInquiries ?? true,
+    includeProjects: defaultFilters?.includeProjects ?? true,
+    mutedMode: defaultFilters?.mutedMode ?? 'all',
+    safeModeOnly: defaultFilters?.safeModeOnly ?? false
+  }));
+  const [searchTerm, setSearchTerm] = useState(initialSearch);
+
+  const setFiltersState = useCallback(
+    (updater: (prev: MessagingInboxFilterState) => MessagingInboxFilterState) => {
+      setFilters((previous) => {
+        const next = updater(previous);
+        if (onFiltersChange) {
+          onFiltersChange(next);
+        }
+        return next;
+      });
+    },
+    [onFiltersChange]
+  );
+
+  const toggleUnread = useCallback(() => {
+    setFiltersState((previous) => ({
+      ...previous,
+      onlyUnread: !previous.onlyUnread
+    }));
+  }, [setFiltersState]);
+
+  const toggleKind = useCallback(
+    (kind: 'INQUIRY' | 'PROJECT') => {
+      setFiltersState((previous) => {
+        const key = kind === 'INQUIRY' ? 'includeInquiries' : 'includeProjects';
+        const otherKey = kind === 'INQUIRY' ? 'includeProjects' : 'includeInquiries';
+        const nextValue = !previous[key];
+        if (!nextValue && !previous[otherKey]) {
+          return previous;
+        }
+        return {
+          ...previous,
+          [key]: nextValue
+        };
+      });
+    },
+    [setFiltersState]
+  );
+
+  const cycleMutedMode = useCallback(() => {
+    setFiltersState((previous) => {
+      const order: MessagingInboxMutedMode[] = ['all', 'muted', 'hidden'];
+      const currentIndex = order.indexOf(previous.mutedMode);
+      const nextMode = order[(currentIndex + 1) % order.length];
+      if (nextMode === previous.mutedMode) {
+        return previous;
+      }
+      return {
+        ...previous,
+        mutedMode: nextMode
+      };
+    });
+  }, [setFiltersState]);
+
+  const toggleSafeMode = useCallback(() => {
+    setFiltersState((previous) => ({
+      ...previous,
+      safeModeOnly: !previous.safeModeOnly
+    }));
+  }, [setFiltersState]);
+
+  const handleSearchChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(event.target.value);
+  }, []);
+
+  const searchQuery = useMemo(() => searchTerm.trim(), [searchTerm]);
+
+  const normalizedKinds = useMemo(() => {
+    const values: string[] = [];
+    if (filters.includeInquiries) {
+      values.push('INQUIRY');
+    }
+    if (filters.includeProjects) {
+      values.push('PROJECT');
+    }
+    return values;
+  }, [filters.includeInquiries, filters.includeProjects]);
+
+  const mutedFilter = useMemo(() => {
+    if (filters.mutedMode === 'all') {
+      return undefined;
+    }
+    return filters.mutedMode === 'muted';
+  }, [filters.mutedMode]);
+
+  const queryMatcher = useCallback(
+    (thread: ThreadItem, normalized: string) => {
+      if (!normalized) {
+        return true;
+      }
+      const label = formatThreadLabel(thread, timezone);
+      const values = [label.title, label.subtitle, label.meta];
+      return values.some((value) => typeof value === 'string' && value.toLowerCase().includes(normalized));
+    },
+    [formatThreadLabel, timezone]
+  );
+
+  const baseOptions = useMemo(
+    () => ({
+      query: searchQuery,
+      kinds: normalizedKinds,
+      onlyUnread: filters.onlyUnread,
+      muted: mutedFilter,
+      safeModeRequired: filters.safeModeOnly ? true : undefined,
+      queryMatcher
+    }),
+    [searchQuery, normalizedKinds, filters.onlyUnread, mutedFilter, filters.safeModeOnly, queryMatcher]
+  );
+
+  const pinnedOptions = useMemo(
+    () => ({
+      ...baseOptions,
+      folder: 'pinned' as const
+    }),
+    [baseOptions]
+  );
+  const archivedOptions = useMemo(
+    () => ({
+      ...baseOptions,
+      folder: 'archived' as const,
+      includeArchived: true
+    }),
+    [baseOptions]
+  );
+  const requestsOptions = useMemo(
+    () => ({
+      folder: 'requests' as const,
+      query: searchQuery
+    }),
+    [searchQuery]
+  );
+
+  const defaultThreads = useInboxThreads(baseOptions);
+  const pinnedThreads = useInboxThreads(pinnedOptions);
+  const archivedThreads = useInboxThreads(archivedOptions);
+  const requests = useInboxThreads(requestsOptions) as MessageRequest[];
 
   const threadSections = useMemo(() => {
     const sections: Array<{ id: string; title: string; threads: ThreadItem[] }> = [];
@@ -112,37 +306,52 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
     return sections;
   }, [pinnedThreads, defaultThreads, archivedThreads]);
 
+  const totalVisibleThreads = useMemo(
+    () => threadSections.reduce((sum, section) => sum + section.threads.length, 0),
+    [threadSections]
+  );
+
   const requestLabels = { ...DEFAULT_REQUEST_ACTION_LABELS, ...(requestActions ?? {}) };
 
-  const handleSelectThread = (threadId: string) => {
-    onSelectThread?.(threadId);
-  };
+  const handleSelectThread = useCallback(
+    (threadId: string) => {
+      onSelectThread?.(threadId);
+    },
+    [onSelectThread]
+  );
 
-  const handleAcceptRequest = async (requestId: string) => {
-    if (onAcceptRequest) {
-      await onAcceptRequest(requestId);
-      return;
-    }
-    await messagingActions.acceptMessageRequest(requestId);
-  };
+  const handleAcceptRequest = useCallback(
+    async (requestId: string) => {
+      if (onAcceptRequest) {
+        await onAcceptRequest(requestId);
+        return;
+      }
+      await messagingActions.acceptMessageRequest(requestId);
+    },
+    [messagingActions, onAcceptRequest]
+  );
 
-  const handleDeclineRequest = async (requestId: string, block: boolean) => {
-    if (onDeclineRequest) {
-      await onDeclineRequest(requestId, { block });
-      return;
-    }
-    await messagingActions.declineMessageRequest(requestId, { block });
-  };
+  const handleDeclineRequest = useCallback(
+    async (requestId: string, block: boolean) => {
+      if (onDeclineRequest) {
+        await onDeclineRequest(requestId, { block });
+        return;
+      }
+      await messagingActions.declineMessageRequest(requestId, { block });
+    },
+    [messagingActions, onDeclineRequest]
+  );
 
-  const handleStartConversation = async () => {
+  const handleStartConversation = useCallback(async () => {
     if (onStartConversation) {
       await onStartConversation();
       return;
     }
     await messagingActions.recordConversationStart();
-  };
+  }, [messagingActions, onStartConversation]);
 
   const canStartConversation = summary.canStartConversation ?? { allowed: true };
+  const mutedModeLabel = MUTED_MODE_LABELS[filters.mutedMode];
 
   return (
     <div className="messaging-inbox">
@@ -179,6 +388,52 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
           ) : null}
         </div>
       </header>
+
+      <div className="messaging-inbox__filters">
+        <div className="messaging-inbox__search">
+          <input
+            type="search"
+            value={searchTerm}
+            onChange={handleSearchChange}
+            placeholder={searchPlaceholder}
+            aria-label="Search threads"
+          />
+        </div>
+        <div className="messaging-inbox__filter-chips">
+          <button type="button" className={chipClass(filters.onlyUnread)} onClick={toggleUnread}>
+            Unread
+          </button>
+          <button
+            type="button"
+            className={chipClass(filters.includeProjects)}
+            onClick={() => toggleKind('PROJECT')}
+          >
+            Projects
+          </button>
+          <button
+            type="button"
+            className={chipClass(filters.includeInquiries)}
+            onClick={() => toggleKind('INQUIRY')}
+          >
+            Inquiries
+          </button>
+          <button type="button" className={chipClass(filters.safeModeOnly)} onClick={toggleSafeMode}>
+            Safe mode
+          </button>
+          <button
+            type="button"
+            className="messaging-inbox__filter-chip messaging-inbox__filter-chip--cycle"
+            onClick={cycleMutedMode}
+          >
+            {mutedModeLabel}
+          </button>
+        </div>
+        <div className="messaging-inbox__results">
+          {totalVisibleThreads === 0
+            ? 'No threads match filters'
+            : `Showing ${totalVisibleThreads} ${totalVisibleThreads === 1 ? 'thread' : 'threads'}`}
+        </div>
+      </div>
 
       {Array.isArray(requests) && requests.length > 0 ? (
         <section className="messaging-inbox__section messaging-inbox__section--requests">
@@ -226,6 +481,7 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
               {section.threads.map((thread) => {
                 const label = formatThreadLabel(thread, timezone);
                 const active = thread.threadId === activeThreadId;
+                const showTags = thread.safeModeRequired || thread.muted;
                 return (
                   <li key={`${section.id}-${thread.threadId}`}>
                     <button
@@ -243,6 +499,20 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
                         <p className="messaging-inbox__thread-subtitle">{label.subtitle}</p>
                       ) : null}
                       {label.meta ? <p className="messaging-inbox__thread-meta">{label.meta}</p> : null}
+                      {showTags ? (
+                        <div className="messaging-inbox__thread-tags">
+                          {thread.safeModeRequired ? (
+                            <span className="messaging-inbox__thread-tag messaging-inbox__thread-tag--safe">
+                              Safe mode
+                            </span>
+                          ) : null}
+                          {thread.muted ? (
+                            <span className="messaging-inbox__thread-tag messaging-inbox__thread-tag--muted">
+                              Muted
+                            </span>
+                          ) : null}
+                        </div>
+                      ) : null}
                     </button>
                   </li>
                 );

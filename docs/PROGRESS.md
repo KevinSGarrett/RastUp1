@@ -200,6 +200,18 @@
   - `node --test tests/booking/*.test.mjs` → pass (65 subtests).
   - `make ci` → pass (Python booking schema + Node booking suites).
 
+## 2025-11-19 — AGENT-3 (WBS-006) Part 8
+
+- Extended inbox store/controller to support blueprint-grade filtering: unread gating, kind subsets, muted-only/hidden views, Safe-Mode-required filtering, request query search, and customizable label matchers (`tools/frontend/messaging/inbox_store.mjs`, controller updates). Added granular unit coverage (`tests/frontend/messaging/{inbox_store,controller}.test.mjs`).
+- Upgraded `MessagingInbox` (`web/components/Messaging/MessagingInbox.tsx`) with persistent filter/search UI (search field, unread/project/inquiry toggles, Safe-Mode toggle, muted cycle), metadata-aware labelling, and Safe-Mode/muted tags; refreshed messaging docs (`docs/data/messaging/{implementation_plan,test_plan,ui_flows}.md`) accordingly.
+- Tests:
+  - `node --test tests/frontend/messaging/*.test.mjs` → pass (70 tests spanning inbox/controller enhancements).
+  - `node --test tests/frontend/**/*.test.mjs` → pass (98 tests across frontend suites).
+  - `node --test tests/search/*.test.mjs` → pass (8 tests).
+  - `python -m unittest tests.search.test_collections_json` → pass (3 tests).
+  - `node --test tests/booking/*.test.mjs` → pass (65 tests).
+    - `make ci` → pass (Python booking schema + Node booking suites).
+
 ## 2025-11-19 — AGENT-3 (WBS-017) Part 3
 
 - Implemented `createCalendarController` orchestrating availability, calendar connect, and reschedule stores with hold/event lifecycle hooks, external busy updates, telemetry sync, and preview refresh helpers (`tools/frontend/calendar/controller.mjs`).

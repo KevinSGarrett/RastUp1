@@ -60,16 +60,34 @@ export function createInboxState(opts = {}) {
   const unreadByThreadId = {};
 
   for (const thread of sortedThreads) {
-    threadsById[thread.threadId] = {
+    if (!thread?.threadId) {
+      continue;
+    }
+    const normalized = {
+      ...thread,
       threadId: thread.threadId,
       lastMessageAt: thread.lastMessageAt,
       unreadCount: thread.unreadCount ?? 0,
       pinned: Boolean(thread.pinned),
       archived: Boolean(thread.archived),
       muted: Boolean(thread.muted),
-      kind: thread.kind,
       safeModeRequired: Boolean(thread.safeModeRequired)
     };
+    if (normalized.title && typeof normalized.title !== 'string') {
+      normalized.title = String(normalized.title);
+    }
+    if (normalized.subtitle && typeof normalized.subtitle !== 'string') {
+      normalized.subtitle = String(normalized.subtitle);
+    }
+    if (normalized.labels && !Array.isArray(normalized.labels)) {
+      normalized.labels = [normalized.labels].filter((value) => value != null);
+    } else if (Array.isArray(normalized.labels)) {
+      normalized.labels = normalized.labels.map((value) => (value == null ? value : String(value)));
+    }
+    if (normalized.metadata && typeof normalized.metadata === 'object') {
+      normalized.metadata = { ...normalized.metadata };
+    }
+    threadsById[thread.threadId] = normalized;
     orderedThreadIds.push(thread.threadId);
     if (thread.pinned) {
       pinnedThreadIds.push(thread.threadId);
@@ -443,19 +461,101 @@ export function getTotalUnread(state) {
   return Object.values(state.unreadByThreadId).reduce((sum, count) => sum + (count ?? 0), 0);
 }
 
+function normalizeKindSet(kinds) {
+  if (!kinds) return null;
+  const iterable = Array.isArray(kinds) ? kinds : [kinds];
+  const normalized = new Set();
+  for (const kind of iterable) {
+    if (kind == null) continue;
+    normalized.add(String(kind).toUpperCase());
+  }
+  return normalized.size > 0 ? normalized : null;
+}
+
+function defaultQueryMatch(candidate, query) {
+  if (!query) return true;
+  const needle = query.toLowerCase();
+  const haystack = [];
+  if (candidate.threadId) haystack.push(candidate.threadId);
+  if (candidate.kind) haystack.push(candidate.kind);
+  if (candidate.status) haystack.push(candidate.status);
+  if (candidate.title) haystack.push(candidate.title);
+  if (candidate.subtitle) haystack.push(candidate.subtitle);
+  if (Array.isArray(candidate.labels)) {
+    haystack.push(...candidate.labels);
+  }
+  const metadata = candidate.metadata;
+  if (metadata && typeof metadata === 'object') {
+    if (typeof metadata.displayName === 'string') {
+      haystack.push(metadata.displayName);
+    }
+    if (typeof metadata.searchText === 'string') {
+      haystack.push(metadata.searchText);
+    }
+    if (Array.isArray(metadata.searchTokens)) {
+      haystack.push(...metadata.searchTokens);
+    }
+  }
+  for (const value of haystack) {
+    if (typeof value !== 'string') continue;
+    if (value.toLowerCase().includes(needle)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /**
- * Returns threads filtered by predicate.
+ * Returns threads filtered by options.
  * @param {ReturnType<typeof createInboxState>} state
- * @param {{ includeArchived?: boolean; folder?: 'default'|'requests'|'pinned'|'archived' }} options
+ * @param {{
+ *   includeArchived?: boolean;
+ *   folder?: 'default'|'requests'|'pinned'|'archived';
+ *   onlyUnread?: boolean;
+ *   kinds?: Iterable<string>|string;
+ *   muted?: boolean;
+ *   safeModeRequired?: boolean;
+ *   query?: string;
+ *   queryMatcher?: (thread: any, normalizedQuery: string) => boolean;
+ *   predicate?: (thread: any) => boolean;
+ * }} options
  */
 export function selectThreads(state, options = {}) {
+  const includeArchived = options.includeArchived ?? false;
+  const onlyUnread = options.onlyUnread ?? false;
+  const kindSet = normalizeKindSet(options.kinds);
+  const mutedFilter = options.muted;
+  const safeModeFilter = options.safeModeRequired;
+  const query =
+    typeof options.query === 'string' && options.query.trim().length > 0
+      ? options.query.trim().toLowerCase()
+      : '';
+  const queryMatcher = typeof options.queryMatcher === 'function' ? options.queryMatcher : null;
+  const predicate = typeof options.predicate === 'function' ? options.predicate : null;
+
   if (options.folder === 'requests') {
     return state.requestOrder
       .map((requestId) => state.requestsById[requestId])
-      .filter(Boolean);
+      .filter((request) => {
+        if (!request) return false;
+        if (query) {
+          const fields = [
+            request.requestId,
+            request.threadId,
+            request.status,
+            typeof request.creditCost === 'number' ? String(request.creditCost) : null
+          ];
+          const matches = fields.some(
+            (value) => typeof value === 'string' && value.toLowerCase().includes(query)
+          );
+          if (!matches) {
+            return false;
+          }
+        }
+        return true;
+      });
   }
 
-  const includeArchived = options.includeArchived ?? false;
   let candidateIds = state.orderedThreadIds;
 
   if (options.folder === 'pinned') {
@@ -472,10 +572,38 @@ export function selectThreads(state, options = {}) {
         return null;
       }
       const unreadCount = state.unreadByThreadId[threadId] ?? thread.unreadCount ?? 0;
-      return {
+      const candidate = {
         ...thread,
         unreadCount
       };
+      if (onlyUnread && unreadCount === 0) {
+        return null;
+      }
+      if (kindSet) {
+        const threadKind = typeof candidate.kind === 'string' ? candidate.kind.toUpperCase() : '';
+        if (!kindSet.has(threadKind)) {
+          return null;
+        }
+      }
+      if (mutedFilter === true && !candidate.muted) {
+        return null;
+      }
+      if (mutedFilter === false && candidate.muted) {
+        return null;
+      }
+      if (safeModeFilter === true && !candidate.safeModeRequired) {
+        return null;
+      }
+      if (safeModeFilter === false && candidate.safeModeRequired) {
+        return null;
+      }
+      if (query && !(defaultQueryMatch(candidate, query) || (queryMatcher?.(candidate, query) ?? false))) {
+        return null;
+      }
+      if (predicate && !predicate(candidate)) {
+        return null;
+      }
+      return candidate;
     })
     .filter(Boolean);
 }

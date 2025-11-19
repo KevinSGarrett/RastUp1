@@ -15,14 +15,14 @@
 
 | Area | Test Focus | Notes |
 | --- | --- | --- |
-| Inbox store | Ordering, pin/archive/mute toggles, unread counts, rate limit enforcement | Simulate `inboxEvents` (new thread, archive, mute) and ensure deterministic ordering. |
+| Inbox store | Ordering, pin/archive/mute toggles, unread counts, rate limit enforcement, advanced filters/search | Simulate `inboxEvents` (new thread, archive, mute), exercise `selectThreads` filters (`onlyUnread`, `kinds`, `muted`, `safeModeRequired`, query + custom matcher), and ensure deterministic ordering. |
 | Thread store | Message insertion ordering, optimistic send lifecycle, read receipt updates, presence TTL pruning | Include out-of-order events and idempotency by `messageId`/`version`. |
 | Safe-Mode rendering | Attachment display state transitions across `nsfwBand`, overrides, and quarantine | Use matrix of user clearance vs thread requirements. |
 | Message requests | Credit gating, expiry, accept/decline transitions | Validate follow-up state (thread moves folder, credits updated). |
 | Action cards | State machine transitions for reschedule, extras, deliverables, disputes | Ensure invalid transitions throw `ACTION_INVALID_STATE` and audit payloads generated. |
 | Upload manager | Client-side lifecycle (request → signed → upload → scanning → ready), failure recovery, TTL pruning | Mock server updates for antivirus results, verify attachment linking and metadata retention. |
 | Notification queue | Quiet hour deferral, severity bypass, dedupe window, digest summaries | Test release after quiet hours and aggregated digest output for deferred items. |
-| Messaging controller | Combined inbox/thread/notification orchestration, optimistic lifecycle, subscription events | Unit tests validating unread sync, optimistic send resolution, message request acceptance, action card analytics, and digest releases. |
+| Messaging controller | Combined inbox/thread/notification orchestration, optimistic lifecycle, subscription events | Unit tests validating unread sync, optimistic send resolution, message request acceptance, filter-aware `selectInboxThreads`, action card analytics, and digest releases. |
 | Messaging client | GraphQL hydration/subscription bridge, optimistic mutation handshake, request mutations | Unit tests verifying `createMessagingClient` refreshes inbox, hydrates threads, applies mapped events, resolves/flags optimistic sends, and invokes request mutations with re-sync on failure. |
 | React bindings | `MessagingProvider` lifecycle, hook subscriptions, store updates via controller events | Use a lightweight React shim to assert auto-subscribe/cleanup behaviour and that `useInboxThreads`, `useThread`, `useInboxSummary` reflect controller changes. |
 | Next.js adapter | Server prefetch + hydration helpers, provider prop wiring | Unit tests cover `createMessagingNextAdapter.prefetch`, `createProviderProps`, and `createRuntime` to ensure inbox/thread payloads hydrate correctly and runtime clients reuse fetch/mutation hooks. |

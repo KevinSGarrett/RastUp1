@@ -85,6 +85,7 @@
 - Introduce `createMessagingController` (framework-neutral orchestrator) to combine inbox/thread/notification stores with subscription hooks for React/Next.js contexts; surface helpers for optimistic send, action cards, message requests, and quiet-hour notifications.  
 - Layer `createMessagingClient` on top of the controller to wrap GraphQL fetch/mutation/subscribe plumbing, applying `normalize*` helpers, bridging optimistic sends, and auto-refreshing inbox/thread state on transport failures.  
 - Ship `createMessagingReactBindings` (tools/frontend/messaging/react_bindings.mjs) to generate React contexts/hooks (`MessagingProvider`, `useInboxThreads`, `useThread`, etc.) while keeping the underlying controller/client framework-neutral; the Next.js façade lives under `web/components/MessagingProvider/**`.  
+- `selectThreads` / `controller.selectInboxThreads` now accept advanced filters (`onlyUnread`, `kinds`, `muted`, `safeModeRequired`, `query`, `queryMatcher`) aligning inbox UX with blueprint requirements and enabling custom search matching per surface.  
 - Provide TypeScript declaration files (`.d.ts`) once the Next.js scaffold materialises; for now, JSDoc shapes near functions for editor IntelliSense.  
 - Aim for idempotent helpers to ease unit testing in Node; mirror these in future React hooks (e.g., `useThreadState` delegates to `ThreadStore` reducers).  
 - Document event payload shapes and integration steps in `ui_flows.md` and `test_plan.md` for continuity across agents.  
@@ -95,6 +96,7 @@
 - Added UI timeline helpers (`tools/frontend/messaging/ui_helpers.mjs`) with unit coverage for Safe-Mode redaction, presence summarisation, and relative timestamp formatting.  
 - Implemented messaging inbox, thread, composer, and project panel scaffolds under `web/components/Messaging/**`, wired to the provider/hooks surface for hydration, subscriptions, optimistic sends, and action card intents.  
 - Inbox UI surfaces pinned/default/archived folders, message request handling (accept/decline/block), credit/rate-limit affordances, and configurable thread labelling hooks for downstream apps.  
+- Inbox filter/search bar layers unread/project/inquiry toggles, safe-mode gating, muted cycle states, and free-text search against thread metadata via enhanced `selectThreads` options; behaviour covered by updated inbox/controller unit suites.  
 - Thread timeline groups messages by day with Safe-Mode aware rendering, optimistic delivery statuses, attachment state pills, action card panels (controller-driven transitions), and a policy-aware composer showing nudges vs hard blocks.  
 - Project panel tabs render snapshot JSON/structured summaries for `brief`, `moodboard`, `files`, `docs`, `expenses`, and `actions`, ready for future design system styling.
 - Introduced Next.js integration utilities (`tools/frontend/messaging/next_adapter.mjs`) providing server-side prefetch + hydration helpers, and packaged a `MessagingWorkspace` layout component (`web/components/Messaging/MessagingWorkspace.tsx`) that composes provider, inbox, thread, and project panel surfaces for immediate route scaffolding.

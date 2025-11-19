@@ -71,6 +71,44 @@ test('message events update inbox unread counts and notify listeners', () => {
   assert.equal(controller.getTotalUnread(), 0);
 });
 
+test('selectInboxThreads applies filtering options', () => {
+  const controller = createMessagingController({
+    inbox: {
+      threads: [
+        {
+          threadId: 'thr-1',
+          kind: 'INQUIRY',
+          lastMessageAt: '2025-01-01T00:00:00Z',
+          metadata: { displayName: 'Buyer Bob' }
+        },
+        {
+          threadId: 'thr-2',
+          kind: 'PROJECT',
+          lastMessageAt: '2025-01-01T01:00:00Z',
+          unreadCount: 3,
+          muted: true,
+          title: 'Sunrise Project'
+        }
+      ]
+    }
+  });
+
+  const unreadProjects = controller.selectInboxThreads({ onlyUnread: true, kinds: ['PROJECT'] });
+  assert.equal(unreadProjects.length, 1);
+  assert.equal(unreadProjects[0].threadId, 'thr-2');
+
+  const searchByMetadata = controller.selectInboxThreads({ query: 'buyer' });
+  assert.equal(searchByMetadata.length, 1);
+  assert.equal(searchByMetadata[0].threadId, 'thr-1');
+
+  const customMatcher = controller.selectInboxThreads({
+    query: 'non-match',
+    queryMatcher: (thread, normalized) => thread.threadId === 'thr-2' && normalized === 'non-match'
+  });
+  assert.equal(customMatcher.length, 1);
+  assert.equal(customMatcher[0].threadId, 'thr-2');
+});
+
 test('optimistic send flows update thread without increasing unread', () => {
   const controller = createMessagingController({
     viewerUserId: 'usr_self',

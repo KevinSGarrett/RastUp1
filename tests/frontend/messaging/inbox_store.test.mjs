@@ -18,21 +18,26 @@ const baseThreads = [
     threadId: 'thr-1',
     kind: 'INQUIRY',
     lastMessageAt: '2025-11-19T04:00:00.000Z',
-    unreadCount: 0
+    unreadCount: 0,
+    metadata: { displayName: 'Client Alice' }
   },
   {
     threadId: 'thr-2',
     kind: 'PROJECT',
     lastMessageAt: '2025-11-19T05:00:00.000Z',
     unreadCount: 2,
-    pinned: true
+    pinned: true,
+    muted: true,
+    title: 'Project Sunrise'
   },
   {
     threadId: 'thr-3',
     kind: 'PROJECT',
     lastMessageAt: '2025-11-18T23:30:00.000Z',
     unreadCount: 5,
-    archived: true
+    archived: true,
+    safeModeRequired: true,
+    metadata: { displayName: 'Safety review' }
   }
 ];
 
@@ -158,4 +163,73 @@ test('selectThreads filters folders correctly', () => {
   assert.equal(selectThreads(state, { folder: 'archived' }).length, 1);
   assert.equal(selectThreads(state, { includeArchived: true }).length, 3);
   assert.equal(selectThreads(state, { folder: 'default' }).length, 2);
+});
+
+test('selectThreads applies unread and kind filters', () => {
+  const state = createInboxState({ threads: baseThreads });
+  const unreadProjects = selectThreads(state, { onlyUnread: true, kinds: ['PROJECT'] });
+  assert.equal(unreadProjects.length, 1);
+  assert.equal(unreadProjects[0].threadId, 'thr-2');
+});
+
+test('selectThreads filters by muted state', () => {
+  const state = createInboxState({ threads: baseThreads });
+  const mutedOnly = selectThreads(state, { muted: true });
+  assert.equal(mutedOnly.length, 1);
+  assert.equal(mutedOnly[0].threadId, 'thr-2');
+  const unmutedOnly = selectThreads(state, { muted: false });
+  assert.equal(unmutedOnly.length, 1);
+  assert.equal(unmutedOnly[0].threadId, 'thr-1');
+});
+
+test('selectThreads filters by safe-mode requirement', () => {
+  const state = createInboxState({ threads: baseThreads });
+  const safeModeThreads = selectThreads(state, { safeModeRequired: true, includeArchived: true });
+  assert.equal(safeModeThreads.length, 1);
+  assert.equal(safeModeThreads[0].threadId, 'thr-3');
+});
+
+test('selectThreads matches query against metadata and title', () => {
+  const state = createInboxState({ threads: baseThreads });
+  const byMetadata = selectThreads(state, { query: 'alice' });
+  assert.equal(byMetadata.length, 1);
+  assert.equal(byMetadata[0].threadId, 'thr-1');
+  const byTitle = selectThreads(state, { query: 'sunrise' });
+  assert.equal(byTitle.length, 1);
+  assert.equal(byTitle[0].threadId, 'thr-2');
+});
+
+test('selectThreads uses custom query matcher when provided', () => {
+  const state = createInboxState({ threads: baseThreads });
+  const custom = selectThreads(state, {
+    query: 'sunset',
+    queryMatcher: (thread, normalized) => thread.threadId === 'thr-2' && normalized === 'sunset'
+  });
+  assert.equal(custom.length, 1);
+  assert.equal(custom[0].threadId, 'thr-2');
+});
+
+test('selectThreads filters requests by query', () => {
+  const state = createInboxState({
+    threads: baseThreads,
+    requests: [
+      {
+        requestId: 'req-1',
+        threadId: 'thr-req',
+        creditCost: 2,
+        createdAt: '2025-11-19T07:00:00.000Z',
+        expiresAt: '2025-11-19T08:00:00.000Z'
+      },
+      {
+        requestId: 'req-2',
+        threadId: 'thr-keep',
+        creditCost: 4,
+        createdAt: '2025-11-19T07:05:00.000Z',
+        expiresAt: '2025-11-19T08:05:00.000Z'
+      }
+    ]
+  });
+  const filtered = selectThreads(state, { folder: 'requests', query: 'keep' });
+  assert.equal(filtered.length, 1);
+  assert.equal(filtered[0].threadId, 'thr-keep');
 });
