@@ -176,6 +176,13 @@
   - `node --test tests/booking/*.test.mjs` → pass (65 tests).
   - `make ci` → pass (Python booking schema + Node booking suites).
 
+## 2025-11-19 — AGENT-3 (WBS-017) Part 3
+
+- Introduced calendar GraphQL executor/data source with stub fallback under `web/lib/calendar/{dataSource,index}.mjs`, providing unified DX for availability rules, holds, external sync, and ICS feed management across server and client.
+- Implemented calendar dashboard route (`web/app/calendar/page.tsx`) and interactive client container (`web/app/calendar/CalendarDashboardClient.tsx`) wiring availability editor, calendar connect, and reschedule picker stores with persistence, telemetry, and feed generation controls.
+- Added stub data source coverage (`tests/frontend/calendar/data_source.test.mjs`) and reran calendar suite `node --test tests/frontend/calendar/*.test.mjs` → pass (22 tests).
+- `make ci` → pass (Python booking schema + Node booking suites).
+
 ## 2025-11-19 — AGENT-2 (WBS-007) Part 1
 
 - Authored initial Smart Docs persistence layer (`db/migrations/027_smart_docs.sql`) covering clause, template, pack, doc instance, signer event, and legal hold tables with retention/approval metadata.
