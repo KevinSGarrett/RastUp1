@@ -147,11 +147,13 @@
 - **Frontend wiring**  
   - `MessagingThread` composer should surface “Report message” affordances per entry, render flagged content with caution styling, and disable send when `thread.moderation.locked === true`.  
   - Add `MessagingModerationQueue` component (paginated list, severity badges, dual-approval placeholders) wired through `MessagingWorkspace` via new props `showModerationQueue`/`moderationQueueProps` with default stub data source entries.
+  - Next adapter and messaging workspace prefetch now hydrate the moderation queue when support/trust/admin roles are detected (via `x-viewer-roles` header or `MESSAGING_SHOW_MODERATION_QUEUE` flag), sharing queue cases with the client controller so the sidebar renders immediately after SSR.
 
 - **Status (2025-11-19)**  
   - Headless queue + controller/client wiring landed with deterministic reducers (`tools/frontend/messaging/moderation_queue.mjs`) and moderation helpers across controller/client/react bindings.  
   - Node tests now cover queue reducers (`tests/frontend/messaging/moderation_queue.test.mjs`), controller helpers (`controller.test.mjs`), client mutations (`client.test.mjs`), and React bindings (`react_bindings.test.mjs`) to guarantee reporting, resolve/remove, and hydrate flows behave per blueprint.
     - Dual-approval workflows implemented via `submitModerationDecision`, including queue stats for `awaitingSecond`, optimistic updates across controller/client/react bindings, and an enriched `MessagingModerationQueue` UI surfacing approvals, resolution metadata, and decision controls.
+  - `createMessagingNextAdapter` & `MessagingPage` now serialize moderation queue cases during SSR and hand them to `MessagingWorkspaceClient`, enabling server-rendered admin views to display queue contents instantly while the client refreshes asynchronously.
 
 - **Testing strategy**  
   - Unit coverage across controller/client ensuring `reportMessage` marks messages + enqueues cases, `blockThread` updates inbox filters, queue reducers remain pure.  

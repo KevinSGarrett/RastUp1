@@ -1416,3 +1416,7 @@ export function getStubInboxPayload() {
 export function getStubThreadPayload(threadId = 'stub-thread') {
   return buildStubThreadPayload(threadId);
 }
+
+export function getStubModerationQueue() {
+  return clone(STUB_MODERATION_QUEUE);
+}

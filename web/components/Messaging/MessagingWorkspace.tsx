@@ -149,14 +149,14 @@ export const MessagingWorkspace: React.FC<MessagingWorkspaceProps> = ({
               activeThreadId={activeThreadId}
               onSelectThread={handleSelectThread}
             />
-            {showNotificationCenter ? (
-              <MessagingNotificationCenter
-                {...notificationCenterProps}
-                className={`messaging-workspace__notification-center${
-                  notificationCenterProps?.className ? ` ${notificationCenterProps.className}` : ''
-                }`}
-              />
-            ) : null}
+              {showNotificationCenter ? (
+                <MessagingNotificationCenter
+                  {...notificationCenterProps}
+                  className={`messaging-workspace__notification-center${
+                    notificationCenterProps?.className ? ` ${notificationCenterProps.className}` : ''
+                  }`}
+                />
+              ) : null}
               {showModerationQueue ? (
                 <MessagingModerationQueue
                   {...moderationQueueProps}

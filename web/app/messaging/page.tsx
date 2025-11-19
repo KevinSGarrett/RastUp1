@@ -67,12 +67,44 @@ function resolveViewerUserId(): string | null {
   return null;
 }
 
+function resolveViewerRoles(): string[] {
+  try {
+    const headerStore = headers();
+    const rolesHeader =
+      headerStore.get('x-viewer-roles') ?? headerStore.get('x-viewer-role') ?? headerStore.get('x-user-roles');
+    if (rolesHeader) {
+      return rolesHeader
+        .split(',')
+        .map((entry) => entry.trim())
+        .filter(Boolean);
+    }
+  } catch {
+    // Ignored
+  }
+  if (process.env.MESSAGING_VIEWER_ROLES) {
+    return process.env.MESSAGING_VIEWER_ROLES.split(',').map((entry) => entry.trim()).filter(Boolean);
+  }
+  return [];
+}
+
+function shouldShowModerationQueue(roles: string[]): boolean {
+  const normalized = roles.map((role) => role.toLowerCase());
+  const moderationRoles = new Set(['support', 'trust_safety', 'trust-safety', 'moderator', 'admin']);
+  const flagOverride = process.env.MESSAGING_SHOW_MODERATION_QUEUE === 'true';
+  return (
+    flagOverride ||
+    normalized.some((role) => moderationRoles.has(role))
+  );
+}
+
 interface MessagingPageProps {
   searchParams?: SearchParams;
 }
 
 export default async function MessagingPage({ searchParams }: MessagingPageProps) {
   const viewerUserId = resolveViewerUserId();
+  const viewerRoles = resolveViewerRoles();
+  const showModerationQueue = shouldShowModerationQueue(viewerRoles);
   const urlSearchParams = buildSearchParams(searchParams);
 
   const parsedState = parseMessagingQueryState(urlSearchParams, {
@@ -84,7 +116,8 @@ export default async function MessagingPage({ searchParams }: MessagingPageProps
   const initialData = await messagingAdapter.prefetch({
     viewerUserId,
     threadIds,
-    includeInbox: true
+    includeInbox: true,
+    includeModerationQueue: showModerationQueue
   });
 
   return (
@@ -95,6 +128,15 @@ export default async function MessagingPage({ searchParams }: MessagingPageProps
       initialFilters={parsedState.filters}
       initialSearchTerm={parsedState.searchTerm}
       queryParamKeys={DEFAULT_QUERY_KEYS}
+      showModerationQueue={showModerationQueue}
+      moderationQueueProps={
+        showModerationQueue
+          ? {
+              title: 'Moderation queue',
+              statusFilter: undefined
+            }
+          : undefined
+      }
     />
   );
 }

@@ -1,10 +1,14 @@
 'use client';
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 
-import { MessagingProvider } from '../../components/MessagingProvider';
+import {
+  MessagingProvider,
+  useMessagingActions
+} from '../../components/MessagingProvider';
 import { MessagingWorkspaceRouteBridge } from '../../components/Messaging/MessagingWorkspaceRouteBridge';
 import type { MessagingInboxFilterState } from '../../components/Messaging/MessagingInbox';
+import type { MessagingModerationQueueProps } from '../../components/Messaging/MessagingModerationQueue';
 import { createMessagingDataSource } from '../../lib/messaging/dataSources.mjs';
 import { DEFAULT_QUERY_KEYS } from '../../../tools/frontend/messaging/filter_params.mjs';
 
@@ -13,8 +17,34 @@ type PrefetchSnapshot = {
   initialInbox: unknown;
   initialThreads: unknown[];
   initialNotifications: unknown;
+  initialModerationQueue: unknown;
   hydratedThreadIds: string[];
   errors: Array<{ scope?: string; message?: string; threadId?: string }>;
+};
+
+interface ModerationQueueHydratorProps {
+  enabled: boolean;
+}
+
+const ModerationQueueHydrator: React.FC<ModerationQueueHydratorProps> = ({ enabled }) => {
+  const actions = useMessagingActions();
+  const startedRef = useRef(false);
+
+  useEffect(() => {
+    if (!enabled || startedRef.current) {
+      return;
+    }
+    startedRef.current = true;
+
+    if (typeof actions.hydrateModerationQueue === 'function') {
+      actions
+        .hydrateModerationQueue()
+        // eslint-disable-next-line no-console
+        .catch((error) => console.error('Messaging moderation queue hydration failed', error));
+    }
+  }, [actions, enabled]);
+
+  return null;
 };
 
 export interface MessagingWorkspaceClientProps {
@@ -24,6 +54,8 @@ export interface MessagingWorkspaceClientProps {
   initialFilters: MessagingInboxFilterState;
   initialSearchTerm: string;
   queryParamKeys?: Partial<typeof DEFAULT_QUERY_KEYS>;
+  showModerationQueue?: boolean;
+  moderationQueueProps?: MessagingModerationQueueProps;
 }
 
 export const MessagingWorkspaceClient: React.FC<MessagingWorkspaceClientProps> = ({
@@ -32,7 +64,9 @@ export const MessagingWorkspaceClient: React.FC<MessagingWorkspaceClientProps> =
   initialThreadId,
   initialFilters,
   initialSearchTerm,
-  queryParamKeys
+  queryParamKeys,
+  showModerationQueue = false,
+  moderationQueueProps
 }) => {
   const dataSource = useMemo(() => createMessagingDataSource(), []);
 
@@ -47,27 +81,35 @@ export const MessagingWorkspaceClient: React.FC<MessagingWorkspaceClientProps> =
       fetchThread: dataSource.fetchThread,
       initialInbox: initialData.initialInbox ?? null,
       initialThreads: Array.isArray(initialData.initialThreads) ? initialData.initialThreads : [],
-      initialNotifications: initialData.initialNotifications ?? null
+      initialNotifications: initialData.initialNotifications ?? null,
+      initialModerationQueue: initialData.initialModerationQueue ?? null
     };
-      const uploadsConfig = {
-        createUploadSession:
-          typeof dataSource.createUploadSession === 'function'
-            ? dataSource.createUploadSession
-            : undefined,
-        completeUpload:
-          typeof dataSource.completeUpload === 'function' ? dataSource.completeUpload : undefined,
-        getUploadStatus:
-          typeof dataSource.getUploadStatus === 'function'
-            ? dataSource.getUploadStatus
-            : undefined
-      };
-      if (
-        uploadsConfig.createUploadSession ||
-        uploadsConfig.completeUpload ||
-        uploadsConfig.getUploadStatus
-      ) {
-        baseConfig.uploads = uploadsConfig;
-      }
+
+    if (typeof dataSource.fetchModerationQueue === 'function') {
+      baseConfig.fetchModerationQueue = dataSource.fetchModerationQueue;
+    }
+
+    const uploadsConfig = {
+      createUploadSession:
+        typeof dataSource.createUploadSession === 'function'
+          ? dataSource.createUploadSession
+          : undefined,
+      completeUpload:
+        typeof dataSource.completeUpload === 'function' ? dataSource.completeUpload : undefined,
+      getUploadStatus:
+        typeof dataSource.getUploadStatus === 'function'
+          ? dataSource.getUploadStatus
+          : undefined
+    };
+
+    if (
+      uploadsConfig.createUploadSession ||
+      uploadsConfig.completeUpload ||
+      uploadsConfig.getUploadStatus
+    ) {
+      baseConfig.uploads = uploadsConfig;
+    }
+
     if (typeof dataSource.subscribeInbox === 'function') {
       baseConfig.subscribeInbox = dataSource.subscribeInbox;
     }
@@ -79,14 +121,11 @@ export const MessagingWorkspaceClient: React.FC<MessagingWorkspaceClientProps> =
     }
     return baseConfig;
   }, [
-    dataSource.fetchInbox,
-    dataSource.fetchThread,
-    dataSource.subscribeInbox,
-    dataSource.subscribeThread,
-    dataSource.mutations,
+    dataSource,
     initialData.initialInbox,
-    initialData.initialThreads,
-    initialData.initialNotifications
+    initialData.initialModerationQueue,
+    initialData.initialNotifications,
+    initialData.initialThreads
   ]);
 
   const hydratedThreadIds = useMemo(() => {
@@ -103,26 +142,29 @@ export const MessagingWorkspaceClient: React.FC<MessagingWorkspaceClientProps> =
     }
   }, [initialData.errors]);
 
-    return (
-      <MessagingProvider
-        viewerUserId={viewerUserId ?? initialData.viewerUserId ?? null}
-        clientConfig={clientConfig}
-        autoStartInbox={typeof dataSource.subscribeInbox === 'function'}
-        autoRefreshInbox
-        autoSubscribeThreadIds={hydratedThreadIds}
-        onClientError={(error, context) => {
-          // eslint-disable-next-line no-console
-          console.error('Messaging client error', { error, context });
+  return (
+    <MessagingProvider
+      viewerUserId={viewerUserId ?? initialData.viewerUserId ?? null}
+      clientConfig={clientConfig}
+      autoStartInbox={typeof dataSource.subscribeInbox === 'function'}
+      autoRefreshInbox
+      autoSubscribeThreadIds={hydratedThreadIds}
+      onClientError={(error, context) => {
+        // eslint-disable-next-line no-console
+        console.error('Messaging client error', { error, context });
+      }}
+    >
+      <ModerationQueueHydrator enabled={showModerationQueue} />
+      <MessagingWorkspaceRouteBridge
+        initialThreadId={initialThreadId ?? hydratedThreadIds[0] ?? null}
+        inboxProps={{
+          defaultFilters: initialFilters,
+          initialSearch: initialSearchTerm
         }}
-      >
-        <MessagingWorkspaceRouteBridge
-          initialThreadId={initialThreadId ?? hydratedThreadIds[0] ?? null}
-          inboxProps={{
-            defaultFilters: initialFilters,
-            initialSearch: initialSearchTerm
-          }}
-          queryParamKeys={mergedQueryKeys}
-        />
-      </MessagingProvider>
-    );
+        showModerationQueue={showModerationQueue}
+        moderationQueueProps={moderationQueueProps}
+        queryParamKeys={mergedQueryKeys}
+      />
+    </MessagingProvider>
+  );
 };

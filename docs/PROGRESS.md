@@ -373,3 +373,9 @@
   - `node --test tests/frontend/**/*.test.mjs` → pass (103 subtests across frontend suites).
   - `node --test tests/booking/*.test.mjs` → pass (65 subtests).
   - `make ci` → pass (Python booking schema + Node booking suites).
+
+## 2025-11-19 — AGENT-3 (WBS-006) Part 21
+
+- Enabled moderation queue prefetch for support/admin viewers by extending `createMessagingNextAdapter`, the messaging workspace client, and Next.js page to read `x-viewer-roles` / `MESSAGING_SHOW_MODERATION_QUEUE`, hydrate cases during SSR, and surface the queue sidebar immediately.
+- Updated messaging data source helpers plus unit suites (`tests/frontend/messaging/{next_adapter,dataSources}.test.mjs`) to cover moderation queue GraphQL/stub execution alongside refreshed docs (`implementation_plan.md`, `test_plan.md`, `ui_flows.md`).
+- Regression: `node --test tests/frontend/messaging/*.test.mjs` → pass (see run artifacts); `make ci` → pass (Python booking schema + Node booking suites).

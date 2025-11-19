@@ -103,6 +103,7 @@
      - `MessagingModerationQueue` lists cases with severity badges, approval history, and resolution metadata; decision buttons call `submitModerationDecision`.
      - First reviewer approval on a dual-approval case transitions status to `AWAITING_SECOND_APPROVAL` and increments queue stats (`awaitingSecond`); second approval finalises the case and records resolution outcome (`APPROVED`, `REJECTED`, etc.).
      - Rejection or escalation decisions resolve immediately, store outcome, and clear the dual-approval requirement.
+       - `MessagingPage` inspects `x-viewer-roles` (or the `MESSAGING_SHOW_MODERATION_QUEUE` flag) to decide whether to prefetch the moderation queue via `createMessagingNextAdapter`; when enabled, queue cases are serialized during SSR so support/admin users land on an immediately populated sidebar before the client refreshes.
 
 ## 6. Notifications & Quiet Hours
 

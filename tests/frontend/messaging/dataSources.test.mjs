@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import {
   createMessagingDataSource,
   getStubInboxPayload,
+  getStubModerationQueue,
   getStubThreadPayload
 } from '../../../web/lib/messaging/dataSources.mjs';
 
@@ -16,6 +17,17 @@ test('createMessagingDataSource returns stub inbox payload when endpoint unavail
 
   const inbox = await dataSource.fetchInbox();
   assert.deepEqual(inbox, getStubInboxPayload());
+});
+
+test('fetchModerationQueue returns stub data when endpoint unavailable', async () => {
+  const dataSource = createMessagingDataSource({
+    endpoint: null,
+    fetchImpl: null,
+    useStubData: true
+  });
+
+  const queue = await dataSource.fetchModerationQueue();
+  assert.deepEqual(queue, getStubModerationQueue());
 });
 
 test('createMessagingDataSource forwards GraphQL request when endpoint provided', async () => {
@@ -70,6 +82,49 @@ test('createMessagingDataSource forwards GraphQL request when endpoint provided'
   const parsedBody = JSON.parse(requests[0].init.body);
   assert.equal(parsedBody.variables.limit, 10);
   assert.deepEqual(inbox, responsePayload.data.inbox);
+});
+
+test('fetchModerationQueue forwards GraphQL request when endpoint provided', async () => {
+  const requests = [];
+  const responsePayload = {
+    data: {
+      moderationQueue: [
+        {
+          caseId: 'case-123',
+          type: 'THREAD',
+          threadId: 'thr_graphql_1',
+          status: 'PENDING',
+          severity: 'MEDIUM',
+          reason: 'SPAM',
+          reportedBy: 'usr_support',
+          reportedAt: '2025-11-19T19:00:00Z',
+          metadata: {}
+        }
+      ]
+    }
+  };
+
+  const fetchImpl = async (url, init) => {
+    requests.push({ url, init });
+    return new Response(JSON.stringify(responsePayload), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  };
+
+  const dataSource = createMessagingDataSource({
+    endpoint: 'https://example.test/graphql',
+    fetchImpl,
+    useStubData: false
+  });
+
+  const queue = await dataSource.fetchModerationQueue({ status: 'PENDING', limit: 10 });
+
+  assert.equal(requests.length, 1);
+  const parsedBody = JSON.parse(requests[0].init.body);
+  assert.equal(parsedBody.variables.status, 'PENDING');
+  assert.equal(parsedBody.variables.limit, 10);
+  assert.deepEqual(queue.cases, responsePayload.data.moderationQueue);
 });
 
 test('createMessagingDataSource falls back to stub thread payload on failure', async () => {

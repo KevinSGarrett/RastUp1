@@ -55,6 +55,7 @@ function normalizeThreadIds(input) {
  * @param {{
  *   fetchInbox?: (args?: any) => Promise<any>;
  *   fetchThread?: (threadId: string, args?: any) => Promise<any>;
+ *   fetchModerationQueue?: (args?: any) => Promise<any>;
  *   subscribeInbox?: (handlers: { next: Function; error?: Function; complete?: Function }) => () => void;
  *   subscribeThread?: (threadId: string, handlers: { next: Function; error?: Function; complete?: Function }) => () => void;
  *   mutations?: Record<string, Function>;
@@ -63,9 +64,10 @@ function normalizeThreadIds(input) {
  * }} config
  */
 export function createMessagingNextAdapter(config = {}) {
-  const baseConfig = {
+    const baseConfig = {
     fetchInbox: config.fetchInbox,
     fetchThread: config.fetchThread,
+      fetchModerationQueue: config.fetchModerationQueue,
     subscribeInbox: config.subscribeInbox,
     subscribeThread: config.subscribeThread,
     mutations: config.mutations ?? {},
@@ -73,9 +75,10 @@ export function createMessagingNextAdapter(config = {}) {
     now: config.now
   };
 
-  function buildClient(controller, overrides = {}) {
+    function buildClient(controller, overrides = {}) {
     const fetchInbox = overrides.fetchInbox ?? baseConfig.fetchInbox;
     const fetchThread = overrides.fetchThread ?? baseConfig.fetchThread;
+      const fetchModerationQueue = overrides.fetchModerationQueue ?? baseConfig.fetchModerationQueue;
     const subscribeInbox = overrides.subscribeInbox ?? baseConfig.subscribeInbox;
     const subscribeThread = overrides.subscribeThread ?? baseConfig.subscribeThread;
     const logger = overrides.logger ?? baseConfig.logger;
@@ -85,11 +88,12 @@ export function createMessagingNextAdapter(config = {}) {
       ...(overrides.mutations ?? {})
     };
 
-    return createMessagingClient(
+      return createMessagingClient(
       removeUndefinedEntries({
         controller,
         fetchInbox,
         fetchThread,
+          fetchModerationQueue,
         subscribeInbox,
         subscribeThread,
         mutations: mergedMutations,
@@ -108,8 +112,10 @@ export function createMessagingNextAdapter(config = {}) {
    *   inboxArgs?: Record<string, any>;
    *   threadArgs?: Record<string, any>;
    *   initialNotifications?: Record<string, any>;
-   *   clientOverrides?: Parameters<typeof buildClient>[1];
+     *   clientOverrides?: Parameters<typeof buildClient>[1];
    *   failFast?: boolean;
+     *   includeModerationQueue?: boolean;
+     *   moderationQueueArgs?: Record<string, any>;
    * }} options
    */
   async function prefetch(options = {}) {
@@ -118,13 +124,15 @@ export function createMessagingNextAdapter(config = {}) {
     const threadIds = normalizeThreadIds(options.threadIds);
     const failFast = options.failFast ?? false;
     const clientOverrides = options.clientOverrides ?? {};
+      const includeModerationQueue = options.includeModerationQueue ?? false;
 
     const result = {
       viewerUserId,
       initialInbox: null,
       initialThreads: [],
       initialNotifications: options.initialNotifications ? deepClone(options.initialNotifications) : null,
-      hydratedThreadIds: [],
+        initialModerationQueue: null,
+        hydratedThreadIds: [],
       errors: []
     };
 
@@ -170,7 +178,7 @@ export function createMessagingNextAdapter(config = {}) {
         result.errors.push({ scope: 'thread', threadId, message });
         continue;
       }
-      try {
+        try {
         const normalizedThread = await client.hydrateThread(threadId, {
           ...(options.threadArgs ?? {}),
           subscribe: false,
@@ -187,6 +195,30 @@ export function createMessagingNextAdapter(config = {}) {
         });
       }
     }
+
+      if (includeModerationQueue) {
+        if (!isFunction(client?.hydrateModerationQueue)) {
+          const message = 'fetchModerationQueue is not configured for messaging adapter';
+          if (failFast) throw new Error(message);
+          result.errors.push({ scope: 'moderationQueue', message });
+        } else {
+          try {
+            await client.hydrateModerationQueue(options.moderationQueueArgs ?? {});
+            const queueCases = isFunction(controller.listModerationCases)
+              ? controller.listModerationCases()
+              : [];
+            result.initialModerationQueue = {
+              cases: deepClone(queueCases)
+            };
+          } catch (error) {
+            if (failFast) throw error;
+            result.errors.push({
+              scope: 'moderationQueue',
+              message: error?.message ?? 'Failed to hydrate moderation queue'
+            });
+          }
+        }
+      }
 
     try {
       client.dispose?.();
@@ -227,19 +259,31 @@ export function createMessagingNextAdapter(config = {}) {
     if (clientConfig.initialThreads === undefined && initialData.initialThreads) {
       clientConfig.initialThreads = deepClone(initialData.initialThreads);
     }
-    if (clientConfig.initialNotifications === undefined && initialData.initialNotifications) {
+      if (clientConfig.initialNotifications === undefined && initialData.initialNotifications) {
       clientConfig.initialNotifications = deepClone(initialData.initialNotifications);
     }
+      if (clientConfig.initialModerationQueue === undefined && initialData.initialModerationQueue) {
+        clientConfig.initialModerationQueue = deepClone(initialData.initialModerationQueue);
+      }
+
+      if (controllerOptions.moderationQueue === undefined && initialData.initialModerationQueue) {
+        controllerOptions.moderationQueue = deepClone(initialData.initialModerationQueue);
+      }
 
     const fetchInbox = clientOverrides.fetchInbox ?? baseConfig.fetchInbox;
     if (clientConfig.fetchInbox === undefined && isFunction(fetchInbox)) {
       clientConfig.fetchInbox = fetchInbox;
     }
 
-    const fetchThread = clientOverrides.fetchThread ?? baseConfig.fetchThread;
+      const fetchThread = clientOverrides.fetchThread ?? baseConfig.fetchThread;
     if (clientConfig.fetchThread === undefined && isFunction(fetchThread)) {
       clientConfig.fetchThread = fetchThread;
     }
+
+      const fetchModerationQueue = clientOverrides.fetchModerationQueue ?? baseConfig.fetchModerationQueue;
+      if (clientConfig.fetchModerationQueue === undefined && isFunction(fetchModerationQueue)) {
+        clientConfig.fetchModerationQueue = fetchModerationQueue;
+      }
 
     const subscribeInbox = clientOverrides.subscribeInbox ?? baseConfig.subscribeInbox;
     if (clientConfig.subscribeInbox === undefined && isFunction(subscribeInbox)) {
@@ -301,9 +345,12 @@ export function createMessagingNextAdapter(config = {}) {
     if (controllerConfig.threads === undefined && initialData.initialThreads) {
       controllerConfig.threads = deepClone(initialData.initialThreads);
     }
-    if (controllerConfig.notifications === undefined && initialData.initialNotifications) {
+      if (controllerConfig.notifications === undefined && initialData.initialNotifications) {
       controllerConfig.notifications = deepClone(initialData.initialNotifications);
     }
+      if (controllerConfig.moderationQueue === undefined && initialData.initialModerationQueue) {
+        controllerConfig.moderationQueue = deepClone(initialData.initialModerationQueue);
+      }
 
     const controller = createMessagingController(removeUndefinedEntries(controllerConfig));
     const client = buildClient(controller, overrides.clientOverrides ?? {});

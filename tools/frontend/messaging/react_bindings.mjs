@@ -131,7 +131,8 @@ export function createMessagingReactBindings(options = {}) {
         viewerUserId,
         inbox: controllerOptions.inbox ?? clientConfig.initialInbox,
         threads: controllerOptions.threads ?? clientConfig.initialThreads,
-        notifications: controllerOptions.notifications ?? clientConfig.initialNotifications
+        notifications: controllerOptions.notifications ?? clientConfig.initialNotifications,
+        moderationQueue: controllerOptions.moderationQueue ?? clientConfig.initialModerationQueue
       };
       controllerRef.current =
         controllerProp ?? options.createController?.(initialOptions) ?? createMessagingController(initialOptions);
