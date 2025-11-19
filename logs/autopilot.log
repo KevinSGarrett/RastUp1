@@ -1,0 +1,7 @@
+[autopilot] Starting orchestrator autopilot loop.
+
+[autopilot] === Iteration 1 ===
+[autopilot] Dispatching next task with `python -m orchestrator.cli run-next` ...
+[run-next] No unblocked todo items found.
+[autopilot] No unblocked todo items found. Stopping autopilot.
+[autopilot] Autopilot loop finished.

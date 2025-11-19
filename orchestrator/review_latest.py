@@ -21,19 +21,26 @@ MODEL_DECISIONS_PATH = ROOT / "ops" / "model-decisions.jsonl"
 class RunReport:
     path: Path
     modified_at: float
+    wbs_id: Optional[str]
 
 
 def find_latest_run_report() -> Optional[RunReport]:
     if not RUN_REPORTS_DIR.exists():
         return None
 
-    # Current structure uses flat files like 2025-11-18-WBS-021-AGENT-1.md
     candidates = [p for p in RUN_REPORTS_DIR.glob("*.md") if p.is_file()]
     if not candidates:
         return None
 
     latest = max(candidates, key=lambda p: p.stat().st_mtime)
-    return RunReport(path=latest, modified_at=latest.stat().st_mtime)
+    m = re.search(r"(WBS-\d+)", latest.name)
+    wbs_id = m.group(1) if m else None
+
+    return RunReport(
+        path=latest,
+        modified_at=latest.stat().st_mtime,
+        wbs_id=wbs_id,
+    )
 
 
 def read_text(path: Path) -> str:
@@ -44,196 +51,170 @@ def ensure_dir(path: Path) -> None:
     path.mkdir(parents=True, exist_ok=True)
 
 
-def parse_task_metadata(report_path: Path) -> Tuple[Optional[str], Optional[str]]:
+def select_model_for_review(text: str) -> Tuple[str, str]:
     """
-    Try to infer WBS task id and agent from filenames like:
-      2025-11-18-WBS-021-AGENT-1.md
+    Choose a model tier based on length + risk.
+
+    Uses env vars:
+      ORCHESTRATOR_MODEL_LOW     (default: gpt-4.1-mini)
+      ORCHESTRATOR_MODEL_MEDIUM  (default: gpt-4.1)
+      ORCHESTRATOR_MODEL_HIGH    (default: gpt-5.1)
     """
-    name = report_path.name
-    m = re.search(r"(WBS-\d+).*?(AGENT-\d+)", name)
-    if not m:
-        return None, None
-    return m.group(1), m.group(2)
+    low = os.getenv("ORCHESTRATOR_MODEL_LOW", "gpt-4.1-mini")
+    medium = os.getenv("ORCHESTRATOR_MODEL_MEDIUM", "gpt-4.1")
+    high = os.getenv("ORCHESTRATOR_MODEL_HIGH", "gpt-5.1")
 
-
-def choose_model_for_run_review(report_text: str) -> Tuple[str, str]:
-    """
-    Pick a model tier automatically based on input size and content.
-
-    You can override defaults via environment variables:
-
-      ORCHESTRATOR_MODEL
-        -> hard override (one model for everything)
-
-      ORCHESTRATOR_MODEL_LOW
-        -> light/cheap model (default: gpt-4.1-mini)
-
-      ORCHESTRATOR_MODEL_MEDIUM
-        -> balanced model   (default: gpt-4.1)
-
-      ORCHESTRATOR_MODEL_HIGH
-        -> heavy model      (default: gpt-4.1)
-    """
-    # Hard override wins.
-    forced = os.getenv("ORCHESTRATOR_MODEL")
-    if forced:
-        return forced, "forced via ORCHESTRATOR_MODEL env var"
-
-    low_model = os.getenv("ORCHESTRATOR_MODEL_LOW", "gpt-4.1-mini")
-    mid_model = os.getenv("ORCHESTRATOR_MODEL_MEDIUM", "gpt-4.1")
-    high_model = os.getenv("ORCHESTRATOR_MODEL_HIGH", "gpt-4.1")
-
-    text = report_text or ""
     length = len(text)
+    lc = text.lower()
 
-    # Base tier purely on size.
-    if length < 6000:
-        tier = "low"
-        base_reason = f"length={length} < 6000 -> low tier"
-    elif length < 20000:
-        tier = "medium"
-        base_reason = f"length={length} < 20000 -> medium tier"
-    else:
-        tier = "high"
-        base_reason = f"length={length} >= 20000 -> high tier"
-
-    # If content is clearly complex/sensitive, bump to at least medium/high.
-    lower = text.lower()
     high_keywords = (
         "security",
-        "compliance",
-        "iam",
-        "kms",
-        "encryption",
-        "schema",
-        "migration",
-        "experiment",
-        "ab test",
-        "analytics",
-        "architecture",
-        "performance",
         "privacy",
+        "pci",
+        "encryption",
+        "iam",
+        "audit",
+        "payment",
+        "stripe",
+        "dsar",
     )
-    if any(k in lower for k in high_keywords):
-        if tier == "low":
-            tier = "medium"
-            base_reason += " + bumped to medium for security/analytics/arch keywords"
-        elif tier == "medium":
-            tier = "high"
-            base_reason += " + bumped to high for security/analytics/arch keywords"
 
-    model_by_tier = {
-        "low": low_model,
-        "medium": mid_model,
-        "high": high_model,
-    }
-    return model_by_tier[tier], base_reason
-
-
-def record_model_decision(
-    run: RunReport, model: str, reason: str, task_kind: str = "run_review"
-) -> None:
-    """
-    Append a JSONL entry to ops/model-decisions.jsonl so we have a trace of
-    which model the Orchestrator used, for which run, and why.
-    """
-    ensure_dir(MODEL_DECISIONS_PATH.parent)
-    task_id, agent = parse_task_metadata(run.path)
-    now = datetime.now(timezone.utc).isoformat()
-
-    entry = {
-        "timestamp": now,
-        "actor": "ORCHESTRATOR",
-        "task_kind": task_kind,
-        "run_report": str(run.path.relative_to(ROOT)),
-        "model": model,
-        "reason": reason,
-    }
-    if task_id:
-        entry["task_id"] = task_id
-    if agent:
-        entry["agent"] = agent
-
-    with MODEL_DECISIONS_PATH.open("a", encoding="utf-8") as f:
-        f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    if any(k in lc for k in high_keywords) or length > 12000:
+        return high, "high"
+    elif length > 4000:
+        return medium, "medium"
+    else:
+        return low, "low"
 
 
 def call_openai(model: str, system_prompt: str, user_content: str) -> str:
     """
-    Call OpenAI using the OPENAI_API_KEY already exported in your shell.
+    Call OpenAI to generate an orchestrator review.
+
+    For GPT-5 / o3 / o4-mini we omit temperature to avoid the 400 error.
     """
     client = OpenAI()
 
-    response = client.chat.completions.create(
-        model=model,
-        messages=[
-            {
-                "role": "system",
-                "content": system_prompt,
-            },
-            {
-                "role": "user",
-                "content": user_content,
-            },
-        ],
-        temperature=0.1,
-    )
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_content},
+    ]
 
-    return response.choices[0].message.content or ""
+    kwargs = {
+        "model": model,
+        "messages": messages,
+    }
+
+    # Reasoning models don't support non-default temperature
+    if not (
+        model.startswith("gpt-5")
+        or model.startswith("o3")
+        or model.startswith("o4-mini")
+    ):
+        kwargs["temperature"] = 0.1
+
+    resp = client.chat.completions.create(**kwargs)
+    return (resp.choices[0].message.content or "").strip()
 
 
-def build_system_prompt() -> str:
-    return (
-        "You are the Orchestrator for a large multi-agent software project. "
-        "Given an AGENT run report, you must:\n"
-        "1) Summarize what was accomplished and what remains.\n"
-        "2) Assess quality, risks, and missing automation/tests.\n"
-        "3) Recommend follow-up tasks and whether the WBS item should "
-        "stay in progress or can be marked done.\n"
-        "4) Write in Markdown, with clear headings and bullet points.\n"
-        "5) Be strict: do NOT mark work complete if automation, CI, or tests "
-        "are missing, even if docs look good.\n"
-    )
+def log_model_decision(entry: dict) -> None:
+    MODEL_DECISIONS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    entry_with_ts = {
+        **entry,
+        "logged_at": datetime.now(timezone.utc).isoformat(),
+    }
+    with MODEL_DECISIONS_PATH.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(entry_with_ts) + "\n")
+
+
+def build_system_prompt(wbs_id: Optional[str]) -> str:
+    wbs_hint = wbs_id or "UNKNOWN"
+    return f"""
+You are the Orchestrator for a large engineering program.
+
+You will receive a single WBS run report and must:
+
+1. Summarize what was accomplished vs. what remains.
+2. Assess quality, risks, and missing automation/tests.
+3. Decide whether it's reasonable to treat this WBS as "complete for this phase"
+   or if it must remain in-progress.
+
+STRICT OUTPUT REQUIREMENT:
+
+- If you believe the work is NOT complete, you MUST include the exact sentence:
+  "Do NOT mark {wbs_hint} as complete."
+
+- If you believe the work IS complete enough to mark done for this phase, you MUST include:
+  "It is reasonable to mark {wbs_hint} as complete."
+
+Your tone should be concise and operator-friendly.
+""".strip()
+
+
+def build_user_content(run_report: RunReport, text: str) -> str:
+    return f"""Run report path: {run_report.path}
+WBS id (from filename): {run_report.wbs_id or "UNKNOWN"}
+
+=== RUN REPORT BEGIN ===
+{text}
+=== RUN REPORT END ===
+"""
+
+
+def write_review_md(run_report: RunReport, review_md: str, model: str, tier: str) -> Path:
+    ensure_dir(ORCH_REVIEWS_DIR)
+
+    ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%SZ")
+    wbs_part = run_report.wbs_id or "UNKNOWN"
+    out_path = ORCH_REVIEWS_DIR / f"orchestrator-review-{wbs_part}-{ts}.md"
+
+    header = [
+        f"> Orchestrator review generated at {ts} UTC",
+        f"> Reviewed run report: `{run_report.path.relative_to(ROOT)}`",
+        f"> WBS: {wbs_part}",
+        f"> Model: {model} (tier={tier})",
+        "",
+    ]
+
+    out_path.write_text("\n".join(header) + "\n" + review_md + "\n", encoding="utf-8")
+    return out_path
 
 
 def main() -> None:
-    ensure_dir(ORCH_REVIEWS_DIR)
-
-    run = find_latest_run_report()
-    if run is None:
-        print("[orchestrator.review_latest] No run reports found under docs/runs/")
+    run_report = find_latest_run_report()
+    if not run_report:
+        print("[orchestrator.review_latest] No run reports found; nothing to do.")
         return
 
-    print(f"[orchestrator.review_latest] Found latest run report: {run.path}")
+    text = read_text(run_report.path)
+    model, tier = select_model_for_review(text)
 
-    report_text = read_text(run.path)
-
-    # Dynamic model selection based on content/size.
-    model, reason = choose_model_for_run_review(report_text)
-    print(f"[orchestrator.review_latest] Using model: {model} ({reason})")
-
-    system_prompt = build_system_prompt()
+    print(
+        f"[orchestrator.review_latest] Found latest run report: {run_report.path}"
+    )
+    print(
+        f"[orchestrator.review_latest] Using model: {model} "
+        f"(tier={tier}, length={len(text)})"
+    )
     print("[orchestrator.review_latest] Calling OpenAI for review...")
-    review_md = call_openai(
-        model=model,
-        system_prompt=system_prompt,
-        user_content=report_text,
-    )
 
-    # Persist orchestrator review.
-    ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%SZ")
-    out_path = ORCH_REVIEWS_DIR / f"orchestrator-review-{ts}.md"
-    header = (
-        f"> Orchestrator review generated at {ts} UTC\n"
-        f"> Reviewed run report: `{run.path.relative_to(ROOT)}`\n"
-        f"> Model: {model} ({reason})\n\n"
-    )
-    out_path.write_text(header + review_md, encoding="utf-8")
+    system_prompt = build_system_prompt(run_report.wbs_id)
+    user_content = build_user_content(run_report, text)
+    review_md = call_openai(model, system_prompt, user_content)
 
-    # Log the model decision for traceability.
-    record_model_decision(run, model=model, reason=reason)
-
+    out_path = write_review_md(run_report, review_md, model, tier)
     print(f"[orchestrator.review_latest] Wrote orchestrator review to: {out_path}")
+
+    log_model_decision(
+        {
+            "source": "review_latest",
+            "model": model,
+            "tier": tier,
+            "wbs_id": run_report.wbs_id,
+            "run_report_path": str(run_report.path),
+            "review_path": str(out_path),
+        }
+    )
 
 
 if __name__ == "__main__":
