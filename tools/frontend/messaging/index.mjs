@@ -8,6 +8,7 @@ export * from './upload_manager.mjs';
 export * from './notification_queue.mjs';
 export * from './controller.mjs';
 export * from './normalizers.mjs';
+export * from './project_panel_presenter.mjs';
 export * from './client.mjs';
 export * from './react_bindings.mjs';
 export * from './ui_helpers.mjs';

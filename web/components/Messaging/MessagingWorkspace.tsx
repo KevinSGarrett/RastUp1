@@ -42,6 +42,18 @@ const ThreadRegion: React.FC<ThreadRegionProps> = ({ threadId, viewerUserId, thr
   }
 
   const threadState = useThread(threadId);
+  const threadLocale = threadProps?.locale;
+  const threadTimezone = threadProps?.timezone;
+  const {
+    locale: panelLocale,
+    timezone: panelTimezone,
+    currency: panelCurrency,
+    projectPanel: _panelProjectPanel,
+    ...restPanelProps
+  } = panelProps ?? {};
+  const projectPanelLocale = panelLocale ?? threadLocale ?? 'en-US';
+  const projectPanelTimezone = panelTimezone ?? threadTimezone ?? 'UTC';
+  const projectPanelCurrency = panelCurrency ?? 'USD';
 
   return (
     <div className="messaging-workspace__thread">
@@ -50,7 +62,13 @@ const ThreadRegion: React.FC<ThreadRegionProps> = ({ threadId, viewerUserId, thr
         viewerUserId={effectiveViewer ?? 'viewer'}
         {...threadProps}
       />
-      <ProjectPanelTabs projectPanel={threadState?.projectPanel ?? null} {...panelProps} />
+      <ProjectPanelTabs
+        projectPanel={threadState?.projectPanel ?? null}
+        locale={projectPanelLocale}
+        timezone={projectPanelTimezone}
+        currency={projectPanelCurrency}
+        {...restPanelProps}
+      />
     </div>
   );
 };

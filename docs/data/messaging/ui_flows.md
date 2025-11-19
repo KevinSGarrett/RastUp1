@@ -73,9 +73,8 @@
 5. **Expenses**
    - Display aggregated `extras`, `overtime`, `refunds` with totals pulled from `ActionCard` states; re-computed client-side each update.
   6. **Actions**
-     - List open action cards sorted by urgency (state + createdAt).  
-     - Buttons delegate to `ThreadStore.transitionActionCard(actionId, intent)` which wraps the correct mutation.
-     - `ProjectPanelTabs` (`web/components/Messaging/ProjectPanelTabs.tsx`) provides a JSON-friendly fallback renderer for tab snapshots while design system components are being built.
+      - Renders open and historical action cards using `presentProjectPanelActions`, surfacing pending badges, formatted metadata, and evidence attachments in a read-only list that mirrors the thread timeline presenter.
+      - Transition CTAs remain disabled in the project panel until design-system buttons land; actionable flows continue to live within the thread timeline via `ThreadStore.transitionActionCard`.
 
 ## 4. Presence & Typing UX
 
