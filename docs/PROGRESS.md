@@ -157,6 +157,18 @@
   - `node --test tests/booking/*.test.mjs` → pass (65 tests).
 - `make ci` → pass (Python booking schema + Node booking suites).
 
+## 2025-11-20 — AGENT-3 (WBS-006) Part 12
+
+- Extended messaging controller/client/data source/react bindings with upload pipeline support (stub GraphQL handlers, upload manager exposure, React hooks).
+- Added messaging workspace composer support for file attachments with Safe-Mode aware previews and status indicators.
+- Tests:
+  - `node --test tests/frontend/messaging/*.test.mjs`
+  - `node --test tests/frontend/**/*.test.mjs`
+  - `node --test tests/search/*.test.mjs`
+  - `python -m unittest tests.search.test_collections_json`
+  - `node --test tests/booking/*.test.mjs`
+  - `make ci`
+
 ## 2025-11-19 — AGENT-1 (WBS-015)
 
 - Authored end-to-end communications blueprint (`docs/ops/communications/communications_system.md`) covering architecture, data models, routing rules, deliverability, admin tooling, observability, and phase plan mapped to TD-0050 – TD-0056.

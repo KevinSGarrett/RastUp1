@@ -170,3 +170,35 @@ test('subscribeInbox defaults to a noop subscription when not provided', () => {
   assert.equal(typeof unsubscribe, 'function');
   unsubscribe();
 });
+
+test('createUploadSession returns stub details when no overrides provided', async () => {
+  const dataSource = createMessagingDataSource({ useStubData: true });
+  const session = await dataSource.createUploadSession('thr-upload', {
+    fileName: 'proof.png'
+  });
+  assert.ok(session.attachmentId);
+  assert.ok(session.uploadUrl.includes(session.attachmentId));
+});
+
+test('completeUpload falls back to stub ready status', async () => {
+  const dataSource = createMessagingDataSource({ useStubData: true });
+  const status = await dataSource.completeUpload('thr-upload', 'att-xyz');
+  assert.equal(status.status, 'READY');
+  assert.equal(status.attachmentId, 'att-xyz');
+});
+
+test('upload handler overrides are invoked when provided', async () => {
+  let createCalled = false;
+  const dataSource = createMessagingDataSource({
+    uploads: {
+      createUploadSession: async () => {
+        createCalled = true;
+        return { attachmentId: 'att-custom', uploadUrl: 'https://upload.custom/session' };
+      }
+    }
+  });
+
+  const session = await dataSource.createUploadSession('thr-handler', { fileName: 'doc.pdf' });
+  assert.ok(createCalled);
+  assert.equal(session.attachmentId, 'att-custom');
+});

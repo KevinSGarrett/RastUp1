@@ -46,9 +46,9 @@
      - `NUDGE`: render banner, allow send.  
      - `BLOCK`: disable send button, highlight offending text.
    - Attachments:
-     - Choose file -> request `getUploadSession()` (returns signed URL + `attachmentId`).
-     - While uploading, show `status: "UPLOADING"`.  
-     - On upload success -> call `notifyUploadComplete(attachmentId)`; timeline renders placeholder card with Safe-Mode overlay until backend marks `status: READY`.
+     - Choose file -> call `prepareUpload(threadId, { fileName, mimeType, sizeBytes, file })` which registers the upload, requests signed URL metadata, and updates composer state.
+     - While uploading, show `status: "UPLOADING"` with progress; disable send until every pending upload reports `READY`.
+     - On upload success -> `applyAttachmentStatus({ attachmentId, status: "READY" })`; timeline renders placeholder card with Safe-Mode overlay until backend marks final state.
    - Send message:
      - Compose `sendMessage` mutation with temp `clientId`.  
      - Optimistically insert `temp` message with `deliveryState: "SENDING"`.  

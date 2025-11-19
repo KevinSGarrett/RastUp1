@@ -268,7 +268,32 @@ export function createMessagingReactBindings(options = {}) {
         recordConversationStart:
           typeof client.recordConversationStart === 'function'
             ? client.recordConversationStart.bind(client)
-            : async () => {}
+            : async () => {},
+        prepareUpload: safeBind(client.prepareUpload, 'Messaging client missing prepareUpload'),
+        getUploadState:
+          typeof controller.getUploadState === 'function'
+            ? controller.getUploadState.bind(controller)
+            : () => null,
+        getUpload:
+          typeof controller.getUpload === 'function'
+            ? controller.getUpload.bind(controller)
+            : () => null,
+        listUploads:
+          typeof controller.listUploads === 'function'
+            ? controller.listUploads.bind(controller)
+            : () => [],
+        cancelUpload:
+          typeof controller.cancelUpload === 'function'
+            ? controller.cancelUpload.bind(controller)
+            : () => {},
+        applyAttachmentStatus:
+          typeof controller.applyAttachmentStatus === 'function'
+            ? controller.applyAttachmentStatus.bind(controller)
+            : () => {},
+        markUploadFailed:
+          typeof controller.markUploadFailed === 'function'
+            ? controller.markUploadFailed.bind(controller)
+            : () => {}
       };
     }, [controller, client]);
 
@@ -308,15 +333,27 @@ export function createMessagingReactBindings(options = {}) {
     return useControllerStore(controller, matcher, snapshotFactory);
   }
 
-  function useThread(threadId) {
-    if (!threadId) {
-      throw new Error('useThread requires threadId');
+    function useThread(threadId) {
+      if (!threadId) {
+        throw new Error('useThread requires threadId');
+      }
+      const { controller } = useMessaging();
+      const matcher = useMemo(() => createMatcher(['thread'], threadId), [threadId]);
+      const snapshotFactory = useMemo(() => (ctrl) => ctrl.getThreadState(threadId), [threadId]);
+      return useControllerStore(controller, matcher, snapshotFactory);
     }
-    const { controller } = useMessaging();
-    const matcher = useMemo(() => createMatcher(['thread'], threadId), [threadId]);
-    const snapshotFactory = useMemo(() => (ctrl) => ctrl.getThreadState(threadId), [threadId]);
-    return useControllerStore(controller, matcher, snapshotFactory);
-  }
+
+    function useUploads() {
+      const { controller } = useMessaging();
+      const matcher = useMemo(() => createMatcher(['uploads']), []);
+      const snapshotFactory = useMemo(
+        () =>
+          (ctrl) =>
+            typeof ctrl.getUploadState === 'function' ? ctrl.getUploadState() : null,
+        []
+      );
+      return useControllerStore(controller, matcher, snapshotFactory);
+    }
 
   function useNotifications() {
     const { controller } = useMessaging();
@@ -335,7 +372,11 @@ export function createMessagingReactBindings(options = {}) {
       recordConversationStart,
       startThreadSubscription,
       stopThreadSubscription,
-      hydrateThread
+      hydrateThread,
+      prepareUpload,
+      cancelUpload,
+      applyAttachmentStatus,
+      markUploadFailed
     } = useMessaging();
     return {
       sendMessage,
@@ -346,7 +387,11 @@ export function createMessagingReactBindings(options = {}) {
       recordConversationStart,
       startThreadSubscription,
       stopThreadSubscription,
-      hydrateThread
+      hydrateThread,
+      prepareUpload,
+      cancelUpload,
+      applyAttachmentStatus,
+      markUploadFailed
     };
   }
 
@@ -360,6 +405,7 @@ export function createMessagingReactBindings(options = {}) {
     useInboxThreads,
     useInboxSummary,
     useThread,
+      useUploads,
     useNotifications
   };
 }

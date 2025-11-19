@@ -255,3 +255,57 @@ test('action card intents update thread state and trigger analytics callback', (
   assert.equal(analyticsEvents.length, 1);
   assert.equal(analyticsEvents[0].type, 'messaging.action_card.intent');
 });
+
+test('upload manager lifecycle updates state and emits changes', () => {
+  const controller = createMessagingController();
+  const uploadChanges = [];
+  controller.subscribe((changes) => {
+    for (const change of changes) {
+      if (change.scope === 'uploads') {
+        uploadChanges.push(change);
+      }
+    }
+  });
+
+  const registered = controller.registerUpload(
+    {
+      clientId: 'upload-1',
+      fileName: 'proof.jpg',
+      mimeType: 'image/jpeg',
+      sizeBytes: 2_048_000,
+      metadata: { threadId: 'thr-42' }
+    },
+    { now: Date.parse('2025-11-20T00:00:00Z') }
+  );
+  assert.equal(registered.status, 'REQUESTED');
+
+  controller.markUploadSigned(
+    'upload-1',
+    { attachmentId: 'att-1' },
+    { now: Date.parse('2025-11-20T00:01:00Z') }
+  );
+  controller.markUploadProgress(
+    'upload-1',
+    { uploadedBytes: 1_024_000, totalBytes: 2_048_000 },
+    { now: Date.parse('2025-11-20T00:02:00Z') }
+  );
+  controller.markUploadComplete(
+    'upload-1',
+    { attachmentId: 'att-1' },
+    { now: Date.parse('2025-11-20T00:03:00Z') }
+  );
+  controller.applyAttachmentStatus(
+    { attachmentId: 'att-1', status: 'READY', nsfwBand: 1 },
+    { now: Date.parse('2025-11-20T00:04:00Z') }
+  );
+
+  const uploadState = controller.getUploadState();
+  const item = uploadState.itemsByClientId['upload-1'];
+  assert.equal(item.status, 'READY');
+  assert.equal(item.nsfwBand, 1);
+  assert.equal(item.metadata.threadId, 'thr-42');
+  assert.ok(
+    uploadChanges.some((change) => change.action === 'uploadComplete'),
+    'expected uploadComplete change'
+  );
+});

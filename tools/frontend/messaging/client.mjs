@@ -103,11 +103,157 @@ export function createMessagingClient(config = {}) {
   const subscribeInbox = config.subscribeInbox ?? null;
   const subscribeThread = config.subscribeThread ?? null;
   const mutations = config.mutations ?? {};
+  const uploadHandlers = config.uploads ?? {};
   const logger = config.logger ?? defaultLogger();
   const nowFn = typeof config.now === 'function' ? config.now : () => Date.now();
 
   let inboxUnsubscribe = null;
   const threadSubscriptions = new Map();
+
+  function ensureAttachmentId(baseId, provided) {
+    if (provided && typeof provided === 'string') {
+      return provided;
+    }
+    return `att_${baseId}`;
+  }
+
+  async function prepareUpload(threadId, descriptor = {}, optionsUpload = {}) {
+    if (!threadId) {
+      throw new Error('prepareUpload requires threadId');
+    }
+    const clientId =
+      descriptor.clientId ??
+      `upload_${nowFn().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+    const fileName = descriptor.fileName ?? descriptor.name ?? 'attachment';
+    const mimeType = descriptor.mimeType ?? descriptor.type ?? 'application/octet-stream';
+    const sizeBytes = descriptor.sizeBytes ?? descriptor.size ?? null;
+    const metadata = { ...(descriptor.metadata ?? {}), threadId };
+
+    const registerDescriptor = {
+      clientId,
+      fileName,
+      mimeType,
+      sizeBytes,
+      metadata
+    };
+    if (descriptor.checksum) {
+      registerDescriptor.checksum = descriptor.checksum;
+    }
+
+    controller.registerUpload(registerDescriptor, { now: optionsUpload.now ?? nowFn() });
+
+    let attachmentId = descriptor.attachmentId ?? null;
+    let sessionResult = null;
+
+    try {
+      if (typeof uploadHandlers.createUploadSession === 'function') {
+        sessionResult = await uploadHandlers.createUploadSession(threadId, {
+          ...registerDescriptor,
+          file: descriptor.file ?? descriptor.blob ?? null,
+          metadata
+        });
+        if (sessionResult) {
+          attachmentId = ensureAttachmentId(clientId, sessionResult.attachmentId ?? attachmentId);
+          controller.markUploadSigned(
+            clientId,
+            {
+              attachmentId,
+              uploadUrl: sessionResult.uploadUrl ?? null,
+              metadata: sessionResult.metadata ?? {}
+            },
+            { now: nowFn() }
+          );
+        }
+      } else {
+        attachmentId = ensureAttachmentId(clientId, attachmentId);
+        controller.markUploadSigned(
+          clientId,
+          { attachmentId },
+          { now: nowFn() }
+        );
+      }
+
+      if (
+        sessionResult &&
+        typeof uploadHandlers.performUpload === 'function' &&
+        sessionResult.uploadUrl
+      ) {
+        await uploadHandlers.performUpload(sessionResult, {
+          file: descriptor.file ?? descriptor.blob ?? null,
+          onProgress: (progress) => {
+            if (progress && typeof progress.uploadedBytes === 'number') {
+              controller.markUploadProgress(
+                clientId,
+                {
+                  uploadedBytes: progress.uploadedBytes,
+                  totalBytes: progress.totalBytes ?? sizeBytes ?? progress.uploadedBytes
+                },
+                { now: nowFn() }
+              );
+            }
+          }
+        });
+      } else if (descriptor.progress && typeof descriptor.progress.uploadedBytes === 'number') {
+        controller.markUploadProgress(
+          clientId,
+          {
+            uploadedBytes: descriptor.progress.uploadedBytes,
+            totalBytes: descriptor.progress.totalBytes ?? sizeBytes ?? descriptor.progress.uploadedBytes
+          },
+          { now: nowFn() }
+        );
+      }
+
+      controller.markUploadComplete(
+        clientId,
+        {
+          attachmentId,
+          checksum: descriptor.checksum ?? sessionResult?.checksum ?? null,
+          metadata
+        },
+        { now: nowFn() }
+      );
+
+      if (typeof uploadHandlers.completeUpload === 'function') {
+        const statusUpdate = await uploadHandlers.completeUpload(threadId, {
+          clientId,
+          attachmentId,
+          metadata
+        });
+        if (statusUpdate) {
+          controller.applyAttachmentStatus(
+            {
+              attachmentId,
+              status: statusUpdate.status ?? 'READY',
+              nsfwBand: statusUpdate.nsfwBand,
+              safeModeState: statusUpdate.safeModeState,
+              errorCode: statusUpdate.errorCode,
+              metadata: statusUpdate.metadata
+            },
+            { now: nowFn() }
+          );
+        }
+      } else {
+        controller.applyAttachmentStatus(
+          {
+            attachmentId,
+            status: 'READY'
+          },
+          { now: nowFn() }
+        );
+      }
+
+      return controller.getUpload(clientId);
+    } catch (error) {
+      controller.markUploadFailed(
+        clientId,
+        { errorCode: error?.code ?? error?.name ?? 'UPLOAD_FAILED' },
+        { now: nowFn() }
+      );
+      logger.error?.('messaging-client: prepareUpload failed', { error, threadId, clientId });
+      throw error;
+    }
+  }
 
   async function refreshInbox(args) {
     if (typeof fetchInbox !== 'function') {
@@ -395,6 +541,21 @@ export function createMessagingClient(config = {}) {
     startThreadSubscription,
     stopThreadSubscription,
     dispose,
+    prepareUpload,
+    getUploadState: () =>
+      (typeof controller.getUploadState === 'function' ? controller.getUploadState() : null),
+    getUpload: (clientId) =>
+      (typeof controller.getUpload === 'function' ? controller.getUpload(clientId) : null),
+    cancelUpload: (clientId, options = {}) =>
+      (typeof controller.cancelUpload === 'function' ? controller.cancelUpload(clientId, options) : null),
+    applyAttachmentStatus: (update, options = {}) =>
+      (typeof controller.applyAttachmentStatus === 'function'
+        ? controller.applyAttachmentStatus(update, options)
+        : null),
+    markUploadFailed: (clientId, details = {}, options = {}) =>
+      (typeof controller.markUploadFailed === 'function'
+        ? controller.markUploadFailed(clientId, details, options)
+        : null),
     sendMessage,
     markThreadRead,
     acceptMessageRequest,

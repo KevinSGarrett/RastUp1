@@ -1,10 +1,11 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   useMessagingActions,
   useMessagingController,
   useNotifications,
-  useThread
+  useThread,
+  useUploads
 } from '../MessagingProvider';
 import {
   formatRelativeTimestamp,
@@ -53,6 +54,11 @@ export const MessagingThread: React.FC<MessagingThreadProps> = ({
   const controller = useMessagingController();
   useNotifications(); // ensures notification context stays warm for toast pipelines
 
+  const uploadState = useUploads();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [pendingUploadIds, setPendingUploadIds] = useState<string[]>([]);
+  const [isUploadInFlight, setIsUploadInFlight] = useState(false);
+
   const [{ state: initialPolicyState, result: initialPolicyResult }] = useState(() =>
     buildPolicyResult(threadId, viewerUserId)
   );
@@ -63,6 +69,38 @@ export const MessagingThread: React.FC<MessagingThreadProps> = ({
   const [isSending, setIsSending] = useState(false);
   const [safeModeOverride, setSafeModeOverride] = useState<boolean>(
     initialSafeModeOverride ?? Boolean(threadState?.safeMode?.override)
+  );
+
+  useEffect(() => {
+    setPendingUploadIds([]);
+  }, [threadId]);
+
+  const pendingUploads = useMemo(() => {
+    if (!uploadState || !Array.isArray(uploadState.order)) {
+      return [];
+    }
+    return pendingUploadIds
+      .map((clientId) => uploadState.itemsByClientId?.[clientId])
+      .filter(Boolean) as Array<Record<string, any>>;
+  }, [uploadState, pendingUploadIds]);
+
+  const uploadsReady = useMemo(
+    () => pendingUploads.every((upload) => upload.status === 'READY'),
+    [pendingUploads]
+  );
+
+  const attachmentsForSend = useMemo(
+    () =>
+      pendingUploads
+        .filter((upload) => upload.status === 'READY')
+        .map((upload) => ({
+          attachmentId: upload.attachmentId ?? upload.clientId,
+          fileName: upload.fileName ?? upload.metadata?.fileName ?? 'attachment',
+          mimeType: upload.mimeType ?? 'application/octet-stream',
+          status: upload.status,
+          nsfwBand: upload.nsfwBand ?? 0
+        })),
+    [pendingUploads]
   );
 
   useEffect(() => {
@@ -218,6 +256,10 @@ export const MessagingThread: React.FC<MessagingThreadProps> = ({
       setComposerError('Message blocked by policy. Please revise and try again.');
       return;
     }
+    if (!uploadsReady) {
+      setComposerError('Please wait for uploads to finish before sending.');
+      return;
+    }
     const clientId = `msg_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
     setIsSending(true);
     setComposerError(null);
@@ -225,13 +267,14 @@ export const MessagingThread: React.FC<MessagingThreadProps> = ({
       await messagingActions.sendMessage(threadId, {
         clientId,
         body: trimmed,
-        attachments: [],
+        attachments: attachmentsForSend,
         authorUserId: viewerUserId
       });
       setComposerText('');
       const evaluation = evaluateWithAudit(policyState, '', { threadId, userId: viewerUserId });
       setPolicyState(evaluation.state);
       setPolicyResult(evaluation);
+      setPendingUploadIds([]);
     } catch (error) {
       const message =
         (error as Error)?.message ?? 'Failed to send message. Please retry once your connection recovers.';
@@ -239,7 +282,17 @@ export const MessagingThread: React.FC<MessagingThreadProps> = ({
     } finally {
       setIsSending(false);
     }
-  }, [composerText, messagingActions, policyResult.status, policyState, threadId, threadState, viewerUserId]);
+  }, [
+    attachmentsForSend,
+    composerText,
+    messagingActions,
+    policyResult.status,
+    policyState,
+    threadId,
+    threadState,
+    uploadsReady,
+    viewerUserId
+  ]);
 
   const handleActionCardIntent = useCallback(
     (actionId: string, intent: string) => {
@@ -250,6 +303,60 @@ export const MessagingThread: React.FC<MessagingThreadProps> = ({
       }
     },
     [controller, threadId]
+  );
+
+  const handleUploadButtonClick = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleSelectFiles = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const { files } = event.target;
+      if (!files || files.length === 0) {
+        return;
+      }
+      setComposerError(null);
+      setIsUploadInFlight(true);
+      try {
+        for (const file of Array.from(files)) {
+          try {
+            const upload = await messagingActions.prepareUpload(threadId, {
+              fileName: file.name,
+              mimeType: file.type || undefined,
+              sizeBytes: file.size,
+              file
+            });
+            if (upload?.clientId) {
+              setPendingUploadIds((previous) =>
+                previous.includes(upload.clientId) ? previous : [...previous, upload.clientId]
+              );
+            }
+          } catch (error) {
+            const message =
+              (error as Error)?.message ?? 'Failed to prepare upload. Please try again.';
+            setComposerError(message);
+          }
+        }
+      } finally {
+        setIsUploadInFlight(false);
+        if (event.target) {
+          event.target.value = '';
+        }
+      }
+    },
+    [messagingActions, threadId]
+  );
+
+  const handleRemoveUpload = useCallback(
+    (clientId: string) => {
+      setPendingUploadIds((previous) => previous.filter((id) => id !== clientId));
+      try {
+        messagingActions.cancelUpload?.(clientId);
+      } catch (error) {
+        console.warn('MessagingThread: cancelUpload failed', error);
+      }
+    },
+    [messagingActions]
   );
 
   if (!threadState) {
@@ -396,6 +503,72 @@ export const MessagingThread: React.FC<MessagingThreadProps> = ({
           </div>
         ) : null}
         {composerError ? <div className="messaging-thread__composer-error">{composerError}</div> : null}
+        <div className="messaging-thread__composer-upload">
+          <button
+            type="button"
+            className="messaging-thread__upload-button"
+            onClick={handleUploadButtonClick}
+            disabled={isUploadInFlight}
+          >
+            {isUploadInFlight ? 'Preparing…' : 'Attach files'}
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            hidden
+            onChange={handleSelectFiles}
+          />
+        </div>
+        {pendingUploads.length > 0 ? (
+          <ul className="messaging-thread__pending-uploads">
+            {pendingUploads.map((upload) => {
+              const sizeLabel =
+                typeof upload.sizeBytes === 'number'
+                  ? `${Math.round(upload.sizeBytes / 1024)} KB`
+                  : null;
+              const progress =
+                upload.progress && typeof upload.progress.totalBytes === 'number'
+                  ? Math.round(
+                      (upload.progress.uploadedBytes / upload.progress.totalBytes) * 100
+                    )
+                  : upload.status === 'READY'
+                    ? 100
+                    : null;
+              return (
+                <li
+                  key={upload.clientId}
+                  className={`messaging-thread__pending-upload messaging-thread__pending-upload--${upload.status.toLowerCase()}`}
+                >
+                  <div className="messaging-thread__pending-upload-info">
+                    <span className="messaging-thread__pending-upload-name">
+                      {upload.fileName ?? upload.metadata?.fileName ?? upload.clientId}
+                    </span>
+                    {sizeLabel ? (
+                      <span className="messaging-thread__pending-upload-size">{sizeLabel}</span>
+                    ) : null}
+                  </div>
+                  <div className="messaging-thread__pending-upload-meta">
+                    <span className="messaging-thread__pending-upload-status">{upload.status.toLowerCase()}</span>
+                    {progress !== null ? (
+                      <span className="messaging-thread__pending-upload-progress">{progress}%</span>
+                    ) : null}
+                    <button
+                      type="button"
+                      className="messaging-thread__pending-upload-remove"
+                      onClick={() => handleRemoveUpload(upload.clientId)}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        ) : null}
+        {!uploadsReady && pendingUploads.length > 0 ? (
+          <p className="messaging-thread__upload-note">Uploads processing…</p>
+        ) : null}
         <textarea
           value={composerText}
           onChange={handleComposerChange}
@@ -409,7 +582,13 @@ export const MessagingThread: React.FC<MessagingThreadProps> = ({
           <button
             type="button"
             onClick={() => void handleSendMessage()}
-            disabled={isSending || composerText.trim().length === 0 || policyResult.status === 'BLOCK'}
+            disabled={
+              isSending ||
+              isUploadInFlight ||
+              composerText.trim().length === 0 ||
+              policyResult.status === 'BLOCK' ||
+              !uploadsReady
+            }
           >
             {isSending ? 'Sending…' : 'Send'}
           </button>

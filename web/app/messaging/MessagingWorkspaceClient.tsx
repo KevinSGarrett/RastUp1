@@ -49,6 +49,25 @@ export const MessagingWorkspaceClient: React.FC<MessagingWorkspaceClientProps> =
       initialThreads: Array.isArray(initialData.initialThreads) ? initialData.initialThreads : [],
       initialNotifications: initialData.initialNotifications ?? null
     };
+      const uploadsConfig = {
+        createUploadSession:
+          typeof dataSource.createUploadSession === 'function'
+            ? dataSource.createUploadSession
+            : undefined,
+        completeUpload:
+          typeof dataSource.completeUpload === 'function' ? dataSource.completeUpload : undefined,
+        getUploadStatus:
+          typeof dataSource.getUploadStatus === 'function'
+            ? dataSource.getUploadStatus
+            : undefined
+      };
+      if (
+        uploadsConfig.createUploadSession ||
+        uploadsConfig.completeUpload ||
+        uploadsConfig.getUploadStatus
+      ) {
+        baseConfig.uploads = uploadsConfig;
+      }
     if (typeof dataSource.subscribeInbox === 'function') {
       baseConfig.subscribeInbox = dataSource.subscribeInbox;
     }

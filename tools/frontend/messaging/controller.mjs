@@ -27,6 +27,19 @@ import {
   collectDigest as collectNotificationDigestReducer,
   listPendingNotifications
 } from './notification_queue.mjs';
+import {
+  createUploadManagerState,
+  registerClientUpload,
+  markUploadSigned as markUploadSignedState,
+  markUploadProgress as markUploadProgressState,
+  markUploadComplete as markUploadCompleteState,
+  applyServerAttachmentStatus,
+  markUploadFailed as markUploadFailedState,
+  cancelUpload as cancelUploadState,
+  pruneUploads as pruneUploadsState,
+  getUpload,
+  getUploadByAttachmentId
+} from './upload_manager.mjs';
 
 function cloneNotificationState(state) {
   return {
@@ -122,6 +135,10 @@ export function createMessagingController(options = {}) {
   const logger = options.logger ?? null;
   const analytics = typeof options.onAnalyticsEvent === 'function' ? options.onAnalyticsEvent : null;
 
+  const uploadOptions =
+    options.uploads && typeof options.uploads === 'object' ? { ...options.uploads } : {};
+  let uploadState = createUploadManagerState(uploadOptions);
+
   let inboxState = createInboxState(options.inbox ?? {});
   const threadStates = new Map();
   if (Array.isArray(options.threads)) {
@@ -145,6 +162,7 @@ export function createMessagingController(options = {}) {
       inbox: inboxState,
       threads: threadStates,
       notifications: notificationState,
+      uploads: uploadState,
       viewerUserId
     };
   }
@@ -166,29 +184,45 @@ export function createMessagingController(options = {}) {
     }
   }
 
-  function updateInbox(updater, change, changes) {
-    const next = updater(inboxState);
-    if (next === inboxState) {
-      return false;
+    function updateInbox(updater, change, changes) {
+      const next = updater(inboxState);
+      if (next === inboxState) {
+        return false;
+      }
+      inboxState = next;
+      if (change) {
+        changes.push({ scope: 'inbox', ...change });
+      }
+      return true;
     }
-    inboxState = next;
-    if (change) {
-      changes.push({ scope: 'inbox', ...change });
-    }
-    return true;
-  }
 
-  function updateNotifications(updater, change, changes) {
-    const next = updater(notificationState);
-    if (next === notificationState) {
-      return false;
+    function updateNotifications(updater, change, changes) {
+      const next = updater(notificationState);
+      if (next === notificationState) {
+        return false;
+      }
+      notificationState = next;
+      if (change) {
+        changes.push({ scope: 'notifications', ...change });
+      }
+      return true;
     }
-    notificationState = next;
-    if (change) {
-      changes.push({ scope: 'notifications', ...change });
+
+    function updateUploads(updater, changes) {
+      const result = updater(uploadState);
+      if (!result || typeof result !== 'object') {
+        return false;
+      }
+      const next = result.state ?? uploadState;
+      if (next === uploadState) {
+        return false;
+      }
+      uploadState = next;
+      if (result.change) {
+        changes.push({ scope: 'uploads', ...result.change });
+      }
+      return true;
     }
-    return true;
-  }
 
   function updateThread(threadId, updater, change, changes) {
     const current = threadStates.get(threadId);
@@ -549,6 +583,245 @@ export function createMessagingController(options = {}) {
     return inboxState;
   }
 
+    function getUploadState() {
+      return uploadState;
+    }
+
+    function listUploads(filter = {}) {
+      const items = Object.values(uploadState.itemsByClientId ?? {}).map((item) => ({ ...item }));
+      if (!filter?.threadId) {
+        return items;
+      }
+      return items.filter((item) => item.metadata?.threadId === filter.threadId);
+    }
+
+    function registerUpload(descriptor, optionsUpload = {}) {
+      const changes = [];
+      let registered = null;
+      const changed = updateUploads((state) => {
+        const next = registerClientUpload(state, descriptor, optionsUpload);
+        registered = getUpload(next, descriptor.clientId);
+        return {
+          state: next,
+          change: registered
+            ? {
+                action: 'uploadRegistered',
+                clientId: registered.clientId,
+                attachmentId: registered.attachmentId ?? null,
+                status: registered.status,
+                threadId: registered.metadata?.threadId ?? null
+              }
+            : null
+        };
+      }, changes);
+      if (changed && changes.length) {
+        emit(changes);
+      }
+      return registered;
+    }
+
+    function markUploadSigned(clientId, details = {}, optionsUpload = {}) {
+      const changes = [];
+      let item = null;
+      const changed = updateUploads((state) => {
+        const next = markUploadSignedState(state, clientId, details, optionsUpload);
+        if (next === state) {
+          return { state: next, change: null };
+        }
+        item = getUpload(next, clientId);
+        return {
+          state: next,
+          change: item
+            ? {
+                action: 'uploadSigned',
+                clientId,
+                attachmentId: item.attachmentId ?? details.attachmentId ?? null,
+                status: item.status,
+                threadId: item.metadata?.threadId ?? null
+              }
+            : null
+        };
+      }, changes);
+      if (changed && changes.length) {
+        emit(changes);
+      }
+      return item;
+    }
+
+    function markUploadProgress(clientId, progress, optionsUpload = {}) {
+      const changes = [];
+      let item = null;
+      const changed = updateUploads((state) => {
+        const next = markUploadProgressState(state, clientId, progress, optionsUpload);
+        if (next === state) {
+          return { state: next, change: null };
+        }
+        item = getUpload(next, clientId);
+        return {
+          state: next,
+          change: item
+            ? {
+                action: 'uploadProgress',
+                clientId,
+                attachmentId: item.attachmentId ?? null,
+                status: item.status,
+                uploadedBytes: item.progress?.uploadedBytes ?? null,
+                totalBytes: item.progress?.totalBytes ?? null,
+                threadId: item.metadata?.threadId ?? null
+              }
+            : null
+        };
+      }, changes);
+      if (changed && changes.length) {
+        emit(changes);
+      }
+      return item;
+    }
+
+    function markUploadComplete(clientId, details = {}, optionsUpload = {}) {
+      const changes = [];
+      let item = null;
+      const changed = updateUploads((state) => {
+        const next = markUploadCompleteState(state, clientId, details, optionsUpload);
+        if (next === state) {
+          return { state: next, change: null };
+        }
+        item = getUpload(next, clientId);
+        return {
+          state: next,
+          change: item
+            ? {
+                action: 'uploadComplete',
+                clientId,
+                attachmentId: item.attachmentId ?? details.attachmentId ?? null,
+                status: item.status,
+                threadId: item.metadata?.threadId ?? null
+              }
+            : null
+        };
+      }, changes);
+      if (changed && changes.length) {
+        emit(changes);
+      }
+      return item;
+    }
+
+    function applyAttachmentStatus(update, optionsUpload = {}) {
+      const changes = [];
+      let item = null;
+      const changed = updateUploads((state) => {
+        const next = applyServerAttachmentStatus(state, update, optionsUpload);
+        if (next === state) {
+          return { state: next, change: null };
+        }
+        item = update?.attachmentId ? getUploadByAttachmentId(next, update.attachmentId) : null;
+        return {
+          state: next,
+          change: item
+            ? {
+                action: 'uploadStatus',
+                clientId: item.clientId,
+                attachmentId: item.attachmentId ?? update?.attachmentId ?? null,
+                status: item.status,
+                nsfwBand: item.nsfwBand ?? null,
+                threadId: item.metadata?.threadId ?? null
+              }
+            : null
+        };
+      }, changes);
+      if (changed && changes.length) {
+        emit(changes);
+      }
+      return item;
+    }
+
+    function markUploadFailed(clientId, details = {}, optionsUpload = {}) {
+      const changes = [];
+      let item = null;
+      const changed = updateUploads((state) => {
+        const next = markUploadFailedState(state, clientId, details, optionsUpload);
+        if (next === state) {
+          return { state: next, change: null };
+        }
+        item = getUpload(next, clientId);
+        return {
+          state: next,
+          change: item
+            ? {
+                action: 'uploadFailed',
+                clientId,
+                attachmentId: item.attachmentId ?? null,
+                status: item.status,
+                errorCode: item.errorCode ?? details.errorCode ?? null,
+                threadId: item.metadata?.threadId ?? null
+              }
+            : null
+        };
+      }, changes);
+      if (changed && changes.length) {
+        emit(changes);
+      }
+      return item;
+    }
+
+    function cancelUpload(clientId, optionsUpload = {}) {
+      const changes = [];
+      let item = null;
+      const changed = updateUploads((state) => {
+        const next = cancelUploadState(state, clientId, optionsUpload);
+        if (next === state) {
+          return { state: next, change: null };
+        }
+        item = getUpload(next, clientId);
+        return {
+          state: next,
+          change: item
+            ? {
+                action: 'uploadCancelled',
+                clientId,
+                attachmentId: item.attachmentId ?? null,
+                status: item.status,
+                threadId: item.metadata?.threadId ?? null
+              }
+            : null
+        };
+      }, changes);
+      if (changed && changes.length) {
+        emit(changes);
+      }
+      return item;
+    }
+
+    function pruneUploads(optionsPrune = {}) {
+      let removedCount = 0;
+      const changes = [];
+      const changed = updateUploads((state) => {
+        const before = new Set(state.order);
+        const next = pruneUploadsState(state, optionsPrune);
+        if (next === state) {
+          return { state, change: null };
+        }
+        const after = new Set(next.order);
+        for (const clientId of before) {
+          if (!after.has(clientId)) {
+            removedCount += 1;
+          }
+        }
+        return {
+          state: next,
+          change: {
+            action: 'uploadPruned',
+            removed: removedCount,
+            remaining: next.order.length
+          }
+        };
+      }, changes);
+      if (changed && changes.length) {
+        emit(changes);
+      }
+      return uploadState;
+    }
+
   return {
     subscribe(listener) {
       if (typeof listener !== 'function') {
@@ -591,6 +864,18 @@ export function createMessagingController(options = {}) {
     recordConversationStart,
     acceptMessageRequest,
     declineMessageRequest,
+    getUploadState,
+    listUploads,
+    getUpload: (clientId) => getUpload(uploadState, clientId),
+    getUploadByAttachmentId: (attachmentId) => getUploadByAttachmentId(uploadState, attachmentId),
+    registerUpload,
+    markUploadSigned,
+    markUploadProgress,
+    markUploadComplete,
+    applyAttachmentStatus,
+    markUploadFailed,
+    cancelUpload,
+    pruneUploads,
     getUnreadMessageIds: (threadId, userId) => {
       const thread = threadStates.get(threadId);
       if (!thread) {

@@ -297,6 +297,42 @@ const DEFAULT_GRAPHQL_MUTATIONS = Object.freeze({
   recordConversationStart: RECORD_CONVERSATION_START_MUTATION
 });
 
+function generateStubAttachmentId(threadId) {
+  return `${threadId}-upload-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+async function stubCreateUploadSession(threadId, descriptor = {}) {
+  const attachmentId = descriptor.attachmentId ?? generateStubAttachmentId(threadId ?? 'stub-thread');
+  return {
+    attachmentId,
+    uploadUrl: `https://stub-upload.example/${attachmentId}`,
+    headers: {
+      'x-stub-upload': 'true'
+    },
+    metadata: {
+      threadId,
+      fileName: descriptor.fileName ?? 'attachment.bin'
+    }
+  };
+}
+
+async function stubCompleteUpload(threadId, attachmentId) {
+  return {
+    attachmentId,
+    threadId,
+    status: 'READY',
+    nsfwBand: 0
+  };
+}
+
+async function stubGetUploadStatus(attachmentId) {
+  return {
+    attachmentId,
+    status: 'READY',
+    nsfwBand: 0
+  };
+}
+
 async function executeGraphQL(query, variables, endpoint, headers, fetchImpl, logger) {
   if (!endpoint || !fetchImpl) {
     return null;
@@ -358,6 +394,22 @@ export function createMessagingDataSource(options = {}) {
   const subscribeInboxImpl = typeof options.subscribeInbox === 'function' ? options.subscribeInbox : null;
   const subscribeThreadImpl =
     typeof options.subscribeThread === 'function' ? options.subscribeThread : null;
+
+  const uploadOverrides = options.uploads ?? {};
+  const uploadHandlers = {
+    createUploadSession:
+      typeof uploadOverrides.createUploadSession === 'function'
+        ? uploadOverrides.createUploadSession
+        : stubCreateUploadSession,
+    completeUpload:
+      typeof uploadOverrides.completeUpload === 'function'
+        ? uploadOverrides.completeUpload
+        : stubCompleteUpload,
+    getUploadStatus:
+      typeof uploadOverrides.getUploadStatus === 'function'
+        ? uploadOverrides.getUploadStatus
+        : stubGetUploadStatus
+  };
 
   function pruneUndefined(input) {
     if (!input || typeof input !== 'object') {
@@ -578,9 +630,67 @@ export function createMessagingDataSource(options = {}) {
     return buildStubThreadPayload(threadId);
   }
 
+    async function createUploadSession(threadId, descriptor = {}) {
+      if (!threadId) {
+        throw new Error('createUploadSession requires threadId');
+      }
+      try {
+        const result = await uploadHandlers.createUploadSession(threadId, descriptor);
+        if (result) {
+          return result;
+        }
+      } catch (error) {
+        logger?.warn?.('messaging data source: createUploadSession handler failed', {
+          error,
+          threadId
+        });
+      }
+      return stubCreateUploadSession(threadId, descriptor);
+    }
+
+    async function completeUpload(threadId, attachmentId, context = {}) {
+      if (!attachmentId) {
+        throw new Error('completeUpload requires attachmentId');
+      }
+      try {
+        const result = await uploadHandlers.completeUpload(threadId, attachmentId, context);
+        if (result) {
+          return result;
+        }
+      } catch (error) {
+        logger?.warn?.('messaging data source: completeUpload handler failed', {
+          error,
+          threadId,
+          attachmentId
+        });
+      }
+      return stubCompleteUpload(threadId, attachmentId);
+    }
+
+    async function getUploadStatus(attachmentId) {
+      if (!attachmentId) {
+        throw new Error('getUploadStatus requires attachmentId');
+      }
+      try {
+        const result = await uploadHandlers.getUploadStatus(attachmentId);
+        if (result) {
+          return result;
+        }
+      } catch (error) {
+        logger?.warn?.('messaging data source: getUploadStatus handler failed', {
+          error,
+          attachmentId
+        });
+      }
+      return stubGetUploadStatus(attachmentId);
+    }
+
   return {
     fetchInbox,
     fetchThread,
+    createUploadSession,
+    completeUpload,
+    getUploadStatus,
     subscribeInbox,
     subscribeThread,
     mutations: mergedMutations

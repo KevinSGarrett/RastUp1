@@ -220,3 +220,82 @@ test('acceptMessageRequest updates inbox state and calls mutation', async () => 
   const inbox = controller.getInboxState();
   assert.ok(!inbox.requestsById['req-accept'], 'request removed from inbox state');
 });
+
+test('prepareUpload registers stub upload and marks ready', async () => {
+  const controller = createMessagingController();
+  const client = createMessagingClient({ controller });
+
+  const upload = await client.prepareUpload('thr-upload', {
+    fileName: 'proof.jpg',
+    mimeType: 'image/jpeg',
+    sizeBytes: 1024
+  });
+
+  assert.ok(upload);
+  assert.equal(upload.status, 'READY');
+  const state = controller.getUploadState();
+  assert.equal(state.order.length, 1);
+  const stored = state.itemsByClientId[state.order[0]];
+  assert.equal(stored.status, 'READY');
+  assert.equal(stored.metadata.threadId, 'thr-upload');
+});
+
+test('prepareUpload leverages custom upload handlers', async () => {
+  const controller = createMessagingController();
+  const events = [];
+  const client = createMessagingClient({
+    controller,
+    uploads: {
+      createUploadSession: async (threadId, descriptor) => {
+        events.push(['session', threadId, descriptor.fileName]);
+        return {
+          attachmentId: 'att-custom',
+          uploadUrl: 'https://upload.test/custom'
+        };
+      },
+      completeUpload: async (threadId, attachmentId) => {
+        events.push(['complete', threadId, attachmentId]);
+        return {
+          attachmentId,
+          status: 'READY',
+          nsfwBand: 0
+        };
+      }
+    }
+  });
+
+  const upload = await client.prepareUpload('thr-custom', {
+    fileName: 'doc.pdf',
+    sizeBytes: 4096
+  });
+
+  assert.equal(upload.attachmentId, 'att-custom');
+  assert.equal(upload.status, 'READY');
+  assert.ok(events.find((event) => event[0] === 'session'));
+  assert.ok(events.find((event) => event[0] === 'complete'));
+});
+
+test('prepareUpload failure marks upload as failed', async () => {
+  const controller = createMessagingController();
+  const error = new Error('upload pipeline failed');
+
+  const client = createMessagingClient({
+    controller,
+    uploads: {
+      createUploadSession: async () => {
+        throw error;
+      }
+    }
+  });
+
+  await assert.rejects(
+    client.prepareUpload('thr-failure', { fileName: 'fail.bin' }),
+    /upload pipeline failed/
+  );
+
+  const state = controller.getUploadState();
+  assert.equal(state.order.length, 1);
+  const item = state.itemsByClientId[state.order[0]];
+  assert.equal(item.status, 'FAILED');
+  assert.equal(item.errorCode, 'Error');
+});
