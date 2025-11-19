@@ -288,6 +288,10 @@ export function createMessagingReactBindings(options = {}) {
               client.updateModerationQueueCase,
               'Messaging client missing updateModerationQueueCase'
             ),
+            submitModerationDecision: safeBind(
+              client.submitModerationDecision,
+              'Messaging client missing submitModerationDecision'
+            ),
             resolveModerationQueueCase: safeBind(
               client.resolveModerationQueueCase,
               'Messaging client missing resolveModerationQueueCase'
@@ -315,6 +319,7 @@ export function createMessagingReactBindings(options = {}) {
             getModerationStats: controllerBind(controller.getModerationStats, () => ({
               pending: 0,
               dualApproval: 0,
+              awaitingSecond: 0,
               resolved: 0
             })),
             listModerationCases: controllerBind(controller.listModerationCases, () => []),
@@ -426,6 +431,7 @@ export function createMessagingReactBindings(options = {}) {
         reportThread,
         hydrateModerationQueue,
         updateModerationQueueCase,
+          submitModerationDecision,
         resolveModerationQueueCase,
         removeModerationQueueCase,
       recordConversationStart,
@@ -461,6 +467,7 @@ export function createMessagingReactBindings(options = {}) {
         reportThread,
         hydrateModerationQueue,
         updateModerationQueueCase,
+        submitModerationDecision,
         resolveModerationQueueCase,
         removeModerationQueueCase,
       recordConversationStart,

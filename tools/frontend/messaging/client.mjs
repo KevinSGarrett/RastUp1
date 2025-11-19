@@ -122,6 +122,11 @@ function safeUnsubscribe(unsubscribeRef, clearFn) {
 *     blockThread?: (threadId: string, ctx?: Record<string, any>) => Promise<any>;
 *     unblockThread?: (threadId: string, ctx?: Record<string, any>) => Promise<any>;
 *     updateModerationQueueCase?: (caseId: string, patch?: Record<string, any>) => Promise<any>;
+ *     submitModerationDecision?: (
+ *       caseId: string,
+ *       decision?: Record<string, any>,
+ *       options?: Record<string, any>
+ *     ) => Promise<any>;
 *     resolveModerationQueueCase?: (caseId: string, resolution?: Record<string, any>) => Promise<any>;
 *     removeModerationQueueCase?: (caseId: string) => Promise<any>;
 *     recordConversationStart?: (ctx?: Record<string, any>) => Promise<any>;
@@ -1019,6 +1024,34 @@ export function createMessagingClient(config = {}) {
     }
   }
 
+  async function submitModerationDecisionAction(caseId, decision = {}, optionsDecision = {}) {
+    if (!caseId) {
+      throw new Error('submitModerationDecision requires caseId');
+    }
+    const previousCase =
+      typeof controller.getModerationCase === 'function' ? deepClone(controller.getModerationCase(caseId)) : null;
+    const queueSnapshot =
+      typeof controller.getModerationQueueState === 'function'
+        ? deepClone(controller.getModerationQueueState())
+        : null;
+    controller.submitModerationQueueDecision(caseId, decision, optionsDecision);
+    try {
+      if (typeof mutations.submitModerationDecision === 'function') {
+        await mutations.submitModerationDecision(caseId, decision, optionsDecision);
+      }
+      return typeof controller.getModerationCase === 'function'
+        ? controller.getModerationCase(caseId)
+        : null;
+    } catch (error) {
+      if (queueSnapshot) {
+        controller.hydrateModerationQueue(queueSnapshot);
+      } else if (previousCase) {
+        controller.updateModerationQueueCase(caseId, previousCase);
+      }
+      throw error;
+    }
+  }
+
   async function removeModerationQueueCaseAction(caseId) {
     if (!caseId) {
       throw new Error('removeModerationQueueCase requires caseId');
@@ -1096,6 +1129,7 @@ export function createMessagingClient(config = {}) {
       blockThread: blockThreadAction,
       unblockThread: unblockThreadAction,
       updateModerationQueueCase: updateModerationQueueCaseAction,
+        submitModerationDecision: submitModerationDecisionAction,
       resolveModerationQueueCase: resolveModerationQueueCaseAction,
       removeModerationQueueCase: removeModerationQueueCaseAction,
     recordConversationStart

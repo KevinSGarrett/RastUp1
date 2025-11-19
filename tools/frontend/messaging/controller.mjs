@@ -32,6 +32,7 @@ import {
   createModerationQueue,
   enqueueCase as enqueueModerationCase,
   updateCase as updateModerationCase,
+  submitDecision as submitModerationDecisionState,
   resolveCase as resolveModerationCase,
   removeCase as removeModerationCase,
   getCase as getModerationCaseFromState,
@@ -1012,6 +1013,22 @@ export function createMessagingController(options = {}) {
       return moderationQueueState;
     }
 
+    function submitModerationQueueDecision(caseId, decision = {}, optionsDecision = {}) {
+      if (!caseId) {
+        throw new Error('submitModerationQueueDecision requires caseId');
+      }
+      const changes = [];
+      updateModerationQueue(
+        (state) => submitModerationDecisionState(state, caseId, decision, optionsDecision),
+        { action: 'decision', caseId, decision },
+        changes
+      );
+      if (changes.length) {
+        emit(changes);
+      }
+      return moderationQueueState;
+    }
+
     function resolveModerationQueueCase(caseId, resolution = {}) {
       if (!caseId) {
         throw new Error('resolveModerationQueueCase requires caseId');
@@ -1364,6 +1381,7 @@ export function createMessagingController(options = {}) {
       blockThread,
       unblockThread,
       updateModerationQueueCase,
+      submitModerationQueueDecision,
       resolveModerationQueueCase,
       removeModerationQueueCase,
     getUploadState,

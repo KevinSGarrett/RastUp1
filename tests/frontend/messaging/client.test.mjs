@@ -540,3 +540,39 @@ test('resolveModerationQueueCase and removeModerationQueueCase sync controller a
   assert.equal(queueState.order.length, 0);
   assert.ok(removeCalled);
 });
+
+test('submitModerationDecision applies dual approval lifecycle through client', async () => {
+  const controller = createMessagingController({
+    moderationQueue: {
+      cases: [
+        {
+          caseId: 'case-decision',
+          status: 'PENDING',
+          severity: 'HIGH',
+          requiresDualApproval: true
+        }
+      ]
+    }
+  });
+
+  const decisionCalls = [];
+  const client = createMessagingClient({
+    controller,
+    mutations: {
+      submitModerationDecision: async (caseId, decision) => {
+        decisionCalls.push({ caseId, decision });
+      }
+    }
+  });
+
+  await client.submitModerationDecision('case-decision', { decision: 'approve', actorId: 'admin-1' });
+  let queueState = controller.getModerationQueueState();
+  assert.equal(queueState.casesById['case-decision'].status, 'AWAITING_SECOND_APPROVAL');
+  assert.equal(queueState.casesById['case-decision'].approvals.length, 1);
+
+  await client.submitModerationDecision('case-decision', { decision: 'approve', actorId: 'admin-2' });
+  queueState = controller.getModerationQueueState();
+  assert.equal(queueState.casesById['case-decision'].status, 'RESOLVED');
+  assert.equal(queueState.casesById['case-decision'].resolution.outcome, 'APPROVED');
+  assert.equal(decisionCalls.length, 2);
+});

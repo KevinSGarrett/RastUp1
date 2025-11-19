@@ -5,6 +5,7 @@ import {
   createModerationQueue,
   enqueueCase,
   updateCase,
+  submitDecision,
   resolveCase,
   removeCase,
   selectCases,
@@ -44,7 +45,7 @@ test('createModerationQueue normalizes cases and computes stats', () => {
   assert.deepEqual(queue.order, ['case-1', 'case-2']);
   assert.equal(queue.casesById['case-1'].severity, 'LOW');
   assert.equal(queue.casesById['case-2'].status, 'RESOLVED');
-  assert.deepEqual(getQueueStats(queue), { pending: 1, dualApproval: 0, resolved: 1 });
+  assert.deepEqual(getQueueStats(queue), { pending: 1, dualApproval: 0, awaitingSecond: 0, resolved: 1 });
 });
 
 test('enqueueCase adds case to front by default and updates stats', () => {
@@ -59,7 +60,7 @@ test('enqueueCase adds case to front by default and updates stats', () => {
   assert.notEqual(next, queue);
   assert.deepEqual(next.order, ['case-3', 'case-1', 'case-2']);
   assert.equal(next.casesById['case-3'].severity, 'MEDIUM');
-  assert.deepEqual(getQueueStats(next), { pending: 2, dualApproval: 1, resolved: 1 });
+  assert.deepEqual(getQueueStats(next), { pending: 2, dualApproval: 1, awaitingSecond: 0, resolved: 1 });
 });
 
 test('enqueueCase with append=true inserts at end', () => {
@@ -109,7 +110,7 @@ test('removeCase deletes case and updates stats', () => {
   const next = removeCase(queue, 'case-1');
   assert.equal(next.order.includes('case-1'), false);
   assert.equal(next.casesById['case-1'], undefined);
-  assert.deepEqual(getQueueStats(next), { pending: 0, dualApproval: 0, resolved: 1 });
+  assert.deepEqual(getQueueStats(next), { pending: 0, dualApproval: 0, awaitingSecond: 0, resolved: 1 });
 });
 
 test('selectCases filters by status, severity, type, dual approval, threadId', () => {
@@ -143,7 +144,44 @@ test('getPendingCases returns shallow copies of pending cases', () => {
 
 test('getQueueStats returns zeroed stats for empty queue', () => {
   const queue = createModerationQueue();
-  assert.deepEqual(getQueueStats(queue), { pending: 0, dualApproval: 0, resolved: 0 });
+  assert.deepEqual(getQueueStats(queue), { pending: 0, dualApproval: 0, awaitingSecond: 0, resolved: 0 });
   const empty = getQueueStats();
-  assert.deepEqual(empty, { pending: 0, dualApproval: 0, resolved: 0 });
+  assert.deepEqual(empty, { pending: 0, dualApproval: 0, awaitingSecond: 0, resolved: 0 });
+});
+
+test('submitDecision resolves single-approval cases immediately', () => {
+  const queue = createModerationQueue({
+    cases: [{ caseId: 'case-simple', status: 'pending', severity: 'medium' }]
+  });
+  const next = submitDecision(queue, 'case-simple', { decision: 'approve', actorId: 'admin-1' });
+  assert.equal(next.casesById['case-simple'].status, 'RESOLVED');
+  assert.equal(next.casesById['case-simple'].resolution.outcome, 'APPROVED');
+  assert.equal(next.casesById['case-simple'].resolution.resolvedBy, 'admin-1');
+  assert.deepEqual(getQueueStats(next), { pending: 0, dualApproval: 0, awaitingSecond: 0, resolved: 1 });
+});
+
+test('submitDecision supports dual approval workflow', () => {
+  const queue = createModerationQueue({
+    cases: [{ caseId: 'case-dual', status: 'pending', severity: 'high', requiresDualApproval: true }]
+  });
+  const firstDecision = submitDecision(queue, 'case-dual', { decision: 'approve', actorId: 'admin-1' });
+  assert.equal(firstDecision.casesById['case-dual'].status, 'AWAITING_SECOND_APPROVAL');
+  assert.equal(firstDecision.casesById['case-dual'].approvals.length, 1);
+  assert.deepEqual(getQueueStats(firstDecision), { pending: 1, dualApproval: 1, awaitingSecond: 1, resolved: 0 });
+
+  const secondDecision = submitDecision(firstDecision, 'case-dual', { decision: 'approve', actorId: 'admin-2' });
+  assert.equal(secondDecision.casesById['case-dual'].status, 'RESOLVED');
+  assert.equal(secondDecision.casesById['case-dual'].resolution.outcome, 'APPROVED');
+  assert.deepEqual(getQueueStats(secondDecision), { pending: 0, dualApproval: 0, awaitingSecond: 0, resolved: 1 });
+});
+
+test('submitDecision with rejection finalizes immediately even for dual approval', () => {
+  const queue = createModerationQueue({
+    cases: [{ caseId: 'case-reject', status: 'pending', requiresDualApproval: true }]
+  });
+  const next = submitDecision(queue, 'case-reject', { decision: 'reject', actorId: 'admin-1' });
+  assert.equal(next.casesById['case-reject'].status, 'RESOLVED');
+  assert.equal(next.casesById['case-reject'].resolution.outcome, 'REJECTED');
+  assert.equal(next.casesById['case-reject'].requiresDualApproval, false);
+  assert.deepEqual(getQueueStats(next), { pending: 0, dualApproval: 0, awaitingSecond: 0, resolved: 1 });
 });

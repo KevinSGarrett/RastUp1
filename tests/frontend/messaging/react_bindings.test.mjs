@@ -126,6 +126,7 @@ test('MessagingProvider wires client lifecycle and exposes actions', async () =>
     recordConversationStart: async () => lifecycleLog.push('recordConversationStart'),
     reportMessage: async () => lifecycleLog.push('reportMessage'),
     reportThread: async () => lifecycleLog.push('reportThread'),
+      submitModerationDecision: async () => lifecycleLog.push('submitModerationDecision'),
     resolveModerationQueueCase: async () => lifecycleLog.push('resolveModerationQueueCase'),
     removeModerationQueueCase: async () => lifecycleLog.push('removeModerationQueueCase'),
     hydrateModerationQueue: async () => lifecycleLog.push('hydrateModerationQueue'),
@@ -166,6 +167,7 @@ test('MessagingProvider wires client lifecycle and exposes actions', async () =>
   await actions.hydrateModerationQueue();
   await actions.reportMessage('thr-1', 'msg-1', { reason: 'SPAM' });
   await actions.reportThread('thr-1', { reason: 'ABUSE' });
+    await actions.submitModerationDecision('case-1', { decision: 'APPROVE' });
   await actions.resolveModerationQueueCase('case-1', { outcome: 'CLEARED' });
   await actions.removeModerationQueueCase('case-1');
   const notificationStateResult = actions.enqueueNotification({
@@ -189,6 +191,10 @@ test('MessagingProvider wires client lifecycle and exposes actions', async () =>
 
   assert.ok(lifecycleLog.includes('reportMessage'), 'expected reportMessage action to call client');
   assert.ok(lifecycleLog.includes('reportThread'), 'expected reportThread action to call client');
+  assert.ok(
+    lifecycleLog.includes('submitModerationDecision'),
+    'expected submit decision action to call client'
+  );
   assert.ok(lifecycleLog.includes('resolveModerationQueueCase'), 'expected resolve case action to call client');
   assert.ok(lifecycleLog.includes('removeModerationQueueCase'), 'expected remove case action to call client');
   assert.ok(lifecycleLog.includes('hydrateModerationQueue'), 'expected hydrate queue action to call client');

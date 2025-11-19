@@ -337,6 +337,19 @@
   - `node --test tests/booking/*.test.mjs`
   - `make ci`
 
+## 2025-11-19 — AGENT-3 (WBS-006) Part 20
+
+- Implemented dual-approval moderation workflow via `submitModerationDecision`, updating controller/client/react bindings and moderation queue stats (`awaitingSecond`) while keeping queue transitions deterministic.
+- Enhanced `MessagingModerationQueue` with approval history, resolution metadata, decision controls, and dual-approval indicators aligned with the new helper.
+- Expanded Node unit coverage for queue/controller/client/react bindings to validate dual-approval flows and UI wiring; refreshed messaging docs to capture the new workflow.
+- Tests:
+  - `node --test tests/frontend/messaging/*.test.mjs`
+  - `node --test tests/frontend/**/*.test.mjs`
+  - `node --test tests/search/*.test.mjs`
+  - `python -m unittest tests.search.test_collections_json`
+  - `node --test tests/booking/*.test.mjs`
+  - `make ci`
+
 ## 2025-11-20 — AGENT-3 (WBS-006) Part 11
 
 - Extended `web/lib/messaging/dataSources.mjs` with GraphQL-aware messaging mutations (send, mark read, message requests) plus configurable subscription hooks while preserving Safe-Mode stub fallbacks, and wired the new runtime into `MessagingWorkspaceClient.tsx` so workspace actions operate in Next.js.

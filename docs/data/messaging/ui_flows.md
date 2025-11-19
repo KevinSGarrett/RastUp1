@@ -99,6 +99,10 @@
    - Toggle updates `safeModeOverride` context; re-render attachments calling `safeMode.presentAttachment()`.
 4. **Quarantine resolution**
    - If upload flagged (`status: QUARANTINED`), show admin status pill; allow user to view reason once backend clears.
+  5. **Dual approval queue**
+     - `MessagingModerationQueue` lists cases with severity badges, approval history, and resolution metadata; decision buttons call `submitModerationDecision`.
+     - First reviewer approval on a dual-approval case transitions status to `AWAITING_SECOND_APPROVAL` and increments queue stats (`awaitingSecond`); second approval finalises the case and records resolution outcome (`APPROVED`, `REJECTED`, etc.).
+     - Rejection or escalation decisions resolve immediately, store outcome, and clear the dual-approval requirement.
 
 ## 6. Notifications & Quiet Hours
 

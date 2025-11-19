@@ -1,9 +1,21 @@
 import React, { useMemo, useState } from 'react';
 
-import {
-  useMessagingActions,
-  useModerationQueue
-} from '../MessagingProvider';
+import { useMessagingActions, useModerationQueue } from '../MessagingProvider';
+
+type ModerationApproval = {
+  actorId?: string;
+  actorRole?: string;
+  decision?: string;
+  notes?: string;
+  decidedAt?: string;
+};
+
+type ModerationResolution = {
+  outcome?: string;
+  notes?: string;
+  resolvedBy?: string;
+  resolvedAt?: string;
+};
 
 type ModerationCase = {
   caseId: string;
@@ -16,7 +28,37 @@ type ModerationCase = {
   reportedBy?: string;
   reportedAt?: string;
   metadata?: Record<string, any>;
-  resolution?: Record<string, any>;
+  approvals?: ModerationApproval[];
+  requiresDualApproval?: boolean;
+  resolution?: ModerationResolution | null;
+};
+
+type DecisionOption = {
+  value: string;
+  label: string;
+  intent?: 'primary' | 'danger' | 'secondary';
+  description?: string;
+};
+
+const DEFAULT_DECISION_OPTIONS: DecisionOption[] = [
+  { value: 'APPROVE', label: 'Approve', intent: 'primary' },
+  { value: 'REJECT', label: 'Reject', intent: 'danger' }
+];
+
+const formatTimestamp = (input?: string) => {
+  if (!input) {
+    return null;
+  }
+  const date = new Date(input);
+  if (Number.isNaN(date.getTime())) {
+    return input;
+  }
+  return date.toLocaleString();
+};
+
+const decisionClassName = (intent?: DecisionOption['intent']) => {
+  const suffix = intent ? intent.toLowerCase() : 'primary';
+  return `messaging-moderation-queue__decision messaging-moderation-queue__decision--${suffix}`;
 };
 
 interface MessagingModerationQueueProps {
@@ -25,8 +67,10 @@ interface MessagingModerationQueueProps {
   statusFilter?: string;
   severityFilter?: string;
   emptyState?: React.ReactNode;
+  decisionOptions?: DecisionOption[];
   onResolveCase?: (moderationCase: ModerationCase) => Promise<void> | void;
   onRemoveCase?: (moderationCase: ModerationCase) => Promise<void> | void;
+  onSubmitDecision?: (moderationCase: ModerationCase, decision: string) => Promise<void> | void;
 }
 
 export const MessagingModerationQueue: React.FC<MessagingModerationQueueProps> = ({
@@ -35,16 +79,28 @@ export const MessagingModerationQueue: React.FC<MessagingModerationQueueProps> =
   statusFilter,
   severityFilter,
   emptyState = <p className="messaging-moderation-queue__empty">No moderation cases pending review.</p>,
+  decisionOptions,
   onResolveCase,
-  onRemoveCase
+  onRemoveCase,
+  onSubmitDecision
 }) => {
   const [resolvingCaseId, setResolvingCaseId] = useState<string | null>(null);
   const [removingCaseId, setRemovingCaseId] = useState<string | null>(null);
+  const [decidingKey, setDecidingKey] = useState<string | null>(null);
   const moderationState = useModerationQueue((state) => state);
   const messagingActions = useMessagingActions();
 
+  const normalizedDecisionOptions = useMemo(() => {
+    const options = (decisionOptions ?? DEFAULT_DECISION_OPTIONS).filter(
+      (option): option is DecisionOption => Boolean(option?.value && option?.label)
+    );
+    return options.length > 0 ? options : DEFAULT_DECISION_OPTIONS;
+  }, [decisionOptions]);
+
+  const canSubmitDecision = Boolean(onSubmitDecision || messagingActions.submitModerationDecision);
+
   const cases = useMemo(() => {
-    if (!moderationState || !moderationState.order) {
+    if (!moderationState?.order) {
       return [];
     }
     return moderationState.order
@@ -60,6 +116,24 @@ export const MessagingModerationQueue: React.FC<MessagingModerationQueueProps> =
         return true;
       });
   }, [moderationState, statusFilter, severityFilter]);
+
+  const handleDecision = async (moderationCase: ModerationCase, decisionValue: string) => {
+    if (!moderationCase?.caseId || !decisionValue) {
+      return;
+    }
+    setDecidingKey(`${moderationCase.caseId}:${decisionValue}`);
+    try {
+      if (onSubmitDecision) {
+        await onSubmitDecision(moderationCase, decisionValue);
+      } else {
+        await messagingActions.submitModerationDecision?.(moderationCase.caseId, { decision: decisionValue });
+      }
+    } catch (error) {
+      console.error('MessagingModerationQueue: submitDecision failed', error);
+    } finally {
+      setDecidingKey(null);
+    }
+  };
 
   const handleResolve = async (moderationCase: ModerationCase) => {
     if (!moderationCase?.caseId) {
@@ -107,6 +181,7 @@ export const MessagingModerationQueue: React.FC<MessagingModerationQueueProps> =
         {moderationState?.stats ? (
           <div className="messaging-moderation-queue__stats">
             <span>Pending: {moderationState.stats.pending ?? 0}</span>
+            <span>Awaiting second: {moderationState.stats.awaitingSecond ?? 0}</span>
             <span>Dual approval: {moderationState.stats.dualApproval ?? 0}</span>
             <span>Resolved: {moderationState.stats.resolved ?? 0}</span>
           </div>
@@ -116,66 +191,170 @@ export const MessagingModerationQueue: React.FC<MessagingModerationQueueProps> =
         emptyState
       ) : (
         <ul className="messaging-moderation-queue__list">
-          {cases.map((entry) => (
-            <li key={entry.caseId} className="messaging-moderation-queue__item">
-              <div className="messaging-moderation-queue__item-summary">
-                <span className={`messaging-moderation-queue__badge messaging-moderation-queue__badge--${(entry.severity ?? 'medium').toLowerCase()}`}>
-                  {entry.severity ?? 'MEDIUM'}
-                </span>
-                <span className="messaging-moderation-queue__case-id">{entry.caseId}</span>
-                <span className="messaging-moderation-queue__case-type">{entry.type ?? 'THREAD'}</span>
-                <span className="messaging-moderation-queue__case-status">{entry.status ?? 'PENDING'}</span>
-              </div>
-              <dl className="messaging-moderation-queue__meta">
-                {entry.reason ? (
-                  <>
-                    <dt>Reason</dt>
-                    <dd>{entry.reason}</dd>
-                  </>
-                ) : null}
-                {entry.threadId ? (
-                  <>
-                    <dt>Thread</dt>
-                    <dd>{entry.threadId}</dd>
-                  </>
-                ) : null}
-                {entry.messageId ? (
-                  <>
-                    <dt>Message</dt>
-                    <dd>{entry.messageId}</dd>
-                  </>
-                ) : null}
-                {entry.reportedBy ? (
-                  <>
-                    <dt>Reported by</dt>
-                    <dd>{entry.reportedBy}</dd>
-                  </>
-                ) : null}
-                {entry.reportedAt ? (
-                  <>
-                    <dt>Reported at</dt>
-                    <dd>{new Date(entry.reportedAt).toLocaleString()}</dd>
-                  </>
-                ) : null}
-              </dl>
-              <div className="messaging-moderation-queue__actions">
-                <button
-                  type="button"
-                  onClick={() => void handleResolve(entry)}
-                  disabled={resolvingCaseId === entry.caseId}
-                >
-                  {resolvingCaseId === entry.caseId ? 'Resolving…' : 'Resolve'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void handleRemove(entry)}
-                  disabled={removingCaseId === entry.caseId}
-                >
-                  {removingCaseId === entry.caseId ? 'Removing…' : 'Remove'}
-                </button>
-              </div>
-            </li>
-          ))}
+          {cases.map((entry) => {
+            const status = (entry.status ?? 'PENDING').toUpperCase();
+            const isResolved = status === 'RESOLVED';
+            const awaitingSecond = status === 'AWAITING_SECOND_APPROVAL';
+            const reportedAtLabel = formatTimestamp(entry.reportedAt);
+            const decisionInFlight = decidingKey?.startsWith(`${entry.caseId}:`) ?? false;
+            const resolving = resolvingCaseId === entry.caseId;
+            const removing = removingCaseId === entry.caseId;
+            const resolveDisabled = isResolved || resolving || decisionInFlight;
+            const removeDisabled = removing || decisionInFlight;
+            const resolutionTimestamp = entry.resolution ? formatTimestamp(entry.resolution.resolvedAt) : null;
+            return (
+              <li key={entry.caseId} className="messaging-moderation-queue__item">
+                <div className="messaging-moderation-queue__item-summary">
+                  <span
+                    className={`messaging-moderation-queue__badge messaging-moderation-queue__badge--${(entry.severity ?? 'medium').toLowerCase()}`}
+                  >
+                    {entry.severity ?? 'MEDIUM'}
+                  </span>
+                  <span className="messaging-moderation-queue__case-id">{entry.caseId}</span>
+                  <span className="messaging-moderation-queue__case-type">{entry.type ?? 'THREAD'}</span>
+                  <span className="messaging-moderation-queue__case-status">{status}</span>
+                  {entry.requiresDualApproval ? (
+                    <span className="messaging-moderation-queue__badge messaging-moderation-queue__badge--dual">
+                      Dual approval
+                    </span>
+                  ) : null}
+                </div>
+                <dl className="messaging-moderation-queue__meta">
+                  {entry.reason ? (
+                    <>
+                      <dt>Reason</dt>
+                      <dd>{entry.reason}</dd>
+                    </>
+                  ) : null}
+                  {entry.threadId ? (
+                    <>
+                      <dt>Thread</dt>
+                      <dd>{entry.threadId}</dd>
+                    </>
+                  ) : null}
+                  {entry.messageId ? (
+                    <>
+                      <dt>Message</dt>
+                      <dd>{entry.messageId}</dd>
+                    </>
+                  ) : null}
+                  {entry.reportedBy ? (
+                    <>
+                      <dt>Reported by</dt>
+                      <dd>{entry.reportedBy}</dd>
+                    </>
+                  ) : null}
+                  {reportedAtLabel ? (
+                    <>
+                      <dt>Reported at</dt>
+                      <dd>
+                        <time dateTime={entry.reportedAt}>{reportedAtLabel}</time>
+                      </dd>
+                    </>
+                  ) : null}
+                  {entry.requiresDualApproval ? (
+                    <>
+                      <dt>Dual approval</dt>
+                      <dd>{awaitingSecond ? 'Awaiting secondary reviewer' : 'Required'}</dd>
+                    </>
+                  ) : null}
+                  {Array.isArray(entry.approvals) && entry.approvals.length > 0 ? (
+                    <>
+                      <dt>Approvals</dt>
+                      <dd>
+                        <ul className="messaging-moderation-queue__approvals">
+                          {entry.approvals.map((approval, index) => {
+                            const approvalKey = `${entry.caseId}-${approval.actorId ?? index}-${approval.decidedAt ?? index}`;
+                            const approvalTimestamp = formatTimestamp(approval.decidedAt);
+                            return (
+                              <li key={approvalKey} className="messaging-moderation-queue__approval">
+                                <span
+                                  className={`messaging-moderation-queue__approval-decision messaging-moderation-queue__approval-decision--${(approval.decision ?? 'unknown').toLowerCase()}`}
+                                >
+                                  {approval.decision ?? 'UNKNOWN'}
+                                </span>
+                                {approval.actorId ? (
+                                  <span className="messaging-moderation-queue__approval-actor">{approval.actorId}</span>
+                                ) : null}
+                                {approvalTimestamp ? (
+                                  <time
+                                    dateTime={approval.decidedAt}
+                                    className="messaging-moderation-queue__approval-time"
+                                  >
+                                    {approvalTimestamp}
+                                  </time>
+                                ) : null}
+                                {approval.notes ? (
+                                  <span className="messaging-moderation-queue__approval-notes">{approval.notes}</span>
+                                ) : null}
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </dd>
+                    </>
+                  ) : null}
+                  {entry.resolution ? (
+                    <>
+                      <dt>Resolution</dt>
+                      <dd>
+                        <span
+                          className={`messaging-moderation-queue__resolution-outcome messaging-moderation-queue__resolution-outcome--${(entry.resolution.outcome ?? 'resolved').toLowerCase()}`}
+                        >
+                          {entry.resolution.outcome ?? 'RESOLVED'}
+                        </span>
+                        {entry.resolution.resolvedBy ? (
+                          <span className="messaging-moderation-queue__resolution-actor">
+                            {entry.resolution.resolvedBy}
+                          </span>
+                        ) : null}
+                        {resolutionTimestamp ? (
+                          <time
+                            dateTime={entry.resolution.resolvedAt ?? undefined}
+                            className="messaging-moderation-queue__resolution-time"
+                          >
+                            {resolutionTimestamp}
+                          </time>
+                        ) : null}
+                        {entry.resolution.notes ? (
+                          <span className="messaging-moderation-queue__resolution-notes">{entry.resolution.notes}</span>
+                        ) : null}
+                      </dd>
+                    </>
+                  ) : null}
+                </dl>
+                <div className="messaging-moderation-queue__actions">
+                  {!isResolved && canSubmitDecision && normalizedDecisionOptions.length > 0 ? (
+                    <div className="messaging-moderation-queue__decision-group">
+                      {normalizedDecisionOptions.map((option) => {
+                        const key = `${entry.caseId}:${option.value}`;
+                        const buttonInFlight = decidingKey === key;
+                        const decisionDisabled = (decisionInFlight && !buttonInFlight) || resolving || removing;
+                        return (
+                          <button
+                            key={key}
+                            type="button"
+                            className={decisionClassName(option.intent)}
+                            onClick={() => void handleDecision(entry, option.value)}
+                            disabled={decisionDisabled}
+                            title={option.description}
+                          >
+                            {buttonInFlight ? `Submitting ${option.label}…` : option.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                  <button type="button" onClick={() => void handleResolve(entry)} disabled={resolveDisabled}>
+                    {isResolved ? 'Resolved' : resolving ? 'Resolving…' : 'Resolve'}
+                  </button>
+                  <button type="button" onClick={() => void handleRemove(entry)} disabled={removeDisabled}>
+                    {removing ? 'Removing…' : 'Remove'}
+                  </button>
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
     </section>

@@ -157,26 +157,72 @@ function cloneState(state) {
 function computeStats(casesById) {
   let pending = 0;
   let dualApproval = 0;
+  let awaitingSecond = 0;
   let resolved = 0;
   for (const entry of Object.values(casesById)) {
     if (!entry) continue;
     const status = entry.status ?? 'PENDING';
     if (status === 'RESOLVED') {
       resolved += 1;
-    } else {
-      pending += 1;
-      if (entry.requiresDualApproval) {
-        dualApproval += 1;
-      }
+      continue;
+    }
+    pending += 1;
+    if (entry.requiresDualApproval) {
+      dualApproval += 1;
+    }
+    if (status === 'AWAITING_SECOND_APPROVAL') {
+      awaitingSecond += 1;
     }
   }
-  return { pending, dualApproval, resolved };
+  return { pending, dualApproval, awaitingSecond, resolved };
 }
 
 function updateStats(state) {
   state.stats = computeStats(state.casesById);
   state.lastUpdatedAt = Date.now();
   return state;
+}
+
+function mapDecisionOutcome(decision) {
+  if (typeof decision !== 'string') {
+    return null;
+  }
+  const normalized = decision.trim().toUpperCase();
+  switch (normalized) {
+    case 'APPROVE':
+    case 'APPROVED':
+      return 'APPROVED';
+    case 'REJECT':
+    case 'REJECTED':
+    case 'DENY':
+    case 'DENIED':
+      return 'REJECTED';
+    case 'ESCALATE':
+    case 'ESCALATED':
+      return 'ESCALATED';
+    case 'OVERRIDE':
+    case 'OVERRIDDEN':
+      return 'OVERRIDDEN';
+    default:
+      return normalized;
+  }
+}
+
+function countUniqueApprovals(approvals = []) {
+  const seen = new Set();
+  for (const entry of approvals) {
+    if (!entry) continue;
+    if (entry.actorId) {
+      seen.add(entry.actorId);
+      continue;
+    }
+    if (entry.decision && entry.decidedAt) {
+      seen.add(`${entry.decision}:${entry.decidedAt}`);
+      continue;
+    }
+    seen.add(JSON.stringify(entry));
+  }
+  return seen.size;
 }
 
 /**
@@ -196,7 +242,7 @@ export function createModerationQueue(input = {}) {
   return updateStats({
     casesById,
     order,
-    stats: { pending: 0, dualApproval: 0, resolved: 0 },
+    stats: { pending: 0, dualApproval: 0, awaitingSecond: 0, resolved: 0 },
     lastUpdatedAt: Date.now()
   });
 }
@@ -276,6 +322,82 @@ export function updateCase(state, caseId, patch = {}) {
 }
 
 /**
+ * Records an approval/decision for a moderation case.
+ * @param {ReturnType<typeof createModerationQueue>} state
+ * @param {string} caseId
+ * @param {{ actorId?: string; decision?: string; notes?: string; actorRole?: string; decidedAt?: string|Date }} decisionInput
+ * @param {{ requiredApprovals?: number }} [options]
+ */
+export function submitDecision(state, caseId, decisionInput = {}, options = {}) {
+  if (!caseId || !state.casesById?.[caseId]) {
+    return state;
+  }
+  const normalizedDecision = normalizeDecision(decisionInput);
+  if (!normalizedDecision) {
+    return state;
+  }
+  const next = cloneState(state);
+  const entry = next.casesById[caseId];
+  const approvals = Array.isArray(entry.approvals) ? [...entry.approvals] : [];
+  const decidedAtIso =
+    normalizedDecision.decidedAt ?? (decisionInput.decidedAt ? toIso(decisionInput.decidedAt) : toIso(Date.now()));
+  const sanitizedDecision = {
+    ...normalizedDecision,
+    notes:
+      normalizedDecision.notes ?? (typeof decisionInput.notes === 'string' ? decisionInput.notes : null),
+    decidedAt: decidedAtIso
+  };
+  const existingIndex = approvals.findIndex(
+    (item) => item?.actorId && sanitizedDecision.actorId && item.actorId === sanitizedDecision.actorId
+  );
+  if (existingIndex >= 0) {
+    approvals[existingIndex] = sanitizedDecision;
+  } else {
+    approvals.push(sanitizedDecision);
+  }
+  entry.approvals = approvals;
+  entry.lastUpdatedAt = decidedAtIso;
+
+  const outcome = mapDecisionOutcome(sanitizedDecision.decision);
+  const isTerminalOutcome =
+    outcome === 'REJECTED' || outcome === 'ESCALATED' || outcome === 'OVERRIDDEN' || outcome === 'BLOCKED';
+  const requiredApprovals =
+    typeof options.requiredApprovals === 'number' && options.requiredApprovals > 0 ? options.requiredApprovals : 2;
+  const approvalCount = countUniqueApprovals(approvals);
+
+  const finalize = (finalOutcome) => {
+    const resolvedOutcome = finalOutcome ?? 'RESOLVED';
+    entry.status = 'RESOLVED';
+    entry.requiresDualApproval = false;
+    entry.resolution = {
+      outcome: resolvedOutcome,
+      notes: sanitizedDecision.notes ?? null,
+      resolvedBy: sanitizedDecision.actorId ?? null,
+      resolvedAt: decidedAtIso
+    };
+    next.order = next.order.filter((id) => id !== caseId);
+    next.order.push(caseId);
+  };
+
+  if (isTerminalOutcome) {
+    finalize(outcome);
+  } else if (entry.requiresDualApproval) {
+    if (approvalCount >= requiredApprovals) {
+      finalize(outcome ?? 'APPROVED');
+    } else {
+      entry.status = 'AWAITING_SECOND_APPROVAL';
+      entry.resolution = null;
+      next.order = next.order.filter((id) => id !== caseId);
+      next.order.unshift(caseId);
+    }
+  } else {
+    finalize(outcome ?? 'APPROVED');
+  }
+
+  return updateStats(next);
+}
+
+/**
  * Marks a case as resolved.
  * @param {ReturnType<typeof createModerationQueue>} state
  * @param {string} caseId
@@ -301,7 +423,8 @@ export function resolveCase(state, caseId, resolution = {}) {
     ...current,
     status: 'RESOLVED',
     lastUpdatedAt: normalizedResolution.resolvedAt ?? toIso(Date.now()),
-    resolution: normalizedResolution
+    resolution: normalizedResolution,
+    requiresDualApproval: false
   };
   next.order = next.order.filter((id) => id !== caseId);
   next.order.push(caseId);
@@ -393,5 +516,5 @@ export function getPendingCases(state) {
  * @param {ReturnType<typeof createModerationQueue>} state
  */
 export function getQueueStats(state) {
-  return state?.stats ? { ...state.stats } : { pending: 0, dualApproval: 0, resolved: 0 };
+  return state?.stats ? { ...state.stats } : { pending: 0, dualApproval: 0, awaitingSecond: 0, resolved: 0 };
 }

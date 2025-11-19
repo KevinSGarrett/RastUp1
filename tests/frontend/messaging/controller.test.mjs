@@ -469,3 +469,32 @@ test('moderation queue helpers mutate controller queue state', () => {
   assert.equal(queueState.order.length, 0);
   assert.equal(queueState.casesById['case-1'], undefined);
 });
+
+test('submitModerationQueueDecision transitions dual approval workflow', () => {
+  const controller = createMessagingController();
+  controller.hydrateModerationQueue({
+    cases: [
+      {
+        caseId: 'case-dual',
+        status: 'PENDING',
+        severity: 'HIGH',
+        requiresDualApproval: true
+      }
+    ]
+  });
+
+  controller.submitModerationQueueDecision('case-dual', { decision: 'approve', actorId: 'admin-1' });
+  let queueState = controller.getModerationQueueState();
+  assert.equal(queueState.casesById['case-dual'].status, 'AWAITING_SECOND_APPROVAL');
+  assert.equal(queueState.casesById['case-dual'].approvals.length, 1);
+  const statsAfterFirst = controller.getModerationStats();
+  assert.equal(statsAfterFirst.awaitingSecond, 1);
+
+  controller.submitModerationQueueDecision('case-dual', { decision: 'approve', actorId: 'admin-2' });
+  queueState = controller.getModerationQueueState();
+  assert.equal(queueState.casesById['case-dual'].status, 'RESOLVED');
+  assert.equal(queueState.casesById['case-dual'].resolution.outcome, 'APPROVED');
+  const statsAfterSecond = controller.getModerationStats();
+  assert.equal(statsAfterSecond.resolved, 1);
+  assert.equal(statsAfterSecond.awaitingSecond, 0);
+});

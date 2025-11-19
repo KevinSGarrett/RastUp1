@@ -95,6 +95,7 @@
 - Logging: instrument `debug` channel `messaging:*` behind environment flag for developer diagnostics without leaking PII.
 - Ship GraphQL normalizers (`tools/frontend/messaging/normalizers.mjs`) that translate AppSync query/subscription payloads into inbox/thread/controller inputs, including helpers for controller hydration.
 - React bindings expose notification queue orchestration helpers (`enqueueNotification`, `flushNotifications`, `collectNotificationDigest`, `listPendingNotifications`) so client surfaces can manage quiet-hours deferrals and digests without reaching into controller internals.
+  - Moderation queue orchestration now includes `submitModerationDecision` across controller, client, and React bindings, enabling dual-approval workflows, queue stats for `awaitingSecond`, and UI surfaces to render approvals, resolution metadata, and decision actions.
 
 ## Component Scaffolding — 2025-11-19
 - Added UI timeline helpers (`tools/frontend/messaging/ui_helpers.mjs`) with unit coverage for Safe-Mode redaction, presence summarisation, and relative timestamp formatting.  
@@ -114,6 +115,7 @@
   - Enabled runtime mutations/subscriptions for the workspace by extending `web/lib/messaging/dataSources.mjs` with GraphQL-aware send/read/request helpers plus stub fallbacks, and wiring the new hooks into `MessagingWorkspaceClient.tsx` so messaging actions function even before the backend is live.
   - Delivered an in-app notification center (`web/components/Messaging/MessagingNotificationCenter.tsx`) that reads the controller's notification queue, auto-flushes ready items, surfaces quiet-hour state, and emits digest summaries alongside optional callbacks for thread navigation; exposed via `MessagingWorkspace` as an opt-in sidebar panel.
    - Introduced a moderation queue sidebar (`web/components/Messaging/MessagingModerationQueue.tsx`) to list pending cases with severity badges, stats, and resolve/remove affordances, toggled via `MessagingWorkspace` props.
+    - Moderation queue UI now renders approval history, dual-approval status indicators, resolution metadata, and decision buttons wired through `submitModerationDecision`, reflecting updated queue stats for awaiting secondary reviewers.
 
 ## Performance & Offline
 - Inbox virtualization and timeline windowing: plan to leverage intersection observers + incremental fetch (`cursor` pagination).  
@@ -149,6 +151,7 @@
 - **Status (2025-11-19)**  
   - Headless queue + controller/client wiring landed with deterministic reducers (`tools/frontend/messaging/moderation_queue.mjs`) and moderation helpers across controller/client/react bindings.  
   - Node tests now cover queue reducers (`tests/frontend/messaging/moderation_queue.test.mjs`), controller helpers (`controller.test.mjs`), client mutations (`client.test.mjs`), and React bindings (`react_bindings.test.mjs`) to guarantee reporting, resolve/remove, and hydrate flows behave per blueprint.
+    - Dual-approval workflows implemented via `submitModerationDecision`, including queue stats for `awaitingSecond`, optimistic updates across controller/client/react bindings, and an enriched `MessagingModerationQueue` UI surfacing approvals, resolution metadata, and decision controls.
 
 - **Testing strategy**  
   - Unit coverage across controller/client ensuring `reportMessage` marks messages + enqueues cases, `blockThread` updates inbox filters, queue reducers remain pure.  
