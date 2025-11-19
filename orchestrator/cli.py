@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
-from datetime import datetime
+from datetime import datetime, UTC
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -353,7 +353,7 @@ def build_task_file(
 
     task_root = repo_root / "ops" / "tasks" / agent_name
     task_root.mkdir(parents=True, exist_ok=True)
-    ts = datetime.utcnow().strftime("%Y%m%d-%H%M%SZ")
+    ts = datetime.now(datetime.UTC).strftime("%Y%m%d-%H%M%SZ")
     task_path = task_root / f"{wbs_task['id']}-{ts}.md"
     task_path.write_text(content, encoding="utf-8")
     return task_path
