@@ -108,6 +108,22 @@ enum ApprovalDecision {
   CANCEL
 }
 
+enum DocPackStatus {
+  DRAFT
+  ISSUED
+  SIGNED
+  VOIDED
+  SUPERSEDED
+}
+
+enum DocEnvelopeStatus {
+  NONE
+  SENT
+  COMPLETED
+  VOIDED
+  EXPIRED
+}
+
 input DateTimeRangeInput {
   start: AWSDateTime!
   end: AWSDateTime!
@@ -138,6 +154,14 @@ input AttachStudioInput {
   draftId: ID!
   studioId: ID!
   correlationId: String
+}
+
+input CreateDocPackInput {
+  draftId: ID!
+  legId: ID!
+  generatorVersion: String!
+  city: String
+  forceReissue: Boolean = false
 }
 
 input MarkDocSignedInput {
@@ -236,22 +260,46 @@ type CheckoutDraft {
   updatedAt: AWSDateTime!
 }
 
+type DocSignerLink {
+  role: String!
+  url: AWSURL!
+  expiresAt: AWSDateTime
+}
+
 type DocEnvelope {
   envelopeId: ID!
-  role: String!
-  status: String!
-  signUrl: AWSURL
-  signedAt: AWSDateTime
-  hash: String
+  docId: ID!
+  status: DocEnvelopeStatus!
+  signerLinks: [DocSignerLink!]!
+  completedAt: AWSDateTime
+  voidedAt: AWSDateTime
+  hashPreSign: String
+  hashPostSign: String
+}
+
+type DocManifestEntry {
+  docId: ID!
+  templateId: ID!
+  templateVersion: Int!
+  envelopeStatus: DocEnvelopeStatus!
+  renderPdfSha256Pre: String
+  renderPdfSha256Post: String
 }
 
 type DocPack {
   packId: ID!
   lbgId: ID!
-  legIds: [ID!]!
-  status: String!
+  legId: ID!
+  status: DocPackStatus!
+  generatorVersion: String!
+  city: String!
+  manifest: [DocManifestEntry!]!
   envelopes: [DocEnvelope!]!
-  expiresAt: AWSDateTime
+  issuedAt: AWSDateTime
+  signedAt: AWSDateTime
+  supersededBy: ID
+  wormRetainedUntil: AWSDateTime!
+  legalHold: Boolean!
 }
 
 type PaymentIntentClientSecret {
@@ -547,6 +595,8 @@ type BookingError {
 extend type Query {
   booking(lbgId: ID!): LinkedBookingGroup! @auth(role: "user")
   bookingTimeline(lbgId: ID!): [CheckoutEvent!]! @auth(role: "user")
+  docPack(packId: ID!): DocPack! @auth(role: "user")
+  docPacks(lbgId: ID!): [DocPack!]! @auth(role: "user")
   financeBooking(lbgId: ID!): LinkedBookingGroup! @auth(role: "finance_ops")
   financeReserveLedger(sellerUserId: ID!): [ReserveEntry!]! @auth(role: "finance_ops")
   financeDailyClose(date: AWSDate!): FinanceDailyClose! @auth(role: "finance_ops")
@@ -559,7 +609,7 @@ extend type Query {
 extend type Mutation {
   startCheckout(input: StartCheckoutInput!): CheckoutDraft! @auth(role: "user") @rateLimit(name: "checkout", window: "PT1M", max: 10)
   attachStudioInFlow(input: AttachStudioInput!): CheckoutDraft! @auth(role: "user")
-  createDocPack(draftId: ID!): DocPack! @auth(role: "user")
+  createDocPack(input: CreateDocPackInput!): DocPack! @auth(role: "user")
   markDocSigned(input: MarkDocSignedInput!): DocPack! @auth(role: "user")
   createPaymentIntent(input: CreatePaymentIntentInput!): PaymentIntentClientSecret! @auth(role: "user")
   confirmPayment(draftId: ID!, idempotencyKey: String!): CheckoutConfirmation! @auth(role: "user")

@@ -175,3 +175,15 @@
   - `node --test tests/frontend/**/*.test.mjs` → pass (90 tests).
   - `node --test tests/booking/*.test.mjs` → pass (65 tests).
   - `make ci` → pass (Python booking schema + Node booking suites).
+
+## 2025-11-19 — AGENT-2 (WBS-007) Part 1
+
+- Authored initial Smart Docs persistence layer (`db/migrations/027_smart_docs.sql`) covering clause, template, pack, doc instance, signer event, and legal hold tables with retention/approval metadata.
+- Introduced Smart Docs backend scaffolding (`services/docs/**`) for pack assembly, variable resolution, evidence hashing, and e-sign adapter HMAC verification; added TypeScript surface (`services/docs/index.ts`) and unit coverage (`tests/docs/*.test.mjs`).
+- Expanded booking GraphQL contract for Doc Packs (status/envelope enums, manifest fields, structured inputs/queries) and documented schema guardrails via `tests/frontend/doc_schema_contract.test.mjs`.
+- Tests:
+  - `node --test tests/docs/*.test.mjs` → pass (11 subtests across domain, e-sign, evidence).
+  - `node --test tests/frontend/doc_schema_contract.test.mjs` → pass (6 schema assertions).
+  - `node --test tests/booking/*.test.mjs` → pass (65 regression subtests).
+  - `python -m unittest tests.python.test_smart_docs_schema tests.python.test_booking_schema` → pass (8 tests).
+  - `make ci` → pass (Python booking schema + Node booking suites).
