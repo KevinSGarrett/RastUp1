@@ -187,3 +187,15 @@
   - `node --test tests/booking/*.test.mjs` → pass (65 regression subtests).
   - `python -m unittest tests.python.test_smart_docs_schema tests.python.test_booking_schema` → pass (8 tests).
   - `make ci` → pass (Python booking schema + Node booking suites).
+
+## 2025-11-19 — AGENT-3 (WBS-006) Part 7
+
+- Delivered Next.js integration adapter (`tools/frontend/messaging/next_adapter.mjs`) exposing `prefetch`, `createProviderProps`, and `createRuntime` helpers to server-render and hydrate messaging state, plus composed a `MessagingWorkspace` layout (`web/components/Messaging/MessagingWorkspace.tsx`) that wraps the provider with inbox/thread/project panel scaffolding. Exported the adapter via `tools/frontend/messaging/index.mjs` and refreshed documentation (`docs/data/messaging/{implementation_plan,test_plan,ui_flows}.md`) to cover the new DX.
+- Added targeted unit coverage (`tests/frontend/messaging/next_adapter.test.mjs`) validating adapter prefetch/runtime behaviour, and updated module exports for downstream consumption.
+- Tests:
+  - `node --test tests/frontend/messaging/*.test.mjs` → pass (63 subtests including new Next adapter coverage).
+  - `node --test tests/frontend/**/*.test.mjs` → pass (96 subtests across frontend suites).
+  - `node --test tests/search/*.test.mjs` → pass (8 subtests).
+  - `python -m unittest tests.search.test_collections_json` → pass (3 tests).
+  - `node --test tests/booking/*.test.mjs` → pass (65 subtests).
+  - `make ci` → pass (Python booking schema + Node booking suites).

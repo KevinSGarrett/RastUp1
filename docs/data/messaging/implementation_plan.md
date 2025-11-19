@@ -97,6 +97,7 @@
 - Inbox UI surfaces pinned/default/archived folders, message request handling (accept/decline/block), credit/rate-limit affordances, and configurable thread labelling hooks for downstream apps.  
 - Thread timeline groups messages by day with Safe-Mode aware rendering, optimistic delivery statuses, attachment state pills, action card panels (controller-driven transitions), and a policy-aware composer showing nudges vs hard blocks.  
 - Project panel tabs render snapshot JSON/structured summaries for `brief`, `moodboard`, `files`, `docs`, `expenses`, and `actions`, ready for future design system styling.
+- Introduced Next.js integration utilities (`tools/frontend/messaging/next_adapter.mjs`) providing server-side prefetch + hydration helpers, and packaged a `MessagingWorkspace` layout component (`web/components/Messaging/MessagingWorkspace.tsx`) that composes provider, inbox, thread, and project panel surfaces for immediate route scaffolding.
 
 ## Performance & Offline
 - Inbox virtualization and timeline windowing: plan to leverage intersection observers + incremental fetch (`cursor` pagination).  

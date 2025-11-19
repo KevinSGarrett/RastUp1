@@ -10,6 +10,7 @@
     - Wrap Next.js layouts with `MessagingProvider` (`web/components/MessagingProvider`) so the controller/client are available via context; call `useInboxThreads`, `useInboxSummary`, and `useNotifications` inside inbox surfaces to obtain reactive slices without manually wiring subscriptions.
     - `MessagingInbox` (`web/components/Messaging/MessagingInbox.tsx`) provides a default inbox surface covering pinned/default/archived folders, message request actions (accept/decline/block), and credit/rate limit affordances—pass `onSelectThread` to drive the active thread view.
     - For thread pages, call `useThread(threadId)` (optionally pairing with `startThreadSubscription`) to receive live message/action card state and `useMessagingActions()` for mutation helpers.
+- `createMessagingNextAdapter` (`tools/frontend/messaging/next_adapter.mjs`) exposes `prefetch`, `createProviderProps`, and `createRuntime` helpers so Next.js routes can server-render inbox + thread payloads, then hydrate the same controller/client on the client. Pair these with `MessagingWorkspace` (`web/components/Messaging/MessagingWorkspace.tsx`) for a ready-made layout that composes provider, inbox list, thread timeline, and project panel snapshots.
    - Compute folders: `default`, `pinned`, `archived`, `requests`.
 2. **Message request handling**
    - Each request entry carries `requestId`, `creditCost`, `expiresAt`.
