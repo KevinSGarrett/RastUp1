@@ -41,3 +41,11 @@
 - Added automation-ready runbooks for secrets rotation and incident response plus immutable logging/redaction policies; integrated security-focused unit tests (`tests/security/test_controls.py`).
 - `python -m unittest discover tests/security` → pass (11 tests).
 - `make ci` → failed (`No rule to make target 'ci'`). CI scaffold still pending from earlier WBS items.
+
+## 2025-11-19 — AGENT-2 (WBS-005)
+
+- Produced booking implementation plan, core Aurora migration (`db/migrations/026_booking_core.sql`), GraphQL contract (`api/schema/booking.graphql`), and backend domain modules (`services/booking/**`) covering state machine, policy engine, and payment orchestration.
+- Authored booking checkout runbook (`ops/runbooks/booking-checkout.md`) and observability dashboard spec (`observability/dashboards/booking.md`).
+- Implemented unit tests for booking flows (`node --test tests/booking/*.test.mjs`) → pass (12 tests across state, policy, payments).
+- Added Python schema validation for booking migration (`python -m unittest tests.python.test_booking_schema`) → pass (3 tests).
+- `make ci` → failed (`No rule to make target 'ci'`). CI bootstrap still outstanding; documented for continuity.

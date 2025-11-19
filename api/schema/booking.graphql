@@ -1,0 +1,376 @@
+# WBS-005 Booking, Checkout, and Payment Processing GraphQL Contract
+
+enum LegType {
+  TALENT
+  STUDIO
+}
+
+enum LegStatus {
+  DRAFT
+  AWAITING_DOCS
+  AWAITING_PAYMENT
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  FAILED
+}
+
+enum LbgStatus {
+  DRAFT
+  AWAITING_DOCS
+  AWAITING_PAYMENT
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  FAILED
+}
+
+enum ChargeStatus {
+  REQUIRES_ACTION
+  AUTHORIZED
+  CAPTURED
+  SUCCEEDED
+  CANCELED
+  FAILED
+}
+
+enum DepositStatus {
+  REQUIRES_ACTION
+  AUTHORIZED
+  CAPTURED
+  VOIDED
+  EXPIRED
+}
+
+enum PayoutStatus {
+  QUEUED
+  IN_TRANSIT
+  PAID
+  FAILED
+  CANCELED
+  PAUSED
+}
+
+enum RefundStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+}
+
+enum DisputeStatus {
+  NEEDS_RESPONSE
+  UNDER_REVIEW
+  WON
+  LOST
+  WARNING_CLOSED
+}
+
+enum PaymentMethodKind {
+  CARD
+  ACH_DEBIT
+}
+
+input DateTimeRangeInput {
+  start: AWSDateTime!
+  end: AWSDateTime!
+}
+
+input StartCheckoutInput {
+  leg: StartLegInput!
+  when: DateTimeRangeInput!
+  city: String!
+  mode: String! # IB, RTB, SMART_INVITE
+  correlationId: String
+}
+
+input StartLegInput {
+  type: LegType!
+  sellerUserId: ID!
+  serviceProfileId: ID
+  studioId: ID
+  title: String!
+  subtotalCents: Int!
+  taxCents: Int = 0
+  feesCents: Int = 0
+  currency: String = "USD"
+  policy: AWSJSON!
+}
+
+input AttachStudioInput {
+  draftId: ID!
+  studioId: ID!
+  correlationId: String
+}
+
+input MarkDocSignedInput {
+  draftId: ID!
+  packId: ID!
+  envelopeId: ID!
+  actorContext: String
+}
+
+input PaymentMethodInput {
+  kind: PaymentMethodKind!
+  paymentMethodId: ID
+  customerId: ID
+  saveForFutureUse: Boolean = false
+  billingDetails: AWSJSON
+}
+
+input CreatePaymentIntentInput {
+  draftId: ID!
+  method: PaymentMethodInput!
+  idempotencyKey: String!
+}
+
+input ChangeOrderInput {
+  lbgId: ID!
+  legId: ID!
+  name: String!
+  quantity: Int = 1
+  unitPriceCents: Int!
+  notes: String
+}
+
+input OvertimeInput {
+  lbgId: ID!
+  legId: ID!
+  minutes: Int!
+}
+
+input QuoteCancellationInput {
+  lbgId: ID!
+  legId: ID!
+}
+
+input CancelLegInput {
+  lbgId: ID!
+  legId: ID!
+  reason: String!
+  actorContext: String
+  override: AWSJSON
+}
+
+input RefundRequestInput {
+  lbgId: ID!
+  legId: ID!
+  amountCents: Int
+  reason: String!
+  metadata: AWSJSON
+}
+
+input DepositClaimInput {
+  legId: ID!
+  amountCents: Int!
+  reason: String!
+  evidence: [AWSURL!]
+}
+
+type CheckoutLeg {
+  legId: ID!
+  type: LegType!
+  status: LegStatus!
+  title: String!
+  startAt: AWSDateTime!
+  endAt: AWSDateTime!
+  subtotalCents: Int!
+  taxCents: Int!
+  feesCents: Int!
+  totalCents: Int!
+  currency: String!
+  policy: AWSJSON!
+  docPackId: ID
+  buyerAcceptsDocs: Boolean!
+}
+
+type CheckoutDraft {
+  lbgId: ID!
+  status: LbgStatus!
+  city: String!
+  legs: [CheckoutLeg!]!
+  requiresDocs: Boolean!
+  docsSigned: Boolean!
+  paymentIntentId: ID
+  paymentClientSecret: String
+  totalCents: Int!
+  currency: String!
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+type DocEnvelope {
+  envelopeId: ID!
+  role: String!
+  status: String!
+  signUrl: AWSURL
+  signedAt: AWSDateTime
+  hash: String
+}
+
+type DocPack {
+  packId: ID!
+  lbgId: ID!
+  legIds: [ID!]!
+  status: String!
+  envelopes: [DocEnvelope!]!
+  expiresAt: AWSDateTime
+}
+
+type PaymentIntentClientSecret {
+  paymentIntentId: ID!
+  clientSecret: String!
+  status: ChargeStatus!
+  requiresAction: Boolean!
+  nextAction: AWSJSON
+}
+
+type ChargeSummary {
+  chargeId: ID!
+  status: ChargeStatus!
+  amountCents: Int!
+  currency: String!
+  paymentMethod: PaymentMethodKind
+  processorIntent: String!
+  capturedAt: AWSDateTime
+}
+
+type DepositSummary {
+  depositId: ID!
+  status: DepositStatus!
+  authorizedCents: Int!
+  capturedCents: Int!
+  expiresAt: AWSDateTime
+}
+
+type PayoutSummary {
+  payoutId: ID!
+  status: PayoutStatus!
+  amountCents: Int!
+  currency: String!
+  scheduledFor: AWSDateTime
+}
+
+type LinkedBookingGroup {
+  lbgId: ID!
+  status: LbgStatus!
+  city: String!
+  startAt: AWSDateTime!
+  endAt: AWSDateTime!
+  acceptanceUntil: AWSDateTime
+  currency: String!
+  legs: [CheckoutLeg!]!
+  charge: ChargeSummary
+  deposits: [DepositSummary!]!
+  payouts: [PayoutSummary!]!
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+type CheckoutConfirmation {
+  lbg: LinkedBookingGroup!
+  charge: ChargeSummary!
+  correlationId: String!
+}
+
+type Amendment {
+  amendmentId: ID!
+  legId: ID!
+  kind: String!
+  line: AWSJSON!
+  deltaSubtotalCents: Int!
+  deltaTaxCents: Int!
+  deltaFeesCents: Int!
+  deltaTotalCents: Int!
+  createdBy: ID!
+  createdAt: AWSDateTime!
+}
+
+type RefundOutcome {
+  legId: ID!
+  refundCents: Int!
+  sellerRetainedCents: Int!
+  taxRefundCents: Int!
+  policyVersion: Int
+  overrideApplied: Boolean!
+}
+
+type RefundReceipt {
+  refundId: ID!
+  status: RefundStatus!
+  amountCents: Int!
+  processor: String!
+  processorRefundId: String
+  createdAt: AWSDateTime!
+}
+
+type DepositClaimResult {
+  legId: ID!
+  deposit: DepositSummary!
+  capturedCents: Int!
+  status: DepositStatus!
+  reason: String!
+}
+
+type ReceiptLeg {
+  legId: ID!
+  title: String!
+  totalCents: Int!
+  taxCents: Int!
+  feesCents: Int!
+  currency: String!
+  policy: AWSJSON!
+  amendments: [Amendment!]!
+  refunds: [RefundReceipt!]!
+}
+
+type CompletionReceipt {
+  lbgId: ID!
+  status: LbgStatus!
+  legs: [ReceiptLeg!]!
+  charge: ChargeSummary!
+  issuedAt: AWSDateTime!
+  docHashes: [String!]!
+}
+
+type CheckoutEvent {
+  lbgId: ID!
+  eventType: String!
+  payload: AWSJSON!
+  occurredAt: AWSDateTime!
+}
+
+type BookingError {
+  code: String!
+  message: String!
+  hint: String
+  correlationId: String!
+  recoverable: Boolean!
+}
+
+extend type Query {
+  booking(lbgId: ID!): LinkedBookingGroup! @auth(role: "user")
+  bookingTimeline(lbgId: ID!): [CheckoutEvent!]! @auth(role: "user")
+  financeBooking(lbgId: ID!): LinkedBookingGroup! @auth(role: "finance_ops")
+}
+
+extend type Mutation {
+  startCheckout(input: StartCheckoutInput!): CheckoutDraft! @auth(role: "user") @rateLimit(name: "checkout", window: "PT1M", max: 10)
+  attachStudioInFlow(input: AttachStudioInput!): CheckoutDraft! @auth(role: "user")
+  createDocPack(draftId: ID!): DocPack! @auth(role: "user")
+  markDocSigned(input: MarkDocSignedInput!): DocPack! @auth(role: "user")
+  createPaymentIntent(input: CreatePaymentIntentInput!): PaymentIntentClientSecret! @auth(role: "user")
+  confirmPayment(draftId: ID!, idempotencyKey: String!): CheckoutConfirmation! @auth(role: "user")
+  addChangeOrder(input: ChangeOrderInput!): Amendment! @auth(role: "user")
+  addOvertime(input: OvertimeInput!): Amendment! @auth(role: "user")
+  quoteCancellation(input: QuoteCancellationInput!): RefundOutcome! @auth(role: "user")
+  cancelLeg(input: CancelLegInput!): RefundReceipt! @auth(role: "user")
+  requestRefund(input: RefundRequestInput!): RefundOutcome! @auth(role: "user")
+  fileDepositClaim(input: DepositClaimInput!): DepositClaimResult! @auth(role: "seller")
+  markCompleted(lbgId: ID!, note: String): CompletionReceipt! @auth(role: "user")
+}
+
+extend type Subscription {
+  checkoutStatus(lbgId: ID!): CheckoutEvent! @aws_subscribe(mutations: ["confirmPayment", "markCompleted", "cancelLeg", "requestRefund"])
+}
