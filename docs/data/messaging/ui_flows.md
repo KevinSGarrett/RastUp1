@@ -7,6 +7,8 @@
    - Preferred: call `createMessagingClient.refreshInbox()` which handles normalization + controller hydration (internally invokes `normalizeInboxPayload`).
    - If bypassing the client helper, run result through `normalizeInboxPayload` (`tools/frontend/messaging/normalizers.mjs`) before calling `MessagingController.hydrateInbox()` to guarantee consistent shapes.
    - For thread detail queries, use `createMessagingClient.hydrateThread(threadId, { subscribe: true })` to normalize via `normalizeThreadPayload`, hydrate controller, and start subscriptions. Manual path still available via direct controller calls when needed.
+   - Wrap Next.js layouts with `MessagingProvider` (`web/components/MessagingProvider`) so the controller/client are available via context; call `useInboxThreads`, `useInboxSummary`, and `useNotifications` inside inbox surfaces to obtain reactive slices without manually wiring subscriptions.
+   - For thread pages, call `useThread(threadId)` (optionally pairing with `startThreadSubscription`) to receive live message/action card state and `useMessagingActions()` for mutation helpers.
    - Compute folders: `default`, `pinned`, `archived`, `requests`.
 2. **Message request handling**
    - Each request entry carries `requestId`, `creditCost`, `expiresAt`.

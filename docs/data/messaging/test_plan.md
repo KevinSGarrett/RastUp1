@@ -24,6 +24,7 @@
 | Notification queue | Quiet hour deferral, severity bypass, dedupe window, digest summaries | Test release after quiet hours and aggregated digest output for deferred items. |
 | Messaging controller | Combined inbox/thread/notification orchestration, optimistic lifecycle, subscription events | Unit tests validating unread sync, optimistic send resolution, message request acceptance, action card analytics, and digest releases. |
 | Messaging client | GraphQL hydration/subscription bridge, optimistic mutation handshake, request mutations | Unit tests verifying `createMessagingClient` refreshes inbox, hydrates threads, applies mapped events, resolves/flags optimistic sends, and invokes request mutations with re-sync on failure. |
+| React bindings | `MessagingProvider` lifecycle, hook subscriptions, store updates via controller events | Use a lightweight React shim to assert auto-subscribe/cleanup behaviour and that `useInboxThreads`, `useThread`, `useInboxSummary` reflect controller changes. |
 | GraphQL normalizers | `normalizeInboxPayload`, `normalizeThreadPayload`, subscription envelope mappers | Ensure AppSync query/subscription payloads produce stable inbox/thread/controller updates and reject malformed data. |
 | Moderation policy | Text evaluation returning `ALLOW`/`NUDGE`/`BLOCK` with escalation counters | Validate threshold resets after cooldown. |
 

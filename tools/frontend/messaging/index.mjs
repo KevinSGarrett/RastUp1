@@ -8,3 +8,4 @@ export * from './notification_queue.mjs';
 export * from './controller.mjs';
 export * from './normalizers.mjs';
 export * from './client.mjs';
+export * from './react_bindings.mjs';

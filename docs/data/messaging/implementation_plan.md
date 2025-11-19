@@ -84,6 +84,7 @@
 - Package headless logic under `tools/frontend/messaging/` (pure functions, deterministic reducers, serializable state).  
 - Introduce `createMessagingController` (framework-neutral orchestrator) to combine inbox/thread/notification stores with subscription hooks for React/Next.js contexts; surface helpers for optimistic send, action cards, message requests, and quiet-hour notifications.  
 - Layer `createMessagingClient` on top of the controller to wrap GraphQL fetch/mutation/subscribe plumbing, applying `normalize*` helpers, bridging optimistic sends, and auto-refreshing inbox/thread state on transport failures.  
+- Ship `createMessagingReactBindings` (tools/frontend/messaging/react_bindings.mjs) to generate React contexts/hooks (`MessagingProvider`, `useInboxThreads`, `useThread`, etc.) while keeping the underlying controller/client framework-neutral; the Next.js façade lives under `web/components/MessagingProvider/**`.  
 - Provide TypeScript declaration files (`.d.ts`) once the Next.js scaffold materialises; for now, JSDoc shapes near functions for editor IntelliSense.  
 - Aim for idempotent helpers to ease unit testing in Node; mirror these in future React hooks (e.g., `useThreadState` delegates to `ThreadStore` reducers).  
 - Document event payload shapes and integration steps in `ui_flows.md` and `test_plan.md` for continuity across agents.  

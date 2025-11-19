@@ -130,3 +130,16 @@
 - Updated messaging documentation (`docs/data/messaging/{implementation_plan,test_plan,ui_flows}.md`) to describe the new client bridge, coverage expectations, and UI flow usage guidance.
 - Regression suite: `node --test tests/frontend/messaging/*.test.mjs`, `node --test tests/frontend/**/*.test.mjs`, `node --test tests/search/*.test.mjs`, `python -m unittest tests.search.test_collections_json`, `node --test tests/booking/*.test.mjs` → all passing.
 - `make ci` → pass (Python booking schema + Node booking suites).
+
+## 2025-11-19 — AGENT-3 (WBS-006) Part 5
+
+- Delivered React-facing bindings for the messaging controller/client (`tools/frontend/messaging/react_bindings.mjs`) and surfaced a Next.js-ready provider/hooks façade under `web/components/MessagingProvider/**`, enabling `MessagingProvider`, `useInboxThreads`, `useThread`, and related actions without duplicating orchestration logic.
+- Authored lightweight React shim tests (`tests/frontend/messaging/react_bindings.test.mjs`) to verify provider lifecycle (auto-subscribe, cleanup, mutation wrappers) and hook reactivity against real controller events; refreshed implementation/test/UI flow docs to cover the new DX pattern.
+- Updated module exports (`tools/frontend/messaging/index.mjs`) and documentation (`docs/data/messaging/{implementation_plan,test_plan,ui_flows}.md`) to reference the React bindings and guidance for wrapping Next.js layouts.
+- Test runs:
+  - `node --test tests/frontend/messaging/*.test.mjs` → pass (57 tests including new React bindings coverage).
+  - `node --test tests/frontend/**/*.test.mjs` → pass (86 tests).
+  - `node --test tests/search/*.test.mjs` → pass (8 tests).
+  - `python -m unittest tests.search.test_collections_json` → pass (3 tests).
+  - `node --test tests/booking/*.test.mjs` → pass (65 tests).
+- `make ci` → pass (Python booking schema + Node booking suites).
