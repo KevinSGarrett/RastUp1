@@ -1,0 +1,42 @@
+{
+  "reschedule": {
+    "actionId": "act-fixture-reschedule",
+    "type": "RESCHEDULE",
+    "state": "PENDING",
+    "version": 7,
+    "payload": {
+      "proposedStart": "2025-12-01T15:00:00Z",
+      "proposedEnd": "2025-12-01T18:00:00Z",
+      "reason": "Weather delay"
+    }
+  },
+  "depositClaim": {
+    "actionId": "act-fixture-deposit",
+    "type": "DEPOSIT_CLAIM_OPEN",
+    "state": "PENDING",
+    "version": 1,
+    "payload": {
+      "amountCents": 25000,
+      "evidence": [
+        "att-damage-1",
+        "att-damage-2"
+      ]
+    }
+  },
+  "custom": {
+    "actionId": "act-fixture-custom",
+    "type": "CUSTOM",
+    "state": "STEP_ONE",
+    "version": 0,
+    "allowedTransitions": [
+      {
+        "intent": "advance",
+        "toState": "STEP_TWO"
+      },
+      {
+        "intent": "cancel",
+        "toState": "CANCELLED"
+      }
+    ]
+  }
+}

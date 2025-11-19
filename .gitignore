@@ -18,3 +18,5 @@ __pycache__/
 docs/orchestrator/from-agents/
 ops/tasks/
 ops/locks/*.lock
+
+logs/

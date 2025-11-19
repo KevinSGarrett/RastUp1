@@ -1,5 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
 
 import {
   computeSafeModeState,
@@ -83,4 +86,33 @@ test('filterMessageBody redacts text when Safe-Mode requires it', () => {
   result = filterMessageBody('Spicy content', { safeMode: safe, nsfwBand: 3 });
   assert.equal(result.redacted, true);
   assert.ok(result.body.includes('Safe-Mode'));
+});
+
+const FIXTURE_DIR = dirname(fileURLToPath(import.meta.url));
+const SAFE_MODE_FIXTURE = JSON.parse(
+  readFileSync(join(FIXTURE_DIR, 'fixtures', 'safe_mode_matrix.json'), 'utf-8')
+);
+
+test('safe mode matrix fixture aligns with helper outputs', () => {
+  for (const entry of SAFE_MODE_FIXTURE.bandMatrix) {
+    const safe = {
+      enabled: entry.safeModeEnabled ?? true,
+      bandMax: entry.safeModeBandMax
+    };
+    const display = getAttachmentDisplayState({
+      nsfwBand: entry.nsfwBand,
+      safeMode: safe
+    });
+    assert.equal(display.displayState, entry.expectedDisplay);
+  }
+
+  for (const scenario of SAFE_MODE_FIXTURE.overrideCases) {
+    const state = computeSafeModeState({
+      threadSafeModeRequired: scenario.threadSafeModeRequired,
+      userIsVerifiedAdult: scenario.userIsVerifiedAdult,
+      allowOverride: scenario.allowOverride,
+      userOverrideRequested: scenario.userOverrideRequested
+    });
+    assert.equal(state.enabled, scenario.expectedEnabled);
+  }
 });

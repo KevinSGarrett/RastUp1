@@ -9,7 +9,9 @@ import {
   failOptimisticMessage,
   getPresenceSnapshot,
   getUnreadMessageIds,
-  getActionCards
+  getActionCards,
+  getActionCardTransitions,
+  applyActionCardIntent
 } from '../../../tools/frontend/messaging/thread_store.mjs';
 
 const baseThreadInput = {
@@ -192,4 +194,34 @@ test('project panel updates respect optimistic concurrency', () => {
     }
   });
   assert.equal(state.projectPanel.tabs.brief.headline, 'Updated headline');
+});
+
+test('getActionCardTransitions falls back to default definitions', () => {
+  const state = createThreadState(baseThreadInput);
+  const transitions = getActionCardTransitions(state, 'act-1');
+  const intents = transitions.map((entry) => entry.intent).sort();
+  assert.deepEqual(intents, ['approve', 'decline', 'fail']);
+});
+
+test('applyActionCardIntent advances state and emits audit event', () => {
+  const initialState = createThreadState(baseThreadInput);
+  const { state: nextState, auditEvent } = applyActionCardIntent(initialState, 'act-1', 'approve', {
+    now: Date.parse('2025-11-19T07:00:00.000Z'),
+    actorUserId: 'usr-buyer',
+    threadId: 'thr-123'
+  });
+  const card = nextState.actionCardsById['act-1'];
+  assert.equal(card.state, 'PAID');
+  assert.equal(card.version, 2);
+  assert.equal(card.lastIntent, 'approve');
+  assert.ok(auditEvent);
+  assert.equal(auditEvent.payload.intent, 'approve');
+  assert.equal(auditEvent.payload.threadId, 'thr-123');
+});
+
+test('applyActionCardIntent throws on invalid transition', () => {
+  const state = createThreadState(baseThreadInput);
+  assert.throws(() => {
+    applyActionCardIntent(state, 'act-1', 'unknown');
+  });
 });

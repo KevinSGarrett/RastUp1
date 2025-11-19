@@ -19,7 +19,9 @@
 | Thread store | Message insertion ordering, optimistic send lifecycle, read receipt updates, presence TTL pruning | Include out-of-order events and idempotency by `messageId`/`version`. |
 | Safe-Mode rendering | Attachment display state transitions across `nsfwBand`, overrides, and quarantine | Use matrix of user clearance vs thread requirements. |
 | Message requests | Credit gating, expiry, accept/decline transitions | Validate follow-up state (thread moves folder, credits updated). |
-| Action cards | State machine transitions for reschedule, extras, deliverables, disputes | Ensure invalid transitions throw `ACTION_INVALID_STATE`. |
+| Action cards | State machine transitions for reschedule, extras, deliverables, disputes | Ensure invalid transitions throw `ACTION_INVALID_STATE` and audit payloads generated. |
+| Upload manager | Client-side lifecycle (request → signed → upload → scanning → ready), failure recovery, TTL pruning | Mock server updates for antivirus results, verify attachment linking and metadata retention. |
+| Notification queue | Quiet hour deferral, severity bypass, dedupe window, digest summaries | Test release after quiet hours and aggregated digest output for deferred items. |
 | Moderation policy | Text evaluation returning `ALLOW`/`NUDGE`/`BLOCK` with escalation counters | Validate threshold resets after cooldown. |
 
 ### 2. Integration Tests (Future, Node/React)
@@ -45,11 +47,10 @@
 - Verify audit events omit message bodies unless flagged for evidence (unit test on policy helper output).
 
 ### 6. Test Data & Fixtures
-- Provide JSON fixtures under `tests/frontend/messaging/fixtures/` (to be created) covering:
-  - Inquiry thread sample (pre-booking).
-  - Project thread with action cards at various states.
-  - Attachment metadata for Safe-Mode matrix.
-  - Moderation violation text samples.
+  - JSON fixtures live under `tests/frontend/messaging/fixtures/`:
+    - `action_cards.json` — reschedule/deposit/custom action card exemplars.
+    - `uploads.json` — pending and ready upload snapshots for Safe-Mode + scanning flows.
+    - `safe_mode_matrix.json` — matrix verifying exposure vs band levels and override scenarios.
 
 ### 7. Tooling & CI
 - Add `node --test tests/frontend/messaging/**/*.test.mjs` to standard run instructions.

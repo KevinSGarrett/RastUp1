@@ -1,3 +1,4 @@
+import { transitionActionCard, getAllowedTransitions } from './action_cards.mjs';
 const DEFAULT_PRESENCE_TTL_MS = 60 * 1000; // 60s
 
 function normalizeTimestamp(value) {
@@ -467,4 +468,54 @@ export function getUnreadMessageIds(state, userId) {
  */
 export function getActionCards(state) {
   return state.actionCardOrder.map((id) => state.actionCardsById[id]).filter(Boolean);
+}
+
+/**
+ * Returns the allowed transitions for an action card in the thread.
+ * @param {ReturnType<typeof createThreadState>} state
+ * @param {string} actionId
+ * @param {{ definitions?: Record<string, any> }} [options]
+ */
+export function getActionCardTransitions(state, actionId, options = {}) {
+  const card = state.actionCardsById[actionId];
+  if (!card) {
+    return [];
+  }
+  return getAllowedTransitions(card, options);
+}
+
+/**
+ * Applies a client-side intent to an action card, returning new state and audit metadata.
+ * @param {ReturnType<typeof createThreadState>} state
+ * @param {string} actionId
+ * @param {string} intent
+ * @param {{
+ *   now?: number;
+ *   updatedAt?: string;
+ *   version?: number;
+ *   versionIncrement?: number;
+ *   metadata?: Record<string, any>;
+ *   payloadPatch?: Record<string, any>;
+ *   mutatePayload?: (payload: Record<string, any>, nextCard: any) => Record<string, any>;
+ *   actorUserId?: string|null;
+ *   threadId?: string|null;
+ *   auditMetadata?: Record<string, any>|null;
+ *   emitAudit?: boolean;
+ *   definitions?: Record<string, any>;
+ * }} [options]
+ * @returns {{ state: ReturnType<typeof createThreadState>; auditEvent: any }}
+ */
+export function applyActionCardIntent(state, actionId, intent, options = {}) {
+  const card = state.actionCardsById[actionId];
+  if (!card) {
+    throw new Error(`Unknown action card: ${actionId}`);
+  }
+  const { card: nextCard, auditEvent } = transitionActionCard(card, intent, options);
+  const next = cloneState(state);
+  next.actionCardsById[actionId] = nextCard;
+  if (!next.actionCardOrder.includes(actionId)) {
+    next.actionCardOrder.push(actionId);
+  }
+  next.lastEventAt = Date.now();
+  return { state: next, auditEvent };
 }

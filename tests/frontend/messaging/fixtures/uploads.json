@@ -1,0 +1,25 @@
+{
+  "pendingUpload": {
+    "clientId": "fixture-upload-1",
+    "fileName": "lighting-diagram.png",
+    "mimeType": "image/png",
+    "sizeBytes": 2097152,
+    "metadata": {
+      "threadId": "thr-fixture-1",
+      "kind": "PROJECT_FILES"
+    }
+  },
+  "readyUpload": {
+    "clientId": "fixture-upload-2",
+    "attachmentId": "att-fixture-ready",
+    "fileName": "proof-cut.mp4",
+    "mimeType": "video/mp4",
+    "sizeBytes": 52428800,
+    "status": "READY",
+    "nsfwBand": 1,
+    "metadata": {
+      "threadId": "thr-fixture-2",
+      "kind": "DELIVERABLE_PROOF"
+    }
+  }
+}

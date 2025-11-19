@@ -87,3 +87,15 @@
 - `python -m unittest tests.search.test_collections_json` → pass (3 tests).  
 - `node --test tests/booking/*.test.mjs` → pass (65 tests).  
 - `make ci` → failed (`No rule to make target 'ci'`). CI scaffolding still pending; failure logged for continuity.
+
+## 2025-11-19 — AGENT-3 (WBS-006) Part 2
+
+- Implemented advanced messaging headless modules: action card transition helpers, upload manager, and notification queue (`tools/frontend/messaging/{action_cards,upload_manager,notification_queue}.mjs`) with exports wired through `index.mjs`.
+- Extended thread store to support client-side action card intents/audit metadata and refreshed Safe-Mode tests with fixture-driven coverage; added new unit suites plus JSON fixtures under `tests/frontend/messaging/fixtures/`.
+- Updated messaging test plan documentation to reflect new coverage areas and fixtures; captured run artifacts in `docs/orchestrator/from-agents/AGENT-3/run-20251119T054701Z/`.
+- `node --test tests/frontend/messaging/*.test.mjs` → pass (40 tests).  
+- `node --test tests/frontend/**/*.test.mjs` → pass (60 tests).  
+- `node --test tests/search/*.test.mjs` → pass (8 tests).  
+- `python -m unittest tests.search.test_collections_json` → pass (3 tests).  
+- `node --test tests/booking/*.test.mjs` → pass (65 tests).  
+- `make ci` → failed (`No rule to make target 'ci'`) — repository still lacks CI target; documented for continuity.

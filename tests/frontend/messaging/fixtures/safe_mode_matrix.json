@@ -1,0 +1,40 @@
+{
+  "bandMatrix": [
+    {
+      "nsfwBand": 0,
+      "safeModeBandMax": 1,
+      "expectedDisplay": "visible"
+    },
+    {
+      "nsfwBand": 2,
+      "safeModeBandMax": 1,
+      "expectedDisplay": "blurred"
+    },
+    {
+      "nsfwBand": 4,
+      "safeModeBandMax": 1,
+      "expectedDisplay": "blocked"
+    },
+    {
+      "nsfwBand": 2,
+      "safeModeBandMax": 1,
+      "safeModeEnabled": false,
+      "expectedDisplay": "visible"
+    }
+  ],
+  "overrideCases": [
+    {
+      "threadSafeModeRequired": true,
+      "userIsVerifiedAdult": true,
+      "allowOverride": true,
+      "expectedEnabled": true
+    },
+    {
+      "threadSafeModeRequired": false,
+      "userIsVerifiedAdult": true,
+      "allowOverride": true,
+      "userOverrideRequested": true,
+      "expectedEnabled": false
+    }
+  ]
+}
