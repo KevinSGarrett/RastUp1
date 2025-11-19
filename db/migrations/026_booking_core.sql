@@ -95,6 +95,16 @@ create type booking.finance_close_status as enum (
   'failed'
 );
 
+create type booking.approval_status as enum (
+  'pending',
+  'approved',
+  'rejected',
+  'cancelled',
+  'expired'
+);
+
+create type booking.approval_decision as enum ('approve', 'reject', 'cancel');
+
 create type booking.tax_provider as enum ('taxjar', 'avalara', 'stripe_tax');
 
 create type booking.receipt_kind as enum ('leg', 'group', 'refund');
@@ -396,6 +406,57 @@ create table if not exists booking.finance_daily_close_item (
 create index if not exists idx_finance_daily_close_item_close on booking.finance_daily_close_item (close_id);
 create index if not exists idx_finance_daily_close_item_category on booking.finance_daily_close_item (category);
 
+create table if not exists booking.finance_approval_request (
+  approval_id text primary key,
+  scope text not null,
+  reference_id text not null,
+  status booking.approval_status not null default 'pending',
+  approvals_required smallint not null default 2 check (approvals_required >= 1),
+  approvals_obtained smallint not null default 0 check (approvals_obtained >= 0),
+  context jsonb not null default '{}'::jsonb,
+  reason text,
+  created_by text not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  expires_at timestamptz,
+  version bigint not null default 0,
+  constraint finance_approval_progress check (approvals_obtained <= approvals_required)
+);
+
+create unique index if not exists idx_finance_approval_pending_scope on booking.finance_approval_request (scope, reference_id) where status = 'pending';
+create index if not exists idx_finance_approval_status on booking.finance_approval_request (status);
+create index if not exists idx_finance_approval_expires_at on booking.finance_approval_request (expires_at) where expires_at is not null;
+
+create table if not exists booking.finance_approval_decision (
+  decision_id text primary key,
+  approval_id text not null references booking.finance_approval_request(approval_id) on delete cascade,
+  approver text not null,
+  decision booking.approval_decision not null,
+  reason text,
+  decided_at timestamptz not null default now(),
+  created_at timestamptz not null default now(),
+  unique (approval_id, approver)
+);
+
+create index if not exists idx_finance_approval_decision_approval on booking.finance_approval_decision (approval_id);
+
+create table if not exists booking.finance_action_log (
+  log_id text primary key,
+  approval_id text references booking.finance_approval_request(approval_id) on delete set null,
+  action text not null,
+  subject_reference text,
+  before_state jsonb,
+  after_state jsonb,
+  metadata jsonb not null default '{}'::jsonb,
+  actor_admin text not null,
+  reason text,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_finance_action_log_approval on booking.finance_action_log (approval_id);
+create index if not exists idx_finance_action_log_action on booking.finance_action_log (action);
+create index if not exists idx_finance_action_log_created_at on booking.finance_action_log (created_at);
+
 create table if not exists booking.idempotency_record (
   scope text not null,
   idempotency_key text not null,
@@ -474,6 +535,12 @@ before update on booking.finance_daily_close
 for each row
 execute function booking.touch_version();
 
+drop trigger if exists trg_booking_finance_approval_request_touch on booking.finance_approval_request;
+create trigger trg_booking_finance_approval_request_touch
+before update on booking.finance_approval_request
+for each row
+execute function booking.touch_version();
+
 comment on table booking.lbg is 'Linked Booking Group container (atomic booking across talent/studio legs).';
 comment on table booking.booking_leg is 'Individual booking leg with independent policy, taxes, and payouts.';
 comment on table booking.charge is 'LBG-level charge capturing buyer funds.';
@@ -491,6 +558,9 @@ comment on table booking.receipt_manifest is 'Immutable receipt payloads (leg, g
 comment on table booking.webhook_event is 'External webhook events captured for idempotent processing and audit.';
 comment on table booking.finance_daily_close is 'Finance daily close status including aggregated variances and audit metadata.';
 comment on table booking.finance_daily_close_item is 'Variance line items captured during finance daily close comparisons.';
+comment on table booking.finance_approval_request is 'Dual-approval workflow requests for finance actions tied to checkout, payouts, or refunds.';
+comment on table booking.finance_approval_decision is 'Recorded decisions for finance approval requests, enforcing two-person rule.';
+comment on table booking.finance_action_log is 'Immutable audit log for finance admin actions and their before/after state snapshots.';
 comment on table booking.idempotency_record is 'Server-side idempotency keys for booking financial operations with optional serialized responses.';
 
 commit;

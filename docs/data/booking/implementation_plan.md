@@ -25,6 +25,20 @@
   - Admin UI wiring for finance/trust consoles and production deployment of saga orchestrator.
   - Automated CI/Makefile bootstrap and end-to-end integration environments.
 
+## Plan vs Done vs Pending (2025-11-19 Run — Part 4 Focus)
+
+- **Plan**
+  - Introduce finance approval ledger tables (dual-approval workflow, admin audit trail) within `booking` schema and extend Python schema tests accordingly.
+  - Implement booking service modules for finance approvals and admin operations, plus targeted Node unit tests covering approval lifecycle, dual-approval enforcement, and audit snapshots.
+  - Expand GraphQL contract with finance approval types/mutations and supporting enums needed by admin consoles.
+  - Refresh documentation snippets (implementation plan, run report forthcoming) and capture required test commands (`node --test`, `python -m unittest`, `make ci`).
+- **Done**
+  - Parts 1–3 deliverables landed in earlier runs (schema baseline, policy/refund/payments modules, payout/dispute/saga/reconciliation extensions) remain in place; no new Part 4 outputs yet.
+- **Pending / Out of Scope for This Run**
+  - Wiring approvals into live infrastructure (Stripe webhooks, Step Functions, admin UI) and Secrets/feature flag plumbing.
+  - Achieving passing `make ci` (Makefile/CI scaffold still tracked separately).
+  - Full admin frontend workflows, analytics dashboards, and production deployment automation.
+
 ## Declared Scope Paths (anticipated)
 
 - `docs/data/booking/**`

@@ -94,6 +94,20 @@ enum PaymentMethodKind {
   ACH_DEBIT
 }
 
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+  EXPIRED
+}
+
+enum ApprovalDecision {
+  APPROVE
+  REJECT
+  CANCEL
+}
+
 input DateTimeRangeInput {
   start: AWSDateTime!
   end: AWSDateTime!
@@ -427,6 +441,45 @@ type FinanceDailyClose {
   items: [FinanceCloseItem!]!
 }
 
+type FinanceApprovalDecision {
+  decisionId: ID!
+  approver: ID!
+  decision: ApprovalDecision!
+  reason: String
+  decidedAt: AWSDateTime!
+}
+
+type FinanceApprovalRequest {
+  approvalId: ID!
+  scope: String!
+  referenceId: ID!
+  status: ApprovalStatus!
+  approvalsRequired: Int!
+  approvalsObtained: Int!
+  context: AWSJSON!
+  reason: String
+  createdBy: ID!
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+  expiresAt: AWSDateTime
+  decisions: [FinanceApprovalDecision!]!
+}
+
+type FinanceActionLog {
+  logId: ID!
+  approval: FinanceApprovalRequest
+  action: String!
+  subjectReference: ID
+  beforeState: AWSJSON
+  afterState: AWSJSON
+  metadata: AWSJSON
+  decision: FinanceApprovalDecision
+  approvalSnapshot: FinanceApprovalRequest
+  actorAdmin: ID!
+  reason: String
+  createdAt: AWSDateTime!
+}
+
 input OverrideReservePolicyInput {
   sellerUserId: ID!
   reserveBps: Int!
@@ -459,6 +512,23 @@ input StartDailyCloseInput {
   idempotencyKey: String!
 }
 
+input StartFinanceApprovalInput {
+  scope: String!
+  referenceId: ID!
+  context: AWSJSON
+  reason: String
+  approvalsRequired: Int = 2
+  expiresInHours: Int
+  idempotencyKey: String!
+}
+
+input DecideFinanceApprovalInput {
+  approvalId: ID!
+  decision: ApprovalDecision!
+  reason: String
+  idempotencyKey: String!
+}
+
 type CheckoutEvent {
   lbgId: ID!
   eventType: String!
@@ -480,6 +550,9 @@ extend type Query {
   financeBooking(lbgId: ID!): LinkedBookingGroup! @auth(role: "finance_ops")
   financeReserveLedger(sellerUserId: ID!): [ReserveEntry!]! @auth(role: "finance_ops")
   financeDailyClose(date: AWSDate!): FinanceDailyClose! @auth(role: "finance_ops")
+  financeApproval(approvalId: ID!): FinanceApprovalRequest! @auth(role: "finance_ops")
+  financeApprovalRequests(status: [ApprovalStatus!], scope: String, limit: Int = 25): [FinanceApprovalRequest!]! @auth(role: "finance_ops")
+  financeActionLog(approvalId: ID!, limit: Int = 50): [FinanceActionLog!]! @auth(role: "finance_ops")
   trustDispute(disputeId: ID!): DisputeDetail! @auth(role: "trust_safety")
 }
 
@@ -505,6 +578,8 @@ extend type Mutation {
   queuePayouts(input: QueuePayoutInput!): [PayoutSummary!]! @auth(role: "finance_ops")
   submitDisputeEvidence(input: SubmitDisputeEvidenceInput!): DisputeDetail! @auth(role: "trust_safety")
   startFinanceDailyClose(input: StartDailyCloseInput!): FinanceDailyClose! @auth(role: "finance_ops")
+  startFinanceApproval(input: StartFinanceApprovalInput!): FinanceApprovalRequest! @auth(role: "finance_ops")
+  decideFinanceApproval(input: DecideFinanceApprovalInput!): FinanceApprovalRequest! @auth(role: "finance_ops")
 }
 
 extend type Subscription {

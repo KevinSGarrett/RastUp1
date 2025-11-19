@@ -27,6 +27,8 @@ class BookingSchemaTest(unittest.TestCase):
             "dispute_status": {"needs_response", "under_review", "won", "lost", "warning_closed"},
             "reserve_status": {"held", "pending_release", "released", "forfeited"},
             "finance_close_status": {"open", "in_progress", "succeeded", "failed"},
+            "approval_status": {"pending", "approved", "rejected", "cancelled", "expired"},
+            "approval_decision": {"approve", "reject", "cancel"},
             "receipt_kind": {"leg", "group", "refund"}
         }
 
@@ -57,6 +59,9 @@ class BookingSchemaTest(unittest.TestCase):
             "booking.webhook_event",
             "booking.finance_daily_close",
             "booking.finance_daily_close_item",
+            "booking.finance_approval_request",
+            "booking.finance_approval_decision",
+            "booking.finance_action_log",
             "booking.idempotency_record"
         ]
         for table in required_tables:

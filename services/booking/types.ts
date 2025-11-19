@@ -438,3 +438,51 @@ export interface IdempotencyRecord {
   expiresAt?: string | null;
 }
 
+export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'cancelled' | 'expired';
+
+export type ApprovalDecision = 'approve' | 'reject' | 'cancel';
+
+export interface FinanceApprovalDecision {
+  decisionId: string;
+  approvalId: string;
+  approver: string;
+  decision: ApprovalDecision;
+  reason?: string | null;
+  decidedAt: string;
+  createdAt: string;
+}
+
+export interface FinanceApprovalRequest {
+  approvalId: string;
+  scope: string;
+  referenceId: string;
+  status: ApprovalStatus;
+  approvalsRequired: number;
+  approvalsObtained: number;
+  context: Record<string, unknown>;
+  reason?: string | null;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  expiresAt?: string | null;
+  decisions: FinanceApprovalDecision[];
+}
+
+export interface FinanceActionLogEntry {
+  logId: string;
+  approvalId?: string | null;
+  action: string;
+  subjectReference?: string | null;
+  beforeState?: Record<string, unknown> | null;
+  afterState?: Record<string, unknown> | null;
+  actorAdmin: string;
+  reason?: string | null;
+  createdAt: string;
+  metadata: {
+    decision: FinanceApprovalDecision | null;
+    approvalSnapshot: FinanceApprovalRequest | null;
+  };
+  decision?: FinanceApprovalDecision | null;
+  approvalSnapshot?: FinanceApprovalRequest | null;
+}
+

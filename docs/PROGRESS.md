@@ -66,3 +66,12 @@
 - `node --test tests/booking/*.test.mjs` → pass (59 tests including new Part 3 suites).  
 - `python -m unittest tests.python.test_booking_schema` → pass (4 tests validating new enums/tables).  
 - `make ci` → failed (`No rule to make target 'ci'`). Target still missing; documented for continuity.
+
+## 2025-11-19 — AGENT-2 (WBS-005) Part 4
+
+- Introduced finance dual-approval workflow tables (`finance_approval_request`, `finance_approval_decision`, `finance_action_log`) and supporting enums in `db/migrations/026_booking_core.sql`, with Python schema tests refreshed for new structures.
+- Implemented finance approvals domain helpers (`services/booking/approvals.{js,ts}`) plus TypeScript types and Node unit tests covering request lifecycle, duplicate guards, expiration, and audit log generation.
+- Expanded booking GraphQL schema with approval enumerations, query/mutation surfaces, and action log types to serve finance ops consoles.
+- `node --test tests/booking/*.test.mjs` → pass (65 subtests including new approvals suite).  
+- `python -m unittest tests.python.test_booking_schema` → pass (4 tests verifying schemas).  
+- `make ci` → failed (`No rule to make target 'ci'`). CI target still missing; failure captured for continuity.
