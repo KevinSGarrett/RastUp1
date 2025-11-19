@@ -20,6 +20,7 @@
 | Safe-Mode rendering | Attachment display state transitions across `nsfwBand`, overrides, and quarantine | Use matrix of user clearance vs thread requirements. |
 | Message requests | Credit gating, expiry, accept/decline transitions | Validate follow-up state (thread moves folder, credits updated). |
 | Action cards | State machine transitions for reschedule, extras, deliverables, disputes | Ensure invalid transitions throw `ACTION_INVALID_STATE` and audit payloads generated. |
+| Action card presenter | Format summaries, metadata, evidence, and intent labels per card type | `tests/frontend/messaging/action_card_presenter.test.mjs` verifies schedule, extras, deposit, and dispute cards render friendly descriptors. |
 | Upload manager | Client-side lifecycle (request → signed → upload → scanning → ready), failure recovery, TTL pruning | Mock server updates for antivirus results, verify attachment linking and metadata retention. |
 | Notification queue | Quiet hour deferral, severity bypass, dedupe window, digest summaries | Test release after quiet hours and aggregated digest output for deferred items. |
 | Messaging controller | Combined inbox/thread/notification orchestration, optimistic lifecycle, subscription events | Unit tests validating unread sync, optimistic send resolution, message request acceptance, filter-aware `selectInboxThreads`, action card analytics, and digest releases. |

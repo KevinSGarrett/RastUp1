@@ -36,7 +36,8 @@
    - `createMessagingClient.startInboxSubscription()` and `startThreadSubscription(threadId)` wrap AppSync subscriptions, translating envelopes with `mapInboxEventEnvelope` / `mapThreadEventEnvelope` and applying them to the controller.
    - Manual flow: `Subscription.threadEvents(threadId)` yields envelopes `{type: "MESSAGE_CREATED"|"MESSAGE_UPDATED"|"ACTION_UPDATED"|"PRESENCE"|"THREAD_LOCKED", payload}` which reducers merge by `messageId` / `actionId`; ensures chronological insertion using `createdAt` + tie breaker on `messageId`.
     - Optimistic messages with `clientId` are reconciled by `createMessagingClient.sendMessage()` (auto resolves) or the direct controller helpers (`resolveOptimisticMessage`, `failOptimisticMessage`).
-    - `MessagingThread` (`web/components/Messaging/MessagingThread.tsx`) hydrates/ subscribes automatically, renders day-grouped timelines with Safe-Mode aware bodies/attachments, surfaces action card transitions, and exposes a policy-aware composer (nudges vs hard blocks).
+     - `MessagingThread` (`web/components/Messaging/MessagingThread.tsx`) hydrates/ subscribes automatically, renders day-grouped timelines with Safe-Mode aware bodies/attachments, surfaces action card transitions, and exposes a policy-aware composer (nudges vs hard blocks).
+      - Action card panel consumes `presentActionCard` results so each type shows friendly titles, contextual metadata, evidence attachments, and CTA labels instead of raw JSON payloads.
 3. **Read receipts**
    - On focus, call `markThreadRead(threadId, lastMessageId)` and update local `participants[].lastReadMsgId`.
    - Show avatars stacked under the last read message.

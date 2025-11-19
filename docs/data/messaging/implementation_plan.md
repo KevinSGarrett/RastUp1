@@ -88,6 +88,7 @@
 - `selectThreads` / `controller.selectInboxThreads` now accept advanced filters (`onlyUnread`, `kinds`, `muted`, `safeModeRequired`, `query`, `queryMatcher`) aligning inbox UX with blueprint requirements and enabling custom search matching per surface.  
   - `createMessagingDataSource` exposes fetch helpers plus configurable `mutations`/`subscribe*` hooks with Safe-Mode aware stub fallbacks; pass `graphqlMutations`, `mutations`, or `subscribeInbox/subscribeThread` overrides to integrate AppSync/App Server transports without rewriting the workspace client.  
 - Upload helpers (`controller.registerUpload`, `client.prepareUpload`, `useUploads`, `prepareUpload`/`cancelUpload` actions) expose a frontend-facing pipeline for file attachments with Safe-Mode aware status tracking prior to backend transport wiring.  
+- Action card presenters (`presentActionCard`, `formatActionCardIntentLabel` in `tools/frontend/messaging/action_card_presenter.mjs`) convert raw payloads into UI-friendly descriptors so workspace surfaces can render type-specific summaries without duplicating JSON parsing logic.  
 - Provide TypeScript declaration files (`.d.ts`) once the Next.js scaffold materialises; for now, JSDoc shapes near functions for editor IntelliSense.  
 - Aim for idempotent helpers to ease unit testing in Node; mirror these in future React hooks (e.g., `useThreadState` delegates to `ThreadStore` reducers).  
 - Document event payload shapes and integration steps in `ui_flows.md` and `test_plan.md` for continuity across agents.  
@@ -100,6 +101,7 @@
 - Inbox UI surfaces pinned/default/archived folders, message request handling (accept/decline/block), credit/rate-limit affordances, and configurable thread labelling hooks for downstream apps.  
 - Inbox filter/search bar layers unread/project/inquiry toggles, safe-mode gating, muted cycle states, and free-text search against thread metadata via enhanced `selectThreads` options; behaviour covered by updated inbox/controller unit suites.  
 - Thread timeline groups messages by day with Safe-Mode aware rendering, optimistic delivery statuses, attachment state pills, action card panels (controller-driven transitions), and a policy-aware composer showing nudges vs hard blocks.  
+- Workspace action card panel now consumes `presentActionCard` outputs to surface schedule changes, extras, deliverables, deposits, and disputes with contextual metadata, evidence attachments, and friendly intent labels instead of raw JSON dumps.  
 - Composer integrates file attachments via the upload manager pipeline, surfacing Safe-Mode aware preview/status chips and gating send until scans complete.  
 - Project panel tabs render snapshot JSON/structured summaries for `brief`, `moodboard`, `files`, `docs`, `expenses`, and `actions`, ready for future design system styling.
 - Introduced Next.js integration utilities (`tools/frontend/messaging/next_adapter.mjs`) providing server-side prefetch + hydration helpers, and packaged a `MessagingWorkspace` layout component (`web/components/Messaging/MessagingWorkspace.tsx`) that composes provider, inbox, thread, and project panel surfaces for immediate route scaffolding.

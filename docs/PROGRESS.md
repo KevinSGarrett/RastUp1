@@ -169,6 +169,20 @@
   - `node --test tests/booking/*.test.mjs`
   - `make ci`
 
+## 2025-11-20 — AGENT-3 (WBS-006) Part 13
+
+- Introduced `presentActionCard`/`formatActionCardIntentLabel` presenter utilities (`tools/frontend/messaging/action_card_presenter.mjs`) with dedicated unit coverage to surface friendly summaries, metadata, and evidence for all action card types.
+- Refined `MessagingThread` action card panel to consume presenter output, apply locale-aware formatting, highlight pending cards, and render intent buttons with readable labels.
+- Updated messaging implementation plan, UI flows, and test plan to document the presenter workflow and new coverage; appended run history in `docs/PROGRESS.md`.
+- Tests (captured in run artifacts):
+  - `node --test tests/frontend/messaging/action_card_presenter.test.mjs`
+  - `node --test tests/frontend/messaging/*.test.mjs`
+  - `node --test tests/frontend/**/*.test.mjs`
+  - `node --test tests/search/*.test.mjs`
+  - `python -m unittest tests.search.test_collections_json`
+  - `node --test tests/booking/*.test.mjs`
+  - `make ci`
+
 ## 2025-11-19 — AGENT-1 (WBS-015)
 
 - Authored end-to-end communications blueprint (`docs/ops/communications/communications_system.md`) covering architecture, data models, routing rules, deliverability, admin tooling, observability, and phase plan mapped to TD-0050 – TD-0056.

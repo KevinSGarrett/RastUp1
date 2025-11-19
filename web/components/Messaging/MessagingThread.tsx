@@ -15,6 +15,10 @@ import {
 } from '../../../tools/frontend/messaging/ui_helpers.mjs';
 import { computeSafeModeState } from '../../../tools/frontend/messaging/safe_mode.mjs';
 import { createPolicyState, evaluateWithAudit } from '../../../tools/frontend/messaging/policy.mjs';
+import {
+  presentActionCard,
+  formatActionCardIntentLabel
+} from '../../../tools/frontend/messaging/action_card_presenter.mjs';
 
 type PolicyResult = ReturnType<typeof evaluateWithAudit>;
 
@@ -25,6 +29,7 @@ interface MessagingThreadProps {
   allowSafeModeOverride?: boolean;
   initialSafeModeOverride?: boolean;
   timezone?: string;
+  locale?: string;
   composerPlaceholder?: string;
   autoHydrate?: boolean;
   autoSubscribe?: boolean;
@@ -45,6 +50,7 @@ export const MessagingThread: React.FC<MessagingThreadProps> = ({
   allowSafeModeOverride = false,
   initialSafeModeOverride,
   timezone = 'UTC',
+  locale = 'en-US',
   composerPlaceholder = 'Write a message…',
   autoHydrate = true,
   autoSubscribe = true
@@ -207,17 +213,31 @@ export const MessagingThread: React.FC<MessagingThreadProps> = ({
       .filter(Boolean);
   }, [threadState]);
 
+  const presentedActionCards = useMemo(
+    () =>
+      actionCards.map((card) => ({
+        card,
+        presentation: presentActionCard(card, { locale, timezone })
+      })),
+    [actionCards, locale, timezone]
+  );
+
   const actionCardTransitions = useMemo(() => {
-    const map: Record<string, string[]> = {};
+    const map: Record<string, Array<{ intent: string; toState?: string }>> = {};
     if (!controller) {
       return map;
     }
-    for (const card of actionCards) {
+    for (const entry of actionCards) {
+      const actionId = entry?.actionId;
+      if (!actionId) {
+        continue;
+      }
       try {
-        map[card.actionId] =
-          controller.getActionCardTransitions?.(threadId, card.actionId, { includeInvalid: false }) ?? [];
+        const transitions =
+          controller.getActionCardTransitions?.(threadId, actionId, { includeInvalid: false }) ?? [];
+        map[actionId] = Array.isArray(transitions) ? transitions : [];
       } catch {
-        map[card.actionId] = [];
+        map[actionId] = [];
       }
     }
     return map;
@@ -447,7 +467,7 @@ export const MessagingThread: React.FC<MessagingThreadProps> = ({
                           <span className="messaging-thread__attachment-name">{attachment.fileName ?? attachment.url ?? 'Attachment'}</span>
                           <span className="messaging-thread__attachment-state">{attachment.display?.reason ?? ''}</span>
                         </li>
-                      ))}
+                        ))}
                     </ul>
                   ) : null}
                   {message.action ? (
@@ -460,41 +480,83 @@ export const MessagingThread: React.FC<MessagingThreadProps> = ({
               ))}
             </ul>
           </div>
-        ))}
-      </section>
-
-      {actionCards.length > 0 ? (
-        <section className="messaging-thread__actions-panel">
-          <h3>Open action cards</h3>
-          <ul className="messaging-thread__actions-list">
-            {actionCards.map((card) => (
-              <li key={card.actionId} className="messaging-thread__action">
-                <div className="messaging-thread__action-header">
-                  <span className="messaging-thread__action-type">{card.type}</span>
-                  <span className="messaging-thread__action-state">{card.state}</span>
-                  <span className="messaging-thread__action-updated">
-                    Updated {formatRelativeTimestamp(card.updatedAt ?? card.createdAt)}
-                  </span>
-                </div>
-                {card.payload ? (
-                  <pre className="messaging-thread__action-payload">
-                    {JSON.stringify(card.payload, null, 2)}
-                  </pre>
-                ) : null}
-                {actionCardTransitions[card.actionId]?.length ? (
-                  <div className="messaging-thread__action-buttons">
-                    {actionCardTransitions[card.actionId].map((intent) => (
-                      <button key={intent} type="button" onClick={() => handleActionCardIntent(card.actionId, intent)}>
-                        {intent.toLowerCase()}
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
-              </li>
-            ))}
-          </ul>
+          ))}
         </section>
-      ) : null}
+
+        {presentedActionCards.length > 0 ? (
+          <section className="messaging-thread__actions-panel">
+            <h3>Open action cards</h3>
+            <ul className="messaging-thread__actions-list">
+              {presentedActionCards.map(({ card, presentation }) => {
+                const transitions = actionCardTransitions[card.actionId] ?? [];
+                const actionClassNames = ['messaging-thread__action'];
+                if (presentation.requiresAttention) {
+                  actionClassNames.push('messaging-thread__action--pending');
+                }
+                return (
+                  <li key={card.actionId} className={actionClassNames.join(' ')}>
+                    <div className="messaging-thread__action-header">
+                      <span className="messaging-thread__action-type">{presentation.title}</span>
+                      <span
+                        className={`messaging-thread__action-state messaging-thread__action-state--${presentation.stateTone}`}
+                      >
+                        {presentation.stateLabel}
+                      </span>
+                      <span className="messaging-thread__action-updated">
+                        Updated {formatRelativeTimestamp(card.updatedAt ?? card.createdAt)}
+                      </span>
+                    </div>
+                    {presentation.summary ? (
+                      <p className="messaging-thread__action-summary">{presentation.summary}</p>
+                    ) : null}
+                    {presentation.metadata.length ? (
+                      <dl className="messaging-thread__action-metadata">
+                        {presentation.metadata.map((entry, index) => (
+                          <div
+                            key={`${card.actionId}-metadata-${index}`}
+                            className="messaging-thread__action-metadata-row"
+                          >
+                            <dt>{entry.label}</dt>
+                            <dd>{entry.value}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    ) : null}
+                    {presentation.attachments.length ? (
+                      <ul className="messaging-thread__action-attachments">
+                        {presentation.attachments.map((attachment, index) => (
+                          <li key={`${card.actionId}-attachment-${index}`}>
+                            <span className="messaging-thread__action-attachment-label">{attachment.label}</span>
+                            <span className="messaging-thread__action-attachment-value">{attachment.value}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                    {transitions.length ? (
+                      <div className="messaging-thread__action-buttons">
+                        {transitions.map((transition, index) => {
+                          const intent = typeof transition === 'string' ? transition : transition?.intent;
+                          if (!intent) {
+                            return null;
+                          }
+                          return (
+                            <button
+                              key={`${card.actionId}-intent-${intent}-${index}`}
+                              type="button"
+                              onClick={() => handleActionCardIntent(card.actionId, intent)}
+                            >
+                              {formatActionCardIntentLabel(intent)}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : null}
+                  </li>
+                );
+              })}
+            </ul>
+        </section>
+        ) : null}
 
       <section className="messaging-thread__composer">
         {policyResult.status === 'NUDGE' ? (
