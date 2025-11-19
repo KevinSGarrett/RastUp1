@@ -94,6 +94,7 @@
 - Document event payload shapes and integration steps in `ui_flows.md` and `test_plan.md` for continuity across agents.  
 - Logging: instrument `debug` channel `messaging:*` behind environment flag for developer diagnostics without leaking PII.
 - Ship GraphQL normalizers (`tools/frontend/messaging/normalizers.mjs`) that translate AppSync query/subscription payloads into inbox/thread/controller inputs, including helpers for controller hydration.
+- React bindings expose notification queue orchestration helpers (`enqueueNotification`, `flushNotifications`, `collectNotificationDigest`, `listPendingNotifications`) so client surfaces can manage quiet-hours deferrals and digests without reaching into controller internals.
 
 ## Component Scaffolding — 2025-11-19
 - Added UI timeline helpers (`tools/frontend/messaging/ui_helpers.mjs`) with unit coverage for Safe-Mode redaction, presence summarisation, and relative timestamp formatting.  
@@ -109,6 +110,7 @@
 - Added query persistence helpers (`tools/frontend/messaging/filter_params.mjs` + unit tests) alongside `MessagingWorkspaceRouteBridge` to sync inbox filters, search, and active thread selection with Next.js query parameters.
 - Created a server/client handoff for the messaging workspace routed through `web/app/messaging/page.tsx`, using `createMessagingNextAdapter` with a shared data source (`web/lib/messaging/dataSources.mjs`) and a client bridge component (`MessagingWorkspaceClient.tsx`) to hydrate `MessagingProvider` from prefetch snapshots while falling back to Safe-Mode aware stub payloads when GraphQL is not yet wired.
   - Enabled runtime mutations/subscriptions for the workspace by extending `web/lib/messaging/dataSources.mjs` with GraphQL-aware send/read/request helpers plus stub fallbacks, and wiring the new hooks into `MessagingWorkspaceClient.tsx` so messaging actions function even before the backend is live.
+  - Delivered an in-app notification center (`web/components/Messaging/MessagingNotificationCenter.tsx`) that reads the controller's notification queue, auto-flushes ready items, surfaces quiet-hour state, and emits digest summaries alongside optional callbacks for thread navigation; exposed via `MessagingWorkspace` as an opt-in sidebar panel.
 
 ## Performance & Offline
 - Inbox virtualization and timeline windowing: plan to leverage intersection observers + incremental fetch (`cursor` pagination).  

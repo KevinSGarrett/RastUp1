@@ -242,58 +242,47 @@ export function createMessagingReactBindings(options = {}) {
         return () => {
           throw new Error(fallbackMessage);
         };
-      };
-      return {
-        controller,
-        client,
-        refreshInbox: safeBind(client.refreshInbox, 'Messaging client missing refreshInbox'),
-        hydrateThread: safeBind(client.hydrateThread, 'Messaging client missing hydrateThread'),
-        startThreadSubscription: safeBind(
-          client.startThreadSubscription,
-          'Messaging client missing startThreadSubscription'
-        ),
-        stopThreadSubscription: typeof client.stopThreadSubscription === 'function'
-          ? client.stopThreadSubscription.bind(client)
-          : noop,
-        sendMessage: safeBind(client.sendMessage, 'Messaging client missing sendMessage'),
-        markThreadRead: safeBind(client.markThreadRead, 'Messaging client missing markThreadRead'),
-        acceptMessageRequest: safeBind(
-          client.acceptMessageRequest,
-          'Messaging client missing acceptMessageRequest'
-        ),
-        declineMessageRequest: safeBind(
-          client.declineMessageRequest,
-          'Messaging client missing declineMessageRequest'
-        ),
-        recordConversationStart:
-          typeof client.recordConversationStart === 'function'
-            ? client.recordConversationStart.bind(client)
-            : async () => {},
-        prepareUpload: safeBind(client.prepareUpload, 'Messaging client missing prepareUpload'),
-        getUploadState:
-          typeof controller.getUploadState === 'function'
-            ? controller.getUploadState.bind(controller)
-            : () => null,
-        getUpload:
-          typeof controller.getUpload === 'function'
-            ? controller.getUpload.bind(controller)
-            : () => null,
-        listUploads:
-          typeof controller.listUploads === 'function'
-            ? controller.listUploads.bind(controller)
-            : () => [],
-        cancelUpload:
-          typeof controller.cancelUpload === 'function'
-            ? controller.cancelUpload.bind(controller)
-            : () => {},
-        applyAttachmentStatus:
-          typeof controller.applyAttachmentStatus === 'function'
-            ? controller.applyAttachmentStatus.bind(controller)
-            : () => {},
-        markUploadFailed:
-          typeof controller.markUploadFailed === 'function'
-            ? controller.markUploadFailed.bind(controller)
-            : () => {}
+        };
+        const controllerBind = (method, fallback) =>
+          typeof method === 'function' ? method.bind(controller) : fallback;
+
+        return {
+          controller,
+          client,
+          refreshInbox: safeBind(client.refreshInbox, 'Messaging client missing refreshInbox'),
+          hydrateThread: safeBind(client.hydrateThread, 'Messaging client missing hydrateThread'),
+          startThreadSubscription: safeBind(
+            client.startThreadSubscription,
+            'Messaging client missing startThreadSubscription'
+          ),
+          stopThreadSubscription: typeof client.stopThreadSubscription === 'function'
+            ? client.stopThreadSubscription.bind(client)
+            : noop,
+          sendMessage: safeBind(client.sendMessage, 'Messaging client missing sendMessage'),
+          markThreadRead: safeBind(client.markThreadRead, 'Messaging client missing markThreadRead'),
+          acceptMessageRequest: safeBind(
+            client.acceptMessageRequest,
+            'Messaging client missing acceptMessageRequest'
+          ),
+          declineMessageRequest: safeBind(
+            client.declineMessageRequest,
+            'Messaging client missing declineMessageRequest'
+          ),
+          recordConversationStart:
+            typeof client.recordConversationStart === 'function'
+              ? client.recordConversationStart.bind(client)
+              : async () => {},
+          prepareUpload: safeBind(client.prepareUpload, 'Messaging client missing prepareUpload'),
+          getUploadState: controllerBind(controller.getUploadState, () => null),
+          getUpload: controllerBind(controller.getUpload, () => null),
+          listUploads: controllerBind(controller.listUploads, () => []),
+          cancelUpload: controllerBind(controller.cancelUpload, () => {}),
+          applyAttachmentStatus: controllerBind(controller.applyAttachmentStatus, () => {}),
+          markUploadFailed: controllerBind(controller.markUploadFailed, () => {}),
+          enqueueNotification: controllerBind(controller.enqueueNotification, () => {}),
+          flushNotifications: controllerBind(controller.flushNotifications, () => []),
+          collectNotificationDigest: controllerBind(controller.collectNotificationDigest, () => []),
+          listPendingNotifications: controllerBind(controller.listPendingNotifications, () => [])
       };
     }, [controller, client]);
 
@@ -376,7 +365,11 @@ export function createMessagingReactBindings(options = {}) {
       prepareUpload,
       cancelUpload,
       applyAttachmentStatus,
-      markUploadFailed
+      markUploadFailed,
+      enqueueNotification,
+      flushNotifications,
+      collectNotificationDigest,
+      listPendingNotifications
     } = useMessaging();
     return {
       sendMessage,
@@ -391,7 +384,11 @@ export function createMessagingReactBindings(options = {}) {
       prepareUpload,
       cancelUpload,
       applyAttachmentStatus,
-      markUploadFailed
+      markUploadFailed,
+      enqueueNotification,
+      flushNotifications,
+      collectNotificationDigest,
+      listPendingNotifications
     };
   }
 

@@ -146,6 +146,21 @@ test('MessagingProvider wires client lifecycle and exposes actions', async () =>
   await actions.declineMessageRequest('req-2');
   await actions.recordConversationStart();
   await actions.hydrateThread('thr-1');
+  const notificationStateResult = actions.enqueueNotification({
+    key: 'test:notification',
+    message: 'New inbox activity'
+  });
+  assert.ok(notificationStateResult, 'enqueueNotification should return notification state');
+  const pendingBeforeFlush = actions.listPendingNotifications();
+  assert.ok(Array.isArray(pendingBeforeFlush), 'listPendingNotifications should return an array');
+  assert.equal(pendingBeforeFlush.length, 1);
+  const flushed = actions.flushNotifications();
+  assert.ok(Array.isArray(flushed), 'flushNotifications should return an array');
+  assert.equal(flushed.length, 1);
+  const pendingAfterFlush = actions.listPendingNotifications();
+  assert.equal(pendingAfterFlush.length, 0, 'listPendingNotifications should be empty after flush');
+  const digests = actions.collectNotificationDigest();
+  assert.ok(Array.isArray(digests), 'collectNotificationDigest should return an array');
 
   const wiringController = useMessagingController();
   assert.ok(wiringController === controller, 'Expected controller from context');

@@ -197,6 +197,20 @@
   - `node --test tests/booking/*.test.mjs`
   - `make ci`
 
+## 2025-11-19 — AGENT-3 (WBS-006) Part 15
+
+- Extended messaging React bindings to expose notification queue helpers (`enqueueNotification`, `flushNotifications`, `collectNotificationDigest`, `listPendingNotifications`) and updated unit tests to exercise the new actions.
+- Introduced `MessagingNotificationCenter` with quiet-hour awareness, digest collection, and optional sidebar integration via `MessagingWorkspace`; exports refreshed for downstream usage.
+- Updated messaging implementation plan, UI flows, and test plan to document the notification center workflow and new coverage expectations.
+- Tests:
+  - `node --test tests/frontend/messaging/react_bindings.test.mjs`
+  - `node --test tests/frontend/messaging/*.test.mjs`
+  - `node --test tests/frontend/**/*.test.mjs`
+  - `node --test tests/search/*.test.mjs`
+  - `python -m unittest tests.search.test_collections_json`
+  - `node --test tests/booking/*.test.mjs`
+  - `make ci`
+
 ## 2025-11-19 — AGENT-1 (WBS-015)
 
 - Authored end-to-end communications blueprint (`docs/ops/communications/communications_system.md`) covering architecture, data models, routing rules, deliverability, admin tooling, observability, and phase plan mapped to TD-0050 – TD-0056.

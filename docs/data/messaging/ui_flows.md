@@ -123,3 +123,18 @@
 - Support/T&S agents access separate consoles (not built yet) but frontend must capture metadata for audit:  
   - Each moderation/approval CTA includes `context.auditTrailId`.  
   - Client logs `messaging.audit` event on each action with sanitized payload (IDs only).
+
+## 9. Notification Center & Quiet Hours
+
+1. **Controller integration**
+   - `MessagingNotificationCenter` subscribes to the shared notification queue via `useNotifications()` and uses `useMessagingActions()` to call `enqueueNotification`, `flushNotifications`, `collectNotificationDigest`, and `listPendingNotifications`.
+   - The component auto-flushes ready notifications (default interval configurable) and exposes callbacks so parent layouts can deep-link into threads when a toast is clicked.
+2. **Quiet hour awareness**
+   - Reads `notificationState.quietHours` to display the configured window and surfaces real-time status (`active` vs `inactive`), polling every 60 s by default.
+   - Deferred notifications (quiet-hours gated) remain in the queue list until `flushNotifications` runs outside the quiet window.
+3. **Digest summaries**
+   - `collectNotificationDigest` aggregates deferred items beyond the digest window, surfacing counts, highest severity, and sample messages; users can trigger via CTA or allow the auto interval to run.
+4. **Workspace placement**
+   - `MessagingWorkspace` accepts `showNotificationCenter` + `notificationCenterProps` to inject the panel into the sidebar beneath the inbox. Alternate placements can compose the standalone component directly.
+5. **Fallback behaviour**
+   - When notification actions are not provided (e.g., stubs), the component degrades gracefully by rendering static “No notifications” states without throwing.

@@ -5,6 +5,7 @@ import type { MessagingProviderProps } from '../MessagingProvider';
 import { MessagingInbox, type MessagingInboxProps } from './MessagingInbox';
 import { MessagingThread, type MessagingThreadProps } from './MessagingThread';
 import { ProjectPanelTabs, type ProjectPanelTabsProps } from './ProjectPanelTabs';
+import { MessagingNotificationCenter, type MessagingNotificationCenterProps } from './MessagingNotificationCenter';
 
 type ThreadProps = Omit<MessagingThreadProps, 'threadId' | 'viewerUserId'>;
 
@@ -20,6 +21,8 @@ export interface MessagingWorkspaceProps extends MessagingProviderProps {
   threadProps?: ThreadProps & { viewerUserId?: string };
   projectPanelProps?: ProjectPanelTabsProps;
   emptyThreadState?: React.ReactNode;
+  showNotificationCenter?: boolean;
+  notificationCenterProps?: MessagingNotificationCenterProps;
 }
 
 interface ThreadRegionProps {
@@ -85,6 +88,8 @@ export const MessagingWorkspace: React.FC<MessagingWorkspaceProps> = ({
   threadProps,
   projectPanelProps,
   emptyThreadState,
+  showNotificationCenter = false,
+  notificationCenterProps,
   children,
   viewerUserId,
   ...providerProps
@@ -131,26 +136,34 @@ export const MessagingWorkspace: React.FC<MessagingWorkspaceProps> = ({
     <MessagingProvider viewerUserId={viewerUserId ?? resolvedViewerId} {...providerProps}>
       <div className={workspaceClass}>
         {header ? <div className="messaging-workspace__header">{header}</div> : null}
-          <div className="messaging-workspace__body">
-            <aside className="messaging-workspace__sidebar">
-              {sidebar}
-              <MessagingInbox
-                {...inboxProps}
-                activeThreadId={activeThreadId}
-                onSelectThread={handleSelectThread}
+        <div className="messaging-workspace__body">
+          <aside className="messaging-workspace__sidebar">
+            {sidebar}
+            <MessagingInbox
+              {...inboxProps}
+              activeThreadId={activeThreadId}
+              onSelectThread={handleSelectThread}
+            />
+            {showNotificationCenter ? (
+              <MessagingNotificationCenter
+                {...notificationCenterProps}
+                className={`messaging-workspace__notification-center${
+                  notificationCenterProps?.className ? ` ${notificationCenterProps.className}` : ''
+                }`}
               />
-            </aside>
-            <section className="messaging-workspace__content">
-              <ThreadRegion
-                threadId={activeThreadId}
-                viewerUserId={resolvedViewerId}
-                threadProps={threadProps}
-                panelProps={projectPanelProps}
-                emptyState={emptyThreadState}
-              />
-              {children}
-            </section>
-          </div>
+            ) : null}
+          </aside>
+          <section className="messaging-workspace__content">
+            <ThreadRegion
+              threadId={activeThreadId}
+              viewerUserId={resolvedViewerId}
+              threadProps={threadProps}
+              panelProps={projectPanelProps}
+              emptyState={emptyThreadState}
+            />
+            {children}
+          </section>
+        </div>
       </div>
     </MessagingProvider>
   );
