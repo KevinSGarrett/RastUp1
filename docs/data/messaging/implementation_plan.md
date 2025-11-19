@@ -86,6 +86,7 @@
 - Aim for idempotent helpers to ease unit testing in Node; mirror these in future React hooks (e.g., `useThreadState` delegates to `ThreadStore` reducers).  
 - Document event payload shapes and integration steps in `ui_flows.md` and `test_plan.md` for continuity across agents.  
 - Logging: instrument `debug` channel `messaging:*` behind environment flag for developer diagnostics without leaking PII.
+- Ship GraphQL normalizers (`tools/frontend/messaging/normalizers.mjs`) that translate AppSync query/subscription payloads into inbox/thread/controller inputs, including helpers for controller hydration.
 
 ## Performance & Offline
 - Inbox virtualization and timeline windowing: plan to leverage intersection observers + incremental fetch (`cursor` pagination).  

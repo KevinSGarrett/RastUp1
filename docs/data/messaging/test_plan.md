@@ -23,6 +23,7 @@
 | Upload manager | Client-side lifecycle (request → signed → upload → scanning → ready), failure recovery, TTL pruning | Mock server updates for antivirus results, verify attachment linking and metadata retention. |
 | Notification queue | Quiet hour deferral, severity bypass, dedupe window, digest summaries | Test release after quiet hours and aggregated digest output for deferred items. |
 | Messaging controller | Combined inbox/thread/notification orchestration, optimistic lifecycle, subscription events | Unit tests validating unread sync, optimistic send resolution, message request acceptance, action card analytics, and digest releases. |
+| GraphQL normalizers | `normalizeInboxPayload`, `normalizeThreadPayload`, subscription envelope mappers | Ensure AppSync query/subscription payloads produce stable inbox/thread/controller updates and reject malformed data. |
 | Moderation policy | Text evaluation returning `ALLOW`/`NUDGE`/`BLOCK` with escalation counters | Validate threshold resets after cooldown. |
 
 ### 2. Integration Tests (Future, Node/React)
