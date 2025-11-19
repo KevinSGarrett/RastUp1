@@ -199,3 +199,14 @@
   - `python -m unittest tests.search.test_collections_json` → pass (3 tests).
   - `node --test tests/booking/*.test.mjs` → pass (65 subtests).
   - `make ci` → pass (Python booking schema + Node booking suites).
+
+## 2025-11-19 — AGENT-3 (WBS-017) Part 3
+
+- Implemented `createCalendarController` orchestrating availability, calendar connect, and reschedule stores with hold/event lifecycle hooks, external busy updates, telemetry sync, and preview refresh helpers (`tools/frontend/calendar/controller.mjs`).
+- Shipped a GraphQL-aware calendar client (`tools/frontend/calendar/client.mjs`) mapping dashboard payloads, managing external sources/feeds, and coordinating atomic hold→confirm flows with booking integrations, exporting via `tools/frontend/calendar/index.mjs`.
+- Added targeted unit coverage for controller/client behaviour (`tests/frontend/calendar/{controller,client}.test.mjs`) and refreshed calendar plan/test documentation to reflect the new DX pathways.
+- Tests:
+  - `node --test tests/frontend/calendar/*.test.mjs` → pass (20 subtests including controller/client suites).
+  - `node --test tests/frontend/**/*.test.mjs` → pass (103 subtests across frontend suites).
+  - `node --test tests/booking/*.test.mjs` → pass (65 subtests).
+  - `make ci` → pass (Python booking schema + Node booking suites).

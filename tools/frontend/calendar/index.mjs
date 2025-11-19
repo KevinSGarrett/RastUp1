@@ -4,3 +4,5 @@ export { createReschedulePickerStore } from './reschedule_picker.mjs';
 export { expandWeeklyRules, applyExceptions } from './availability.mjs';
 export { computeFeasibleSlots } from './feasibility.mjs';
 export * from './time.mjs';
+export { createCalendarController } from './controller.mjs';
+export { createCalendarClient } from './client.mjs';

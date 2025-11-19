@@ -19,7 +19,9 @@
   - `feasibility/engine` — subtract holds, confirmed events, external busy blocks; enforce buffers and lead time.
   - `ics/helpers/outbound` — build ICS payloads (VEVENT + tokens/feeds), ensure deterministic UID generation and folding.
   - `ui/state` — reducers/stores for availability editor panels, calendar connect status, reschedule picker selection.
-  - **Implemented suites:** `node --test tests/frontend/calendar/*.test.mjs` covering feasibility engine edge cases (DST, conflicts, booking window), ICS poller parsing/poller flows, ICS outbound feeds/invites, availability editor store diff tracking, connect store telemetry, reschedule picker filtering, and DX utilities.
+  - `controller` — orchestrates availability/connect/reschedule stores, hold lifecycle, external busy updates, telemetry sync.
+  - `client` — GraphQL dashboard hydration, hold creation/release, booking integration guard rails, ICS connect/disconnect flows.
+  - **Implemented suites:** `node --test tests/frontend/calendar/*.test.mjs` covering feasibility engine edge cases (DST, conflicts, booking window), ICS poller parsing/poller flows, ICS outbound feeds/invites, availability editor store diff tracking, connect store telemetry, reschedule picker filtering, controller orchestration, and GraphQL client behaviour.
 - **Contract**
   - Mock GraphQL payload validations for `WeeklyRule`, `Exception`, `Hold`, `CalEvent`, `FeasibleSlot`.
   - Schema snapshot tests once `api/schema/calendar.graphql` lands (pending backend delivery).
