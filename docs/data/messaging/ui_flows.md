@@ -50,6 +50,7 @@
      - Choose file -> call `prepareUpload(threadId, { fileName, mimeType, sizeBytes, file })` which registers the upload, requests signed URL metadata, and updates composer state.
      - While uploading, show `status: "UPLOADING"` with progress; disable send until every pending upload reports `READY`.
      - On upload success -> `applyAttachmentStatus({ attachmentId, status: "READY" })`; timeline renders placeholder card with Safe-Mode overlay until backend marks final state.
+     - While status remains `SCANNING`, the client polls `getUploadStatus` via `createMessagingClient.prepareUpload`; when the server responds `READY`/`QUARANTINED`, the composer chips update in place, and after repeated `SCANNING` responses the client marks the upload `FAILED` with `UPLOAD_STATUS_TIMEOUT`.
    - Send message:
      - Compose `sendMessage` mutation with temp `clientId`.  
      - Optimistically insert `temp` message with `deliveryState: "SENDING"`.  

@@ -69,8 +69,8 @@
 - **Mutation flows**
   - `sendMessage`, `acceptMessageRequest`, `declineMessageRequest`, `blockThread`, `pinThread`, `archiveThread`, `markInboxRead`.
   - Action card operations mirror §1.4.C mutations with idempotent client id support.
-- **Upload pipeline**
-  - Use pre-signed URLs with progress callbacks; on completion poll `message.assetStatus` for `SCANNING`, `READY`, `QUARANTINED`.
+  - **Upload pipeline**
+    - Use pre-signed URLs with progress callbacks; `createMessagingClient.prepareUpload` now polls `getUploadStatus` until assets transition from `SCANNING` into `READY`/`QUARANTINED`, and records `UPLOAD_STATUS_TIMEOUT` if the server never responds.
 - **Notifications**
   - local queue holds toasts; quiet-hour info accessible via global preferences context (tie-in to §1.10).
 
@@ -87,7 +87,7 @@
 - Ship `createMessagingReactBindings` (tools/frontend/messaging/react_bindings.mjs) to generate React contexts/hooks (`MessagingProvider`, `useInboxThreads`, `useThread`, etc.) while keeping the underlying controller/client framework-neutral; the Next.js façade lives under `web/components/MessagingProvider/**`.  
 - `selectThreads` / `controller.selectInboxThreads` now accept advanced filters (`onlyUnread`, `kinds`, `muted`, `safeModeRequired`, `query`, `queryMatcher`) aligning inbox UX with blueprint requirements and enabling custom search matching per surface.  
   - `createMessagingDataSource` exposes fetch helpers plus configurable `mutations`/`subscribe*` hooks with Safe-Mode aware stub fallbacks; pass `graphqlMutations`, `mutations`, or `subscribeInbox/subscribeThread` overrides to integrate AppSync/App Server transports without rewriting the workspace client.  
-- Upload helpers (`controller.registerUpload`, `client.prepareUpload`, `useUploads`, `prepareUpload`/`cancelUpload` actions) expose a frontend-facing pipeline for file attachments with Safe-Mode aware status tracking prior to backend transport wiring.  
+  - Upload helpers (`controller.registerUpload`, `client.prepareUpload`, `useUploads`, `prepareUpload`/`cancelUpload` actions) expose a frontend-facing pipeline for file attachments with Safe-Mode aware status tracking; the client now polls `getUploadStatus` for antivirus results and marks failures with `UPLOAD_STATUS_TIMEOUT` when scans stall.  
 - Action card presenters (`presentActionCard`, `formatActionCardIntentLabel` in `tools/frontend/messaging/action_card_presenter.mjs`) and project panel presenter helpers (`presentProjectPanelActions` in `tools/frontend/messaging/project_panel_presenter.mjs`) convert raw payloads into UI-friendly descriptors so workspace surfaces can render type-specific summaries without duplicating JSON parsing logic.  
 - Provide TypeScript declaration files (`.d.ts`) once the Next.js scaffold materialises; for now, JSDoc shapes near functions for editor IntelliSense.  
 - Aim for idempotent helpers to ease unit testing in Node; mirror these in future React hooks (e.g., `useThreadState` delegates to `ThreadStore` reducers).  

@@ -299,3 +299,56 @@ test('prepareUpload failure marks upload as failed', async () => {
   assert.equal(item.status, 'FAILED');
   assert.equal(item.errorCode, 'Error');
 });
+
+test('prepareUpload polls attachment status until ready', async () => {
+  const controller = createMessagingController();
+  const statusCalls = [];
+  const client = createMessagingClient({
+    controller,
+    uploads: {
+      createUploadSession: async () => ({ attachmentId: 'att-scan', uploadUrl: 'https://upload.example/scan' }),
+      completeUpload: async () => ({
+        attachmentId: 'att-scan',
+        status: 'SCANNING'
+      }),
+      getUploadStatus: async (attachmentId) => {
+        statusCalls.push(attachmentId);
+        if (statusCalls.length < 2) {
+          return { attachmentId, status: 'SCANNING' };
+        }
+        return { attachmentId, status: 'READY', nsfwBand: 2 };
+      }
+    }
+  });
+
+  const upload = await client.prepareUpload(
+    'thr-scan',
+    { fileName: 'preview.png', sizeBytes: 2048 },
+    { statusPollIntervalMs: 0, statusPollMaxAttempts: 5 }
+  );
+
+  assert.equal(upload.status, 'READY');
+  assert.equal(upload.nsfwBand, 2);
+  assert.equal(statusCalls.length, 2);
+});
+
+test('prepareUpload marks upload failed when status polling times out', async () => {
+  const controller = createMessagingController();
+  const client = createMessagingClient({
+    controller,
+    uploads: {
+      createUploadSession: async () => ({ attachmentId: 'att-timeout' }),
+      completeUpload: async () => ({ attachmentId: 'att-timeout', status: 'SCANNING' }),
+      getUploadStatus: async (attachmentId) => ({ attachmentId, status: 'SCANNING' })
+    }
+  });
+
+  const upload = await client.prepareUpload(
+    'thr-timeout',
+    { fileName: 'slow.bin', sizeBytes: 512 },
+    { statusPollIntervalMs: 0, statusPollMaxAttempts: 2 }
+  );
+
+  assert.equal(upload.status, 'FAILED');
+  assert.equal(upload.errorCode, 'UPLOAD_STATUS_TIMEOUT');
+});

@@ -237,6 +237,17 @@
 - Added stub data source coverage (`tests/frontend/calendar/data_source.test.mjs`) and reran calendar suite `node --test tests/frontend/calendar/*.test.mjs` → pass (22 tests).
 - `make ci` → pass (Python booking schema + Node booking suites).
 
+## 2025-11-19 — AGENT-3 (WBS-006) Part 16
+
+- Extended the messaging upload pipeline to poll `getUploadStatus` via `createMessagingClient.prepareUpload`, applying Safe-Mode metadata updates and emitting `UPLOAD_STATUS_TIMEOUT` when scans stall.
+- Added messaging client unit coverage for attachment status polling/timeout paths and refreshed implementation, UI flow, and test plan docs to capture the new lifecycle.
+- `node --test tests/frontend/messaging/*.test.mjs` → pass (98 tests).
+- `node --test tests/frontend/**/*.test.mjs` → pass (140 tests).
+- `node --test tests/search/*.test.mjs` → pass (8 tests).
+- `python -m unittest tests.search.test_collections_json` → pass (3 tests).
+- `node --test tests/booking/*.test.mjs` → pass (65 tests).
+- `make ci` → pass (Python booking schema + Node booking suites).
+
 ## 2025-11-19 — AGENT-2 (WBS-007) Part 1
 
 - Authored initial Smart Docs persistence layer (`db/migrations/027_smart_docs.sql`) covering clause, template, pack, doc instance, signer event, and legal hold tables with retention/approval metadata.

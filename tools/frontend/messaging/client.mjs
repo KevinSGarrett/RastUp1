@@ -27,6 +27,28 @@ function cloneAttachments(attachments) {
     .map((att) => ({ ...att }));
 }
 
+const TERMINAL_ATTACHMENT_STATUSES = new Set(['READY', 'QUARANTINED', 'FAILED', 'CANCELLED']);
+const DEFAULT_STATUS_POLL_INTERVAL_MS = 1500;
+const DEFAULT_STATUS_POLL_ATTEMPTS = 10;
+
+function normalizeAttachmentStatus(status, fallback = 'SCANNING') {
+  if (typeof status === 'string' && status.trim()) {
+    return status.trim().toUpperCase();
+  }
+  return fallback;
+}
+
+function isTerminalAttachmentStatus(status) {
+  return TERMINAL_ATTACHMENT_STATUSES.has(normalizeAttachmentStatus(status));
+}
+
+async function delay(ms) {
+  if (!Number.isFinite(ms) || ms <= 0) {
+    return;
+  }
+  await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 function normalizeMessageAck(node) {
   if (!node || typeof node !== 'object') {
     return null;
@@ -117,6 +139,73 @@ export function createMessagingClient(config = {}) {
     return `att_${baseId}`;
   }
 
+    async function pollAttachmentStatus(threadId, clientId, attachmentId, initialStatus, optionsUpload = {}) {
+      if (typeof uploadHandlers.getUploadStatus !== 'function') {
+        return normalizeAttachmentStatus(initialStatus);
+      }
+      const intervalRaw = optionsUpload.statusPollIntervalMs;
+      const maxAttemptsRaw = optionsUpload.statusPollMaxAttempts;
+      const interval =
+        Number.isFinite(intervalRaw) && intervalRaw >= 0 ? intervalRaw : DEFAULT_STATUS_POLL_INTERVAL_MS;
+      const maxAttempts =
+        Number.isFinite(maxAttemptsRaw) && maxAttemptsRaw > 0 ? maxAttemptsRaw : DEFAULT_STATUS_POLL_ATTEMPTS;
+      let currentStatus = normalizeAttachmentStatus(initialStatus);
+      let attempt = 0;
+
+      while (!isTerminalAttachmentStatus(currentStatus) && attempt < maxAttempts) {
+        if (attempt > 0) {
+          await delay(interval);
+        }
+        attempt += 1;
+        let nextStatusPayload = null;
+        try {
+          nextStatusPayload = await uploadHandlers.getUploadStatus(attachmentId, {
+            threadId,
+            clientId,
+            status: currentStatus
+          });
+        } catch (error) {
+          logger.error?.('messaging-client: getUploadStatus failed', {
+            error,
+            attachmentId,
+            clientId,
+            threadId
+          });
+          continue;
+        }
+        if (!nextStatusPayload) {
+          continue;
+        }
+        const nextStatus = normalizeAttachmentStatus(nextStatusPayload.status, currentStatus);
+        controller.applyAttachmentStatus(
+          {
+            attachmentId,
+            status: nextStatus,
+            nsfwBand: nextStatusPayload.nsfwBand,
+            safeModeState: nextStatusPayload.safeModeState,
+            errorCode: nextStatusPayload.errorCode,
+            metadata: nextStatusPayload.metadata
+          },
+          { now: nowFn() }
+        );
+        currentStatus = nextStatus;
+      }
+
+      if (!isTerminalAttachmentStatus(currentStatus)) {
+        controller.applyAttachmentStatus(
+          {
+            attachmentId,
+            status: 'FAILED',
+            errorCode: 'UPLOAD_STATUS_TIMEOUT'
+          },
+          { now: nowFn() }
+        );
+        return 'FAILED';
+      }
+
+      return currentStatus;
+    }
+
   async function prepareUpload(threadId, descriptor = {}, optionsUpload = {}) {
     if (!threadId) {
       throw new Error('prepareUpload requires threadId');
@@ -204,46 +293,65 @@ export function createMessagingClient(config = {}) {
         );
       }
 
-      controller.markUploadComplete(
-        clientId,
-        {
-          attachmentId,
-          checksum: descriptor.checksum ?? sessionResult?.checksum ?? null,
-          metadata
-        },
-        { now: nowFn() }
-      );
-
-      if (typeof uploadHandlers.completeUpload === 'function') {
-        const statusUpdate = await uploadHandlers.completeUpload(threadId, {
+        controller.markUploadComplete(
           clientId,
-          attachmentId,
-          metadata
-        });
-        if (statusUpdate) {
-          controller.applyAttachmentStatus(
-            {
-              attachmentId,
-              status: statusUpdate.status ?? 'READY',
-              nsfwBand: statusUpdate.nsfwBand,
-              safeModeState: statusUpdate.safeModeState,
-              errorCode: statusUpdate.errorCode,
-              metadata: statusUpdate.metadata
-            },
-            { now: nowFn() }
-          );
-        }
-      } else {
-        controller.applyAttachmentStatus(
           {
             attachmentId,
-            status: 'READY'
+            checksum: descriptor.checksum ?? sessionResult?.checksum ?? null,
+            metadata
           },
           { now: nowFn() }
         );
-      }
 
-      return controller.getUpload(clientId);
+        const applyStatusUpdate = (update = {}) => {
+          const normalizedStatus = normalizeAttachmentStatus(update.status, 'READY');
+          controller.applyAttachmentStatus(
+            {
+              attachmentId,
+              status: normalizedStatus,
+              nsfwBand: update.nsfwBand,
+              safeModeState: update.safeModeState,
+              errorCode: update.errorCode,
+              metadata: update.metadata
+            },
+            { now: nowFn() }
+          );
+          return normalizedStatus;
+        };
+
+        let lastStatus = 'READY';
+
+        if (typeof uploadHandlers.completeUpload === 'function') {
+          const statusUpdate = await uploadHandlers.completeUpload(threadId, {
+            clientId,
+            attachmentId,
+            metadata
+          });
+          lastStatus = statusUpdate ? applyStatusUpdate(statusUpdate) : applyStatusUpdate({ status: 'READY' });
+        } else {
+          lastStatus = applyStatusUpdate({ status: 'READY' });
+        }
+
+        if (!isTerminalAttachmentStatus(lastStatus)) {
+          if (typeof uploadHandlers.getUploadStatus === 'function') {
+            lastStatus = await pollAttachmentStatus(
+              threadId,
+              clientId,
+              attachmentId,
+              lastStatus,
+              optionsUpload
+            );
+          } else {
+            logger.warn?.('messaging-client: upload awaiting server status without getUploadStatus handler', {
+              attachmentId,
+              clientId,
+              threadId,
+              status: lastStatus
+            });
+          }
+        }
+
+        return controller.getUpload(clientId);
     } catch (error) {
       controller.markUploadFailed(
         clientId,
