@@ -5,6 +5,7 @@
 1. **Initial load**
    - Fire `Query.inbox(limit, cursor)` → returns ordered thread edges and `newRequestCount`.
    - Normalize results via `InboxStore.hydrate()` to seed thread map.
+   - Hydrate controller: `MessagingController.hydrateInbox()` followed by per-thread `hydrateThread` to keep inbox/thread projections in sync for subscriptions.
    - Compute folders: `default`, `pinned`, `archived`, `requests`.
 2. **Message request handling**
    - Each request entry carries `requestId`, `creditCost`, `expiresAt`.

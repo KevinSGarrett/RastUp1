@@ -1,0 +1,616 @@
+import {
+  createInboxState,
+  applyInboxEvent as applyInboxEventReducer,
+  selectThreads,
+  getTotalUnread,
+  canStartConversation,
+  recordConversationStart as recordConversationStartReducer,
+  acceptMessageRequest as acceptMessageRequestReducer,
+  declineMessageRequest as declineMessageRequestReducer,
+  pruneExpiredRequests as pruneExpiredRequestsReducer
+} from './inbox_store.mjs';
+import {
+  createThreadState,
+  applyThreadEvent as applyThreadEventReducer,
+  enqueueOptimisticMessage as enqueueOptimisticMessageReducer,
+  resolveOptimisticMessage as resolveOptimisticMessageReducer,
+  failOptimisticMessage as failOptimisticMessageReducer,
+  getUnreadMessageIds,
+  getActionCards,
+  getActionCardTransitions,
+  applyActionCardIntent as applyActionCardIntentReducer
+} from './thread_store.mjs';
+import {
+  createNotificationQueue,
+  enqueueNotification as enqueueNotificationReducer,
+  flushNotifications as flushNotificationQueue,
+  collectDigest as collectNotificationDigestReducer,
+  listPendingNotifications
+} from './notification_queue.mjs';
+
+function cloneNotificationState(state) {
+  return {
+    itemsById: Object.fromEntries(Object.entries(state.itemsById).map(([id, item]) => [id, { ...item }])),
+    order: [...state.order],
+    dedupe: { ...state.dedupe },
+    quietHours: {
+      startMinutes: state.quietHours.startMinutes,
+      endMinutes: state.quietHours.endMinutes,
+      timezoneOffsetMinutes: state.quietHours.timezoneOffsetMinutes,
+      bypassSeverities: new Set(state.quietHours.bypassSeverities)
+    },
+    dedupeWindowMs: state.dedupeWindowMs,
+    digestWindowMs: state.digestWindowMs,
+    maxItems: state.maxItems,
+    lastUpdatedAt: state.lastUpdatedAt
+  };
+}
+
+function mapThreadEventToInbox(event, nextThreadState, viewerUserId) {
+  if (!event?.type || !nextThreadState) {
+    return null;
+  }
+  const threadId = nextThreadState.thread.threadId;
+  switch (event.type) {
+    case 'MESSAGE_CREATED': {
+      const incrementUnread =
+        event.payload?.authorUserId && viewerUserId && event.payload.authorUserId !== viewerUserId ? 1 : 0;
+      const lastMessageAt = nextThreadState.thread.lastMessageAt ?? event.payload?.createdAt;
+      return {
+        type: 'THREAD_MESSAGE_RECEIVED',
+        payload: {
+          threadId,
+          lastMessageAt,
+          incrementUnread
+        }
+      };
+    }
+    case 'MESSAGE_UPDATED':
+      return {
+        type: 'THREAD_UPDATED',
+        payload: {
+          threadId,
+          lastMessageAt: nextThreadState.thread.lastMessageAt
+        }
+      };
+    case 'THREAD_STATUS_CHANGED':
+      return {
+        type: 'THREAD_UPDATED',
+        payload: {
+          threadId,
+          status: nextThreadState.thread.status
+        }
+      };
+    case 'SAFE_MODE_OVERRIDE':
+      return {
+        type: 'THREAD_UPDATED',
+        payload: {
+          threadId,
+          safeModeRequired: nextThreadState.thread.safeModeRequired
+        }
+      };
+    case 'READ_RECEIPT_UPDATED': {
+      if (viewerUserId && event.payload?.userId === viewerUserId) {
+        return {
+          type: 'THREAD_READ',
+          payload: { threadId }
+        };
+      }
+      return null;
+    }
+    default:
+      return null;
+  }
+}
+
+/**
+ * Creates a messaging controller that orchestrates inbox, thread, and notification state.
+ * Provides a framework-neutral surface suitable for React, Vue, or other UI environments.
+ * @param {{
+ *   viewerUserId?: string|null;
+ *   inbox?: Parameters<typeof createInboxState>[0];
+ *   threads?: Array<Parameters<typeof createThreadState>[0]>;
+ *   notifications?: Parameters<typeof createNotificationQueue>[0];
+ *   now?: () => number;
+ *   logger?: { debug?: Function; warn?: Function; error?: Function };
+ *   onAnalyticsEvent?: (event: { type: string; payload?: Record<string, any> }) => void;
+ * }} [options]
+ */
+export function createMessagingController(options = {}) {
+  let viewerUserId = options.viewerUserId ?? null;
+  const nowFn = typeof options.now === 'function' ? options.now : () => Date.now();
+  const logger = options.logger ?? null;
+  const analytics = typeof options.onAnalyticsEvent === 'function' ? options.onAnalyticsEvent : null;
+
+  let inboxState = createInboxState(options.inbox ?? {});
+  const threadStates = new Map();
+  if (Array.isArray(options.threads)) {
+    for (const threadInput of options.threads) {
+      try {
+        const state = createThreadState(threadInput);
+        threadStates.set(state.thread.threadId, state);
+      } catch (error) {
+        if (logger?.warn) {
+          logger.warn('messaging-controller: failed to hydrate thread', { error, threadInput });
+        }
+      }
+    }
+  }
+  let notificationState = createNotificationQueue(options.notifications ?? {});
+
+  const listeners = new Set();
+
+  function getSnapshot() {
+    return {
+      inbox: inboxState,
+      threads: threadStates,
+      notifications: notificationState,
+      viewerUserId
+    };
+  }
+
+  function emit(changes) {
+    if (!Array.isArray(changes) || changes.length === 0) {
+      return;
+    }
+    const snapshot = getSnapshot();
+    for (const listener of listeners) {
+      if (typeof listener !== 'function') continue;
+      try {
+        listener(changes, snapshot);
+      } catch (error) {
+        if (logger?.error) {
+          logger.error('messaging-controller: listener threw', { error });
+        }
+      }
+    }
+  }
+
+  function updateInbox(updater, change, changes) {
+    const next = updater(inboxState);
+    if (next === inboxState) {
+      return false;
+    }
+    inboxState = next;
+    if (change) {
+      changes.push({ scope: 'inbox', ...change });
+    }
+    return true;
+  }
+
+  function updateNotifications(updater, change, changes) {
+    const next = updater(notificationState);
+    if (next === notificationState) {
+      return false;
+    }
+    notificationState = next;
+    if (change) {
+      changes.push({ scope: 'notifications', ...change });
+    }
+    return true;
+  }
+
+  function updateThread(threadId, updater, change, changes) {
+    const current = threadStates.get(threadId);
+    if (!current) {
+      if (logger?.warn) {
+        logger.warn('messaging-controller: missing thread', { threadId, reason: change?.action ?? 'update' });
+      }
+      return null;
+    }
+    const next = updater(current);
+    if (next === current) {
+      return current;
+    }
+    threadStates.set(threadId, next);
+    if (change) {
+      changes.push({ scope: 'thread', threadId, ...change });
+    }
+    return next;
+  }
+
+  function applyThreadEventInternal(threadId, event, options = {}) {
+    const changes = [];
+    const next = updateThread(
+      threadId,
+      (state) => applyThreadEventReducer(state, event),
+      { action: 'event', event },
+      changes
+    );
+    if (!next) {
+      return null;
+    }
+    if (!options.skipInbox) {
+      const inboxEvent = mapThreadEventToInbox(event, next, viewerUserId);
+      if (inboxEvent) {
+        updateInbox(
+          (state) => applyInboxEventReducer(state, inboxEvent),
+          { action: 'sync', event: inboxEvent, threadId },
+          changes
+        );
+      }
+    }
+    if (changes.length) {
+      emit(changes);
+    }
+    return next;
+  }
+
+  function hydrateInbox(inboxInput) {
+    const changes = [];
+    updateInbox(
+      () => createInboxState(inboxInput ?? {}),
+      { action: 'hydrate' },
+      changes
+    );
+    if (changes.length) {
+      emit(changes);
+    }
+    return inboxState;
+  }
+
+  function applyInboxEvent(event) {
+    const changes = [];
+    updateInbox(
+      (state) => applyInboxEventReducer(state, event),
+      { action: 'event', event },
+      changes
+    );
+    if (changes.length) {
+      emit(changes);
+    }
+    return inboxState;
+  }
+
+  function hydrateThread(threadInput, optionsHydrate = {}) {
+    if (!threadInput?.thread?.threadId) {
+      throw new Error('hydrateThread requires thread.threadId');
+    }
+    const state = createThreadState(threadInput);
+    threadStates.set(state.thread.threadId, state);
+    const changes = [
+      { scope: 'thread', threadId: state.thread.threadId, action: 'hydrate' }
+    ];
+    if (optionsHydrate.syncInbox !== false) {
+      updateInbox(
+        (stateInbox) =>
+          applyInboxEventReducer(stateInbox, {
+            type: 'THREAD_UPDATED',
+            payload: {
+              threadId: state.thread.threadId,
+              lastMessageAt: state.thread.lastMessageAt,
+              status: state.thread.status,
+              kind: state.thread.kind,
+              safeModeRequired: state.thread.safeModeRequired
+            }
+          }),
+        { action: 'sync', reason: 'hydrateThread', threadId: state.thread.threadId },
+        changes
+      );
+    }
+    emit(changes);
+    return state;
+  }
+
+  function removeThread(threadId) {
+    if (!threadStates.has(threadId)) {
+      return false;
+    }
+    threadStates.delete(threadId);
+    emit([{ scope: 'thread', threadId, action: 'remove' }]);
+    return true;
+  }
+
+  function markThreadRead(threadId, payload = {}) {
+    const userId = payload.userId ?? viewerUserId;
+    if (!userId) {
+      throw new Error('markThreadRead requires userId or viewerUserId');
+    }
+    const readAtIso = payload.readAt ?? new Date(nowFn()).toISOString();
+    return applyThreadEventInternal(
+      threadId,
+      {
+        type: 'READ_RECEIPT_UPDATED',
+        payload: {
+          userId,
+          role: payload.role ?? 'participant',
+          lastReadMsgId: payload.lastReadMsgId ?? null,
+          lastReadAt: readAtIso
+        }
+      },
+      { reason: 'markThreadRead' }
+    );
+  }
+
+  function enqueueOptimisticMessage(threadId, input) {
+    const changes = [];
+    const createdAt = input?.createdAt ?? new Date(nowFn()).toISOString();
+    const next = updateThread(
+      threadId,
+      (state) =>
+        enqueueOptimisticMessageReducer(state, {
+          ...input,
+          createdAt
+        }),
+      { action: 'optimistic', clientId: input?.clientId },
+      changes
+    );
+    if (!next) {
+      return null;
+    }
+    updateInbox(
+      (state) =>
+        applyInboxEventReducer(state, {
+          type: 'THREAD_MESSAGE_RECEIVED',
+          payload: {
+            threadId,
+            lastMessageAt: next.thread.lastMessageAt ?? createdAt,
+            incrementUnread: 0
+          }
+        }),
+      { action: 'sync', event: { type: 'THREAD_MESSAGE_RECEIVED', origin: 'optimistic' }, threadId },
+      changes
+    );
+    if (changes.length) {
+      emit(changes);
+    }
+    return next;
+  }
+
+  function resolveOptimisticMessage(threadId, clientId, payload) {
+    const changes = [];
+    const next = updateThread(
+      threadId,
+      (state) => resolveOptimisticMessageReducer(state, clientId, payload),
+      { action: 'optimisticResolve', clientId, messageId: payload?.messageId },
+      changes
+    );
+    if (!next) {
+      return null;
+    }
+    updateInbox(
+      (state) =>
+        applyInboxEventReducer(state, {
+          type: 'THREAD_UPDATED',
+          payload: {
+            threadId,
+            lastMessageAt: next.thread.lastMessageAt
+          }
+        }),
+      { action: 'sync', event: { type: 'THREAD_UPDATED', origin: 'optimisticResolve' }, threadId },
+      changes
+    );
+    if (changes.length) {
+      emit(changes);
+    }
+    return next;
+  }
+
+  function failOptimisticMessage(threadId, clientId, errorCode = 'UNKNOWN') {
+    const changes = [];
+    const next = updateThread(
+      threadId,
+      (state) => failOptimisticMessageReducer(state, clientId, errorCode),
+      { action: 'optimisticFail', clientId, errorCode },
+      changes
+    );
+    if (changes.length) {
+      emit(changes);
+    }
+    return next;
+  }
+
+  function applyThreadEvent(threadId, event) {
+    return applyThreadEventInternal(threadId, event ?? {});
+  }
+
+  function applyActionCardIntent(threadId, actionId, intent, optionsAction = {}) {
+    const current = threadStates.get(threadId);
+    if (!current) {
+      throw new Error(`Unknown thread: ${threadId}`);
+    }
+    const { state: next, auditEvent } = applyActionCardIntentReducer(current, actionId, intent, optionsAction);
+    if (next === current) {
+      return { state: next, auditEvent };
+    }
+    threadStates.set(threadId, next);
+    const changes = [
+      { scope: 'thread', threadId, action: 'actionCard', actionId, intent }
+    ];
+    updateInbox(
+      (stateInbox) =>
+        applyInboxEventReducer(stateInbox, {
+          type: 'THREAD_UPDATED',
+          payload: {
+            threadId,
+            lastMessageAt: next.thread.lastMessageAt
+          }
+        }),
+      { action: 'sync', event: { type: 'THREAD_UPDATED', origin: 'actionCard' }, threadId },
+      changes
+    );
+    emit(changes);
+    if (analytics) {
+      analytics({
+        type: 'messaging.action_card.intent',
+        payload: {
+          threadId,
+          actionId,
+          intent,
+          auditEvent
+        }
+      });
+    }
+    return { state: next, auditEvent };
+  }
+
+  function enqueueNotification(notification, optionsNotification = {}) {
+    const changes = [];
+    updateNotifications(
+      (state) =>
+        enqueueNotificationReducer(state, notification, {
+          now: optionsNotification.now ?? nowFn()
+        }),
+      { action: 'enqueue', notification },
+      changes
+    );
+    if (changes.length) {
+      emit(changes);
+    }
+    return notificationState;
+  }
+
+  function flushNotifications(optionsFlush = {}) {
+    const changes = [];
+    let flushed = [];
+    updateNotifications(
+      (state) => {
+        const result = flushNotificationQueue(state, { now: optionsFlush.now ?? nowFn() });
+        flushed = result.notifications;
+        return result.state;
+      },
+      { action: 'flush', count: flushed.length },
+      changes
+    );
+    if (changes.length) {
+      emit(changes);
+    }
+    return flushed;
+  }
+
+  function collectNotificationDigest(optionsDigest = {}) {
+    const nextState = cloneNotificationState(notificationState);
+    const digest = collectNotificationDigestReducer(nextState, { now: optionsDigest.now ?? nowFn() });
+    const changes = [];
+    updateNotifications(() => nextState, { action: 'digest', count: digest.length }, changes);
+    if (changes.length) {
+      emit(changes);
+    }
+    return digest;
+  }
+
+  function pruneExpiredRequests(now = nowFn()) {
+    const changes = [];
+    updateInbox(
+      (state) => pruneExpiredRequestsReducer(state, now),
+      { action: 'pruneRequests' },
+      changes
+    );
+    if (changes.length) {
+      emit(changes);
+    }
+    return inboxState;
+  }
+
+  function recordConversationStart(ctx = {}) {
+    const changes = [];
+    updateInbox(
+      (state) =>
+        recordConversationStartReducer(state, {
+          ...ctx,
+          now: ctx.now ?? nowFn()
+        }),
+      { action: 'conversationStart' },
+      changes
+    );
+    if (changes.length) {
+      emit(changes);
+    }
+    return inboxState;
+  }
+
+  function acceptMessageRequest(requestId, ctx = {}) {
+    const changes = [];
+    updateInbox(
+      (state) =>
+        acceptMessageRequestReducer(state, requestId, {
+          ...ctx,
+          now: ctx.now ?? nowFn()
+        }),
+      { action: 'requestAccept', requestId },
+      changes
+    );
+    if (changes.length) {
+      emit(changes);
+    }
+    return inboxState;
+  }
+
+  function declineMessageRequest(requestId, optionsDecline = {}) {
+    const changes = [];
+    updateInbox(
+      (state) => declineMessageRequestReducer(state, requestId, optionsDecline),
+      { action: optionsDecline.block ? 'requestBlock' : 'requestDecline', requestId },
+      changes
+    );
+    if (changes.length) {
+      emit(changes);
+    }
+    return inboxState;
+  }
+
+  return {
+    subscribe(listener) {
+      if (typeof listener !== 'function') {
+        throw new TypeError('listener must be a function');
+      }
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+    getSnapshot,
+    getViewerUserId: () => viewerUserId,
+    setViewerUserId(id) {
+      viewerUserId = id ?? null;
+    },
+    getInboxState: () => inboxState,
+    getThreadState: (threadId) => threadStates.get(threadId) ?? null,
+    listThreadIds: () => Array.from(threadStates.keys()),
+    getNotificationState: () => notificationState,
+    hydrateInbox,
+    applyInboxEvent,
+    hydrateThread,
+    applyThreadEvent,
+    removeThread,
+    markThreadRead,
+    enqueueOptimisticMessage,
+    resolveOptimisticMessage,
+    failOptimisticMessage,
+    applyActionCardIntent,
+    enqueueNotification,
+    flushNotifications,
+    collectNotificationDigest,
+    listPendingNotifications: () => listPendingNotifications(notificationState),
+    pruneExpiredRequests,
+    getTotalUnread: () => getTotalUnread(inboxState),
+    selectInboxThreads: (optionsSelect = {}) => selectThreads(inboxState, optionsSelect),
+    canStartConversation: (ctx = {}) =>
+      canStartConversation(inboxState, {
+        ...ctx,
+        now: ctx.now ?? nowFn()
+      }),
+    recordConversationStart,
+    acceptMessageRequest,
+    declineMessageRequest,
+    getUnreadMessageIds: (threadId, userId) => {
+      const thread = threadStates.get(threadId);
+      if (!thread) {
+        return [];
+      }
+      return getUnreadMessageIds(thread, userId);
+    },
+    getActionCards: (threadId) => {
+      const thread = threadStates.get(threadId);
+      if (!thread) {
+        return [];
+      }
+      return getActionCards(thread);
+    },
+    getActionCardTransitions: (threadId, actionId, optionsTransitions = {}) => {
+      const thread = threadStates.get(threadId);
+      if (!thread) {
+        return [];
+      }
+      return getActionCardTransitions(thread, actionId, optionsTransitions);
+    }
+  };
+}

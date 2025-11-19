@@ -5,3 +5,4 @@ export * from './policy.mjs';
 export * from './action_cards.mjs';
 export * from './upload_manager.mjs';
 export * from './notification_queue.mjs';
+export * from './controller.mjs';

@@ -106,3 +106,10 @@
 - Added Python unit test (`tests/python/test_infra_docs.py`) to enforce roadmap completeness (required headings, environment matrix integrity, no placeholder text).
 - `python -m unittest tests.python.test_infra_docs` → pass (3 tests).
 - `make ci` → pass (Python booking schema tests + Node booking suites executed via target).
+
+## 2025-11-19 — AGENT-3 (WBS-006) Part 3
+
+- Added framework-neutral messaging controller orchestrator (`tools/frontend/messaging/controller.mjs`) that coordinates inbox, thread, optimistic messaging, action cards, and notification queues; updated module exports and messaging documentation to highlight the new DX surface.
+- Expanded frontend messaging tests with controller coverage (`tests/frontend/messaging/controller.test.mjs`) validating unread sync, optimistic flows, message request handling, quiet-hour digesting, and analytics hooks; refreshed implementation/test plans to reference the controller.
+- Executed regression suites: `node --test tests/frontend/messaging/*.test.mjs`, `node --test tests/frontend/**/*.test.mjs`, `node --test tests/search/*.test.mjs`, `python -m unittest tests.search.test_collections_json`, `node --test tests/booking/*.test.mjs` → all passing.
+- `make ci` → pass (Python booking schema + Node booking suites).
