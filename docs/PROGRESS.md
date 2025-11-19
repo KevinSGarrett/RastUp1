@@ -75,3 +75,15 @@
 - `node --test tests/booking/*.test.mjs` → pass (65 subtests including new approvals suite).  
 - `python -m unittest tests.python.test_booking_schema` → pass (4 tests verifying schemas).  
 - `make ci` → failed (`No rule to make target 'ci'`). CI target still missing; failure captured for continuity.
+
+## 2025-11-19 — AGENT-3 (WBS-006)
+
+- Authored messaging frontend implementation, UI flow, and test strategy docs (`docs/data/messaging/{implementation_plan,ui_flows,test_plan}.md`) mapping blueprint requirements to planned React/Next.js work.
+- Delivered headless messaging utilities (`tools/frontend/messaging/{inbox_store,thread_store,safe_mode,policy}.mjs` plus `index.mjs`) covering inbox ordering, credit/rate limiting, action card state, presence, Safe-Mode rendering, and policy evaluation.
+- Added comprehensive Node unit tests for new modules (`tests/frontend/messaging/*.test.mjs`) and reran existing frontend/search/booking suites to ensure integration stability.
+- `node --test tests/frontend/messaging/*.test.mjs` → pass (24 tests across inbox, policy, safe-mode, thread reducers).  
+- `node --test tests/frontend/**/*.test.mjs` → pass (44 tests including prior auth/onboarding suites).  
+- `node --test tests/search/*.test.mjs` → pass (8 tests).  
+- `python -m unittest tests.search.test_collections_json` → pass (3 tests).  
+- `node --test tests/booking/*.test.mjs` → pass (65 tests).  
+- `make ci` → failed (`No rule to make target 'ci'`). CI scaffolding still pending; failure logged for continuity.
