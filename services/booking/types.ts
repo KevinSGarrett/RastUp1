@@ -163,3 +163,149 @@ export interface PaymentIntentPayload {
   metadata: Record<string, string>;
 }
 
+export type AmendmentKind = 'change_order' | 'overtime' | 'refund_line' | 'admin_adjustment';
+
+export interface AmendmentLine {
+  name: string;
+  quantity: number;
+  unitPriceCents: number;
+  totalCents: number;
+  notes?: string;
+}
+
+export interface AmendmentDraft {
+  amendmentId: string;
+  legId: string;
+  kind: AmendmentKind;
+  lineJson: AmendmentLine;
+  deltaSubtotalCents: number;
+  deltaTaxCents: number;
+  deltaFeesCents: number;
+  deltaTotalCents: number;
+  createdBy: string;
+  createdAt: string;
+}
+
+export type AmendmentPaymentStrategy = 'INCREMENTAL_CAPTURE' | 'NEW_INTENT';
+
+export interface RefundCommand {
+  lbgId?: string;
+  legId: string;
+  amountCents: number;
+  taxRefundCents: number;
+  reason: string;
+  metadata: Record<string, unknown>;
+  idempotencyKey: string;
+}
+
+export interface RefundSummaryLeg {
+  legId: string;
+  refundCents: number;
+  sellerRetainedCents: number;
+  taxRefundCents: number;
+}
+
+export interface RefundSummary {
+  totalRefundCents: number;
+  totalSellerRetainedCents: number;
+  totalTaxRefundCents: number;
+  legs: RefundSummaryLeg[];
+}
+
+export interface DepositAuthSnapshot {
+  depositId: string;
+  legId: string;
+  status: DepositStatus;
+  authorizedCents: number;
+  capturedCents: number;
+  expiresAt?: string | null;
+}
+
+export type DepositClaimStatus = 'pending' | 'approved' | 'denied' | 'captured' | 'voided';
+
+export interface DepositClaimRecord {
+  claimId: string;
+  depositId: string;
+  legId: string;
+  status: DepositClaimStatus;
+  amountCents: number;
+  capturedCents: number;
+  reason: string;
+  evidence: string[];
+  submittedBy: string;
+  approvedBy?: string;
+  decisionReason?: string;
+  decidedAt?: string;
+  claimWindowExpiresAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ReceiptLegPayload {
+  legId: string;
+  title: string;
+  totalCents: number;
+  taxCents: number;
+  feesCents: number;
+  currency: string;
+  policy: unknown;
+  amendments: AmendmentDraft[];
+  refunds: Array<{
+    refundId: string | null;
+    status: string | null;
+    amountCents: number;
+    processor: string | null;
+    processorRefundId: string | null;
+    createdAt: string | null;
+  }>;
+  docHashes: string[];
+}
+
+export interface GroupReceiptPayload {
+  lbgId: string;
+  status: LbgStatus | null;
+  legs: string[];
+  currency: string;
+  subtotalCents: number;
+  taxCents: number;
+  feesCents: number;
+  totalCents: number;
+  charge: {
+    chargeId: string | null;
+    processor: string | null;
+    processorIntent: string | null;
+    amountCents: number;
+    status: string | null;
+    capturedAt: string | null;
+    paymentMethod: string | null;
+  } | null;
+  issuedAt: string;
+  docHashes: string[];
+}
+
+export type ReceiptKind = 'leg' | 'group' | 'refund';
+
+export interface ReceiptManifestEntry {
+  receiptId: string;
+  lbgId: string;
+  legId: string | null;
+  kind: ReceiptKind;
+  docHashes: string[];
+  payload: ReceiptLegPayload | GroupReceiptPayload | Record<string, unknown>;
+  storageUrl: string | null;
+  renderedAt: string | null;
+  createdAt: string;
+}
+
+export interface NormalizedWebhookEvent {
+  provider: string;
+  eventId: string;
+  rawType: string;
+  normalizedType: string;
+  occurredAt: string | null;
+  lbgId: string | null;
+  legIds: string[];
+  payload: Record<string, unknown>;
+  metadata: Record<string, unknown>;
+}
+

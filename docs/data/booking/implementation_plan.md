@@ -10,21 +10,20 @@
   - Stripe Connect is the launch processor; adapters must isolate Stripe-specific fields.
   - DocuSign / Dropbox Sign integration handled via adapter contract defined here but implemented collaboratively with Integrations lane.
 
-## Plan vs Done vs Pending (Pre-Run Summary)
+## Plan vs Done vs Pending (2025-11-19 Run — Part 2 Focus)
 
 - **Plan**
-  - Author Aurora schema migration covering `lbg`, `booking_leg`, `charge`, `charge_split`, `deposit_auth`, `amendment`, `refund`, `dispute`, `payout`, `tax_txn`.
-  - Define GraphQL schema (`api/schema/booking.graphql`) for checkout, amendments, completion, refunds, and disputes aligned with §1.3.I/§1.3.K/§1.3.L.
-  - Implement backend domain modules (`services/booking/**`) capturing state machine, validation, payment orchestration hooks, and Stripe/tax/doc pack adapter interfaces.
-  - Produce unit tests for state transitions, policy enforcement, and payments/refund calculations (Node TAP + Python for SQL schema validation).
-  - Document operations/telemetry: draft runbook & event catalog updates where required.
-  - Run smoke tests, document outcomes, assemble run report + attach pack.
+  - Extend Aurora schema (`026_booking_core.sql`) with Part-2 entities: amendment line JSON, deposit claim ledger, receipt manifests, and webhook dedupe table.
+  - Add Part-2 domain modules under `services/booking/**` for change orders & overtime orchestration, cancellation execution (policy + refund wiring), acceptance window helpers, deposit claim handling, receipt assembly, and normalized webhook mapping.
+  - Broaden unit test suite (`tests/booking/**`) to cover change order math, incremental capture decisions, cancellation bands, acceptance windows, deposit claims, and webhook idempotency plus update Python schema checks.
+  - Refresh operational docs (runbook + observability) with deposit claim workflow, cancellation policy monitoring, receipt generation, and webhook processing notes.
+  - Capture scope paths, execute Node + Python tests, attempt `make ci`, and prepare run report with attach pack.
 - **Done**
-  - Dependencies satisfied by prior WBS runs (WBS-002 accounts + WBS-003 search). No booking artifacts exist yet; this run starts greenfield.
+  - Part-1 artefacts shipped in prior run: implementation plan baseline, core migration skeleton, GraphQL contract, state/policy/payment domain modules, booking runbook, booking observability spec, and unit tests for foundational flows.
 - **Pending / Out of Scope for This Run**
-  - Real Stripe/Tax provider provisioning & secrets.
-  - Admin UI implementation and full Step Functions orchestration (requires cross-lane collaboration).
-  - Full ACH settlement monitoring, payouts automation, and production infra.
+  - Step Functions saga, payout scheduler, reserves, disputes evidence kits, and admin consoles (Part 3 deliverables).
+  - Real Stripe/Tax/Doc Pack integrations, secrets management, and infra provisioning.
+  - Automated CI/Makefile bootstrap and end-to-end integration environments.
 
 ## Declared Scope Paths (anticipated)
 

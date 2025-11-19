@@ -22,8 +22,10 @@ class BookingSchemaTest(unittest.TestCase):
             "leg_status": {"draft", "awaiting_docs", "awaiting_payment", "confirmed", "in_progress", "completed", "cancelled", "failed"},
             "charge_status": {"requires_action", "authorized", "captured", "succeeded", "canceled", "failed"},
             "deposit_status": {"requires_action", "authorized", "captured", "voided", "expired"},
+            "deposit_claim_status": {"pending", "approved", "denied", "captured", "voided"},
             "refund_status": {"pending", "succeeded", "failed"},
-            "dispute_status": {"needs_response", "under_review", "won", "lost", "warning_closed"}
+            "dispute_status": {"needs_response", "under_review", "won", "lost", "warning_closed"},
+            "receipt_kind": {"leg", "group", "refund"}
         }
 
         for enum_name, values in expected.items():
@@ -41,11 +43,14 @@ class BookingSchemaTest(unittest.TestCase):
             "booking.charge",
             "booking.charge_split",
             "booking.deposit_auth",
+            "booking.deposit_claim",
             "booking.amendment",
             "booking.payout",
             "booking.tax_txn",
             "booking.refund",
-            "booking.dispute"
+            "booking.dispute",
+            "booking.receipt_manifest",
+            "booking.webhook_event"
         ]
         for table in required_tables:
             with self.subTest(table=table):
@@ -55,6 +60,10 @@ class BookingSchemaTest(unittest.TestCase):
     def test_booking_leg_totals_constraint_present(self) -> None:
         self.assertIn("constraint booking_leg_amounts", self.sql)
         self.assertIn("constraint booking_leg_profile_or_studio", self.sql)
+
+    def test_deposit_claim_constraints_present(self) -> None:
+        self.assertIn("deposit_claim_capture_bounds", self.sql)
+        self.assertIn("constraint amendment_total_consistency", self.sql)
 
 
 if __name__ == "__main__":

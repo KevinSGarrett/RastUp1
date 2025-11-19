@@ -44,6 +44,14 @@ enum DepositStatus {
   EXPIRED
 }
 
+enum DepositClaimStatus {
+  PENDING
+  APPROVED
+  DENIED
+  CAPTURED
+  VOIDED
+}
+
 enum PayoutStatus {
   QUEUED
   IN_TRANSIT
@@ -242,6 +250,7 @@ type DepositSummary {
   authorizedCents: Int!
   capturedCents: Int!
   expiresAt: AWSDateTime
+  claimWindowExpiresAt: AWSDateTime
 }
 
 type PayoutSummary {
@@ -306,11 +315,17 @@ type RefundReceipt {
 }
 
 type DepositClaimResult {
+  claimId: ID!
   legId: ID!
+  amountCents: Int!
   deposit: DepositSummary!
   capturedCents: Int!
-  status: DepositStatus!
+  status: DepositClaimStatus!
   reason: String!
+  evidence: [AWSURL!]!
+  approvedBy: ID
+  decisionReason: String
+  decidedAt: AWSDateTime
 }
 
 type ReceiptLeg {
@@ -368,6 +383,9 @@ extend type Mutation {
   cancelLeg(input: CancelLegInput!): RefundReceipt! @auth(role: "user")
   requestRefund(input: RefundRequestInput!): RefundOutcome! @auth(role: "user")
   fileDepositClaim(input: DepositClaimInput!): DepositClaimResult! @auth(role: "seller")
+  approveDepositClaim(claimId: ID!, amountCents: Int!, decisionReason: String, idempotencyKey: String!): DepositClaimResult! @auth(role: "finance_ops")
+  denyDepositClaim(claimId: ID!, decisionReason: String, idempotencyKey: String!): DepositClaimResult! @auth(role: "finance_ops")
+  voidDepositClaim(claimId: ID!, decisionReason: String, idempotencyKey: String!): DepositClaimResult! @auth(role: "finance_ops")
   markCompleted(lbgId: ID!, note: String): CompletionReceipt! @auth(role: "user")
 }
 

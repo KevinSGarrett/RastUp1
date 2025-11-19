@@ -47,6 +47,14 @@ create type booking.deposit_status as enum (
   'expired'
 );
 
+create type booking.deposit_claim_status as enum (
+  'pending',
+  'approved',
+  'denied',
+  'captured',
+  'voided'
+);
+
 create type booking.amendment_kind as enum (
   'change_order',
   'overtime',
@@ -74,6 +82,8 @@ create type booking.payout_status as enum (
 );
 
 create type booking.tax_provider as enum ('taxjar', 'avalara', 'stripe_tax');
+
+create type booking.receipt_kind as enum ('leg', 'group', 'refund');
 
 create or replace function booking.touch_version()
 returns trigger
@@ -176,6 +186,30 @@ create table if not exists booking.deposit_auth (
   unique (processor, processor_setup)
 );
 
+create table if not exists booking.deposit_claim (
+  claim_id text primary key,
+  deposit_id text not null references booking.deposit_auth(deposit_id) on delete cascade,
+  leg_id text not null references booking.booking_leg(leg_id) on delete cascade,
+  status booking.deposit_claim_status not null default 'pending',
+  amount_cents integer not null check (amount_cents >= 0),
+  captured_cents integer not null default 0 check (captured_cents >= 0),
+  reason text not null,
+  evidence jsonb not null default '[]'::jsonb,
+  submitted_by text not null,
+  approved_by text,
+  decision_reason text,
+  decided_at timestamptz,
+  claim_window_expires_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  version bigint not null default 0,
+  constraint deposit_claim_capture_bounds check (captured_cents <= amount_cents)
+);
+
+create index if not exists idx_deposit_claim_leg on booking.deposit_claim (leg_id);
+create index if not exists idx_deposit_claim_status on booking.deposit_claim (status);
+create index if not exists idx_deposit_claim_deposit on booking.deposit_claim (deposit_id);
+
 create table if not exists booking.amendment (
   amendment_id text primary key,
   leg_id text not null references booking.booking_leg(leg_id) on delete cascade,
@@ -187,7 +221,11 @@ create table if not exists booking.amendment (
   delta_total_cents integer not null,
   note text,
   created_by text not null,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  constraint amendment_line_json_object check (jsonb_typeof(line_json) = 'object'),
+  constraint amendment_total_consistency check (
+    delta_subtotal_cents + delta_tax_cents + delta_fees_cents = delta_total_cents
+  )
 );
 
 create table if not exists booking.payout (
@@ -249,6 +287,39 @@ create table if not exists booking.dispute (
 create index if not exists idx_dispute_leg on booking.dispute (leg_id);
 create index if not exists idx_dispute_status on booking.dispute (status);
 
+create table if not exists booking.receipt_manifest (
+  receipt_id text primary key,
+  lbg_id text not null references booking.lbg(lbg_id) on delete cascade,
+  leg_id text references booking.booking_leg(leg_id) on delete set null,
+  kind booking.receipt_kind not null,
+  doc_hashes jsonb not null default '[]'::jsonb,
+  payload jsonb not null,
+  storage_url text,
+  rendered_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  version bigint not null default 0
+);
+
+create index if not exists idx_receipt_manifest_kind on booking.receipt_manifest (kind);
+create index if not exists idx_receipt_manifest_leg on booking.receipt_manifest (leg_id);
+
+create table if not exists booking.webhook_event (
+  provider text not null,
+  event_id text not null,
+  event_type text not null,
+  lbg_id text,
+  leg_id text,
+  occurred_at timestamptz,
+  received_at timestamptz not null default now(),
+  processed_at timestamptz,
+  payload jsonb not null,
+  primary key (provider, event_id)
+);
+
+create index if not exists idx_webhook_event_type on booking.webhook_event (event_type);
+create index if not exists idx_webhook_event_received_at on booking.webhook_event (received_at);
+
 drop trigger if exists trg_booking_lbg_touch on booking.lbg;
 create trigger trg_booking_lbg_touch
 before update on booking.lbg
@@ -273,6 +344,12 @@ before update on booking.deposit_auth
 for each row
 execute function booking.touch_version();
 
+drop trigger if exists trg_booking_deposit_claim_touch on booking.deposit_claim;
+create trigger trg_booking_deposit_claim_touch
+before update on booking.deposit_claim
+for each row
+execute function booking.touch_version();
+
 drop trigger if exists trg_booking_payout_touch on booking.payout;
 create trigger trg_booking_payout_touch
 before update on booking.payout
@@ -285,15 +362,24 @@ before update on booking.tax_txn
 for each row
 execute function booking.touch_version();
 
+drop trigger if exists trg_booking_receipt_manifest_touch on booking.receipt_manifest;
+create trigger trg_booking_receipt_manifest_touch
+before update on booking.receipt_manifest
+for each row
+execute function booking.touch_version();
+
 comment on table booking.lbg is 'Linked Booking Group container (atomic booking across talent/studio legs).';
 comment on table booking.booking_leg is 'Individual booking leg with independent policy, taxes, and payouts.';
 comment on table booking.charge is 'LBG-level charge capturing buyer funds.';
 comment on table booking.charge_split is 'Allocations of an LBG charge to each leg.';
 comment on table booking.deposit_auth is 'Studio deposit authorizations via SetupIntent.';
+comment on table booking.deposit_claim is 'Studio deposit claim ledger with approval and capture metadata.';
 comment on table booking.amendment is 'Change orders, overtime, refunds, and admin adjustments per leg.';
 comment on table booking.payout is 'Stripe Connect payouts for legs, including reserves and scheduling metadata.';
 comment on table booking.tax_txn is 'Tax provider transactions per leg.';
 comment on table booking.refund is 'Refund executions per leg with Stripe references.';
 comment on table booking.dispute is 'Stripe dispute records with evidence windows and outcomes.';
+comment on table booking.receipt_manifest is 'Immutable receipt payloads (leg, group, refund) with document hashes and storage references.';
+comment on table booking.webhook_event is 'External webhook events captured for idempotent processing and audit.';
 
 commit;

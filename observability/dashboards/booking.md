@@ -9,12 +9,18 @@
   - p50/p95 for `startCheckout → confirmPayment`.
   - Docs-before-pay latency (`createDocPack → markDocSigned`).
   - Stripe PaymentIntent confirmation latency.
+  - **Acceptance Window**
+    - Countdown vs actual acceptance event (`acceptance.window.start`, `acceptance.buyer.accept`, `acceptance.auto_accept`).
+    - Auto-complete rate and manual overrides per city.
 - **Error Budget**
   - Error rate by taxonomy codes (`DOCS_NOT_SIGNED`, `CHARGE_NOT_READY`, `AMENDMENT_PAYMENT_FAILED`).
   - Alert when error rate > 4% over 5 min.
 - **Idempotency**
   - Count of idempotent replays (Stripe PI, refunds) vs new requests.
   - Dedup store depth (records > 24h).
+  - **Receipt Generation**
+    - Successful vs failed renders (`receipt.render.succeeded|failed`).
+    - Aging receipts without storage URL in `booking.receipt_manifest`.
 
 ## Dashboard: `Finance Ops & Reconciliation`
 
@@ -27,7 +33,8 @@
   - Transfer success vs failure (grouped by Stripe Connect response).
 - **Deposits**
   - Authorized vs captured vs expired SetupIntents.
-  - Claims approved/denied with average capture amount.
+    - Claims funnel: pending, approved, denied, voided (`booking.deposit_claim.status`).
+    - Average capture amount vs authorization and decision SLA (submitted → decided).
 - **Variance Checks**
   - Booking ledger vs payment ledger delta (USD).
   - Tax commitment mismatches (per provider).
@@ -43,6 +50,9 @@
 - **Policy Overrides**
   - Count of admin overrides (cancellation refunds, deposit captures).
   - Override reasons and approving admin.
+  - **Webhook Processing**
+    - Pending events per provider from `booking.webhook_event` (missing `processed_at`).
+    - Replay attempts vs success.
 
 ## Key Metrics & Alerts
 
@@ -51,6 +61,9 @@
 - `stripe.webhook.dlq.depth` > 10 events sustained for 5 min.
 - `refund.outcome.mismatch` any variance > $50 triggered.
 - `payout.reserve.backlog` > 100 leads to finance escalation.
+- `deposit.claim.pending` > 15 for >30 min (possible backlog).
+- `receipt.render.error_rate` > 2% over 10 min.
+- `webhook.event.unprocessed` > 25 (across providers) for >15 min.
 
 ## Logging & Tracing
 
@@ -61,6 +74,8 @@
   - `docs.envelope.create` / `docs.envelope.signed`
   - `stripe.payment_intent.confirm`
   - `refund.kernel.evaluate`
+  - `deposit.claim.evaluate` / `deposit.claim.capture`
+  - `receipt.render.execute`
 
 ## Data Sources
 

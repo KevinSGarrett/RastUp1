@@ -49,3 +49,11 @@
 - Implemented unit tests for booking flows (`node --test tests/booking/*.test.mjs`) → pass (12 tests across state, policy, payments).
 - Added Python schema validation for booking migration (`python -m unittest tests.python.test_booking_schema`) → pass (3 tests).
 - `make ci` → failed (`No rule to make target 'ci'`). CI bootstrap still outstanding; documented for continuity.
+
+## 2025-11-19 — AGENT-2 (WBS-005) Part 2
+
+- Extended booking schema with deposit claims, receipt manifests, webhook dedupe, and amendment safeguards (`db/migrations/026_booking_core.sql`); updated GraphQL contract for deposit claim approvals (`api/schema/booking.graphql`).
+- Implemented Part-2 domain modules (`services/booking/{amendments,cancellations,deposits,receipts,webhooks}.{js,ts}`) plus expanded tests covering amendments, cancellations, deposits, receipts, webhooks (`node --test tests/booking/*.test.mjs` → pass, 34 subtests).
+- Refreshed Python schema validation for new tables/enums (`python -m unittest tests.python.test_booking_schema` → pass, 4 tests).
+- Updated ops runbook & observability dashboards for deposit claims, acceptance windows, receipts, webhook monitoring.
+- `make ci` → failed (`No rule to make target 'ci'`). CI target still absent; failure recorded for traceability.

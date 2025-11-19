@@ -49,9 +49,21 @@ Provide operational guidance for the Linked Booking Group (LBG) checkout pipelin
 3. If mismatch, trigger replay of Stripe refund webhook (`payment.refund.replay`) and notify finance ops.
 
 ### 6. Deposit Claims
-1. Finance reviews evidence pack; approve in admin console.
-2. Invoke `fileDepositClaim` mutation (finance role) with evidence URL.
-3. Verify `booking.deposit_auth` updated to `CAPTURED` and `deposit.capture.succeeded` event emitted.
+1. Finance triages evidence (photos, doc pack, chat) and confirms claim within policy window. Query `booking.deposit_claim` for prior submissions.
+2. File `fileDepositClaim` mutation (finance role) with evidence URLs and reason; confirm new `PENDING` row in `booking.deposit_claim`.
+3. Approve partial/full capture via `approveDepositClaim` (include `idempotencyKey` + `decisionReason`). Use `denyDepositClaim` or `voidDepositClaim` when evidence insufficient or claim withdrawn.
+4. Confirm `booking.deposit_auth.captured_cents` updated and `DepositSummary` shows new `claimWindowExpiresAt`. Monitor immutable events `deposit.claim.approved|denied|voided`.
+5. Receipts regenerate automatically; validate `booking.receipt_manifest` contains fresh leg + group manifests referencing the capture/decision.
+
+### 7. Acceptance Window & Receipts
+1. When acceptance window expires without buyer action, scheduler triggers `canAutoComplete` → `markCompleted`. Check `booking.lbg.acceptance_until` and event `acceptance.auto_accept`.
+2. Receipt rendering failures land in `receipt.render.error` log. Re-run generator and verify records in `booking.receipt_manifest` have `storage_url` populated.
+3. To resend receipts, fetch manifest payload, regenerate PDF, and upload to S3 (path: `s3://receipts/<receiptId>.pdf`). Update storage pointer for audit.
+
+### 8. Webhook Replay & Idempotency
+1. Inspect `booking.webhook_event` for missing/failed events (each row keyed by provider + event id). Any duplicates indicate idempotency guard engaged.
+2. For Stripe: replay via dashboard or CLI with same event id; ensure deduper (`createWebhookDeduper`) permits processing only once.
+3. For tax/doc providers, verify normalized events `tax.*` / `doc.envelope.*` emitted downstream; stale rows older than 48h without `processed_at` require manual replay.
 
 ## Verification & Observability
 
@@ -80,3 +92,4 @@ Provide operational guidance for the Linked Booking Group (LBG) checkout pipelin
 - Domain logic: `services/booking/*.js`
 - Policies: `docs/data/booking/implementation_plan.md`
 - Attach pack manifest: `docs/orchestrator/from-agents/AGENT-2/*`
+- Receipts & claims: `booking.deposit_claim`, `booking.receipt_manifest`, `booking.webhook_event`

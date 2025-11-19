@@ -7,6 +7,8 @@ import {
   ensureAtomicConfirmation,
   applyAmendmentToLeg,
   calculateAggregateTotals,
+  computeAcceptanceDeadline,
+  canAutoComplete,
   StateInvariantError
 } from '../../services/booking/state.js';
 
@@ -97,4 +99,20 @@ test('applyAmendmentToLeg updates monetary totals and guards invariants', () => 
     () => applyAmendmentToLeg(BASE_LEG, badAmendment),
     (error) => error instanceof StateInvariantError && error.code === 'TOTAL_MISMATCH'
   );
+});
+
+test('computeAcceptanceDeadline offsets start time by acceptance window hours', () => {
+  const deadline = computeAcceptanceDeadline('2025-12-01T10:00:00Z', 48);
+  assert.equal(deadline, '2025-12-03T10:00:00.000Z');
+});
+
+test('canAutoComplete only when legs completed after end time has passed', () => {
+  const completeLegs = [
+    { ...BASE_LEG, status: 'COMPLETED', endAt: '2025-12-01T19:00:00Z' },
+    { ...BASE_LEG, legId: 'leg_2', status: 'COMPLETED', endAt: '2025-12-01T19:30:00Z' }
+  ];
+  assert.equal(canAutoComplete(completeLegs, '2025-12-01T20:00:00Z'), true);
+
+  const inProgressLeg = [{ ...BASE_LEG, status: 'IN_PROGRESS', endAt: '2025-12-01T19:00:00Z' }];
+  assert.equal(canAutoComplete(inProgressLeg, '2025-12-01T20:00:00Z'), false);
 });
