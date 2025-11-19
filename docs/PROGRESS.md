@@ -318,6 +318,12 @@
   - `node --test tests/booking/*.test.mjs`
   - `make ci`
 
+## 2025-11-20 — AGENT-3 (WBS-006) Part 18 (Planning)
+
+- Analysed blueprint requirements for moderation/reporting features, captured controller/store/data source/React UI changes in `docs/data/messaging/implementation_plan.md`.
+- Updated test plan to flag upcoming moderation queue coverage scenarios.
+- Implementation deferred pending backend GraphQL mutations/subscriptions; follow-up run will tackle controller/client wiring once transports are available.
+
 ## 2025-11-20 — AGENT-3 (WBS-006) Part 11
 
 - Extended `web/lib/messaging/dataSources.mjs` with GraphQL-aware messaging mutations (send, mark read, message requests) plus configurable subscription hooks while preserving Safe-Mode stub fallbacks, and wired the new runtime into `MessagingWorkspaceClient.tsx` so workspace actions operate in Next.js.

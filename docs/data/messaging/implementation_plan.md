@@ -125,6 +125,30 @@
 3. **Uploads & Safe-Mode**: Need consistent placeholder states while antivirus results pending; placeholders should consider accessiblity (alt text).  
 4. **Performance**: Large threads risk expensive re-renders. Plan to chunk messages (e.g., 50 per page) and rely on virtualization; design reducers to operate incrementally.
 
+## Moderation & Reporting (2025-11-20 deep dive)
+
+- **Message reporting contract**  
+  - Extend thread store messages with `moderation { state, reason, reportedBy, reportedAt, auditTrailId }`.  
+  - Controller helper `reportMessage(threadId, messageId, { reason, severity, enqueueCase })` should optimistically mark the message as `REPORTED`, emit inbox sync events, and enqueue a moderation case to a dedicated queue state.
+  - GraphQL normalizers must map `moderation` fields from queries/subscriptions (`message.moderation{state,reason,...}`) and coerce legacy flags like `message.state === "FLAGGED"` into the unified object.
+
+- **Thread level escalation**  
+  - Introduce `thread.moderation { locked, lockedAt, lockedBy, reason, auditTrailId }`, and thread events `THREAD_LOCK_STATE` to toggle composer availability.  
+  - Inbox needs blocking semantics (`THREAD_BLOCKED`, `THREAD_UNBLOCKED`) that hide a conversation from default folders while preserving immutable audit data.
+
+- **Moderation queue façade**  
+  - Headless store `moderation_queue.mjs` with deterministic reducers: `enqueue`, `update`, `resolve`, `remove`, selectors for pending/dual-approval cases.  
+  - Controller exposes queue state plus React bindings hook `useModerationQueue()` so admin-only surfaces can list, filter, and resolve cases without touching controller internals.
+
+- **Frontend wiring**  
+  - `MessagingThread` composer should surface “Report message” affordances per entry, render flagged content with caution styling, and disable send when `thread.moderation.locked === true`.  
+  - Add `MessagingModerationQueue` component (paginated list, severity badges, dual-approval placeholders) wired through `MessagingWorkspace` via new props `showModerationQueue`/`moderationQueueProps` with default stub data source entries.
+
+- **Testing strategy**  
+  - Unit coverage across controller/client ensuring `reportMessage` marks messages + enqueues cases, `blockThread` updates inbox filters, queue reducers remain pure.  
+  - React tests for the moderation queue component verifying rendering of pending cases and action callbacks.  
+  - Document gaps: backend GraphQL mutations/subscriptions still stubbed; follow-up WBS must handle transport wiring once backend delivers APIs.
+
 ## Next Steps (Future Runs)
 - Scaffold Next.js app with shared design system and integrate messaging stores into actual pages.  
 - Implement GraphQL hooks, websockets (AppSync) subscription wiring, and optimistic mutation wrappers.  
