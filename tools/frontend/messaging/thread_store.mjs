@@ -9,6 +9,119 @@ function normalizeTimestamp(value) {
   return new Date(0).toISOString();
 }
 
+function defaultMessageModeration() {
+  return {
+    state: 'CLEAN',
+    reason: null,
+    reportedBy: null,
+    reportedAt: null,
+    severity: null,
+    auditTrailId: null,
+    resolvedAt: null,
+    reviewer: null,
+    notes: null
+  };
+}
+
+function normalizeMessageModeration(input, fallback = null) {
+  const base = fallback ? { ...fallback } : defaultMessageModeration();
+  if (!input || typeof input !== 'object') {
+    return base;
+  }
+  if (input.state !== undefined) {
+    base.state =
+      typeof input.state === 'string' && input.state.trim().length > 0
+        ? input.state.trim().toUpperCase()
+        : base.state;
+  }
+  if (input.reason !== undefined) {
+    base.reason = input.reason ?? null;
+  }
+  if (input.reportedBy !== undefined) {
+    base.reportedBy = input.reportedBy ?? null;
+  }
+  if (input.reportedAt !== undefined) {
+    base.reportedAt = input.reportedAt ? normalizeTimestamp(input.reportedAt) : null;
+  }
+  if (input.severity !== undefined) {
+    base.severity = input.severity ?? null;
+  }
+  if (input.auditTrailId !== undefined) {
+    base.auditTrailId = input.auditTrailId ?? null;
+  }
+  if (input.resolvedAt !== undefined) {
+    base.resolvedAt = input.resolvedAt ? normalizeTimestamp(input.resolvedAt) : null;
+  }
+  if (input.reviewer !== undefined) {
+    base.reviewer = input.reviewer ?? null;
+  }
+  if (input.notes !== undefined) {
+    base.notes = input.notes ?? null;
+  }
+  return base;
+}
+
+function defaultThreadModeration() {
+  return {
+    state: 'OPEN',
+    locked: false,
+    lockedAt: null,
+    lockedBy: null,
+    blocked: false,
+    blockedAt: null,
+    blockedBy: null,
+    reason: null,
+    auditTrailId: null,
+    severity: null,
+    updatedAt: null
+  };
+}
+
+function normalizeThreadModeration(input, fallback = null) {
+  const base = fallback ? { ...fallback } : defaultThreadModeration();
+  if (!input || typeof input !== 'object') {
+    return base;
+  }
+  if (input.state !== undefined) {
+    base.state =
+      typeof input.state === 'string' && input.state.trim().length > 0
+        ? input.state.trim().toUpperCase()
+        : base.state;
+  }
+  if (input.locked !== undefined) {
+    base.locked = Boolean(input.locked);
+  }
+  if (input.lockedAt !== undefined) {
+    base.lockedAt = input.lockedAt ? normalizeTimestamp(input.lockedAt) : null;
+  }
+  if (input.lockedBy !== undefined) {
+    base.lockedBy = input.lockedBy ?? null;
+  }
+  if (input.blocked !== undefined) {
+    base.blocked = Boolean(input.blocked);
+  }
+  if (input.blockedAt !== undefined) {
+    base.blockedAt = input.blockedAt ? normalizeTimestamp(input.blockedAt) : null;
+  }
+  if (input.blockedBy !== undefined) {
+    base.blockedBy = input.blockedBy ?? null;
+  }
+  if (input.reason !== undefined) {
+    base.reason = input.reason ?? null;
+  }
+  if (input.auditTrailId !== undefined) {
+    base.auditTrailId = input.auditTrailId ?? null;
+  }
+  if (input.severity !== undefined) {
+    base.severity = input.severity ?? null;
+  }
+  if (input.updatedAt !== undefined) {
+    base.updatedAt = input.updatedAt ? normalizeTimestamp(input.updatedAt) : null;
+  }
+  return base;
+}
+
+
 /**
  * Creates a normalized thread state.
  * @param {{
@@ -77,8 +190,9 @@ export function createThreadState(input) {
         body: message.body ?? '',
         attachments: Array.isArray(message.attachments) ? message.attachments.map((att) => ({ ...att })) : [],
         action: message.action ? { ...message.action } : null,
-        nsfwBand: Number.isInteger(message.nsfwBand) ? message.nsfwBand : 0,
-        deliveryState: 'SENT'
+      nsfwBand: Number.isInteger(message.nsfwBand) ? message.nsfwBand : 0,
+      deliveryState: 'SENT',
+      moderation: normalizeMessageModeration(message.moderation)
       };
       return message.messageId;
     });
@@ -132,7 +246,8 @@ export function createThreadState(input) {
       kind: input.thread.kind,
       status: input.thread.status ?? 'OPEN',
       safeModeRequired: Boolean(input.thread.safeModeRequired),
-      lastMessageAt: resolvedLastMessageAt
+      lastMessageAt: resolvedLastMessageAt,
+      moderation: normalizeThreadModeration(input.thread.moderation)
     },
     messagesById: normalizedMessages,
     messageOrder,
@@ -155,11 +270,36 @@ export function createThreadState(input) {
 
 function cloneState(state) {
   return {
-    thread: { ...state.thread },
-    messagesById: { ...state.messagesById },
+    thread: {
+      ...state.thread,
+      moderation: state.thread?.moderation
+        ? { ...state.thread.moderation }
+        : defaultThreadModeration()
+    },
+    messagesById: Object.fromEntries(
+      Object.entries(state.messagesById).map(([messageId, message]) => [
+        messageId,
+        {
+          ...message,
+          attachments: Array.isArray(message.attachments)
+            ? message.attachments.map((att) => ({ ...att }))
+            : [],
+          action: message.action ? { ...message.action } : null,
+          moderation: message.moderation ? { ...message.moderation } : defaultMessageModeration()
+        }
+      ])
+    ),
     messageOrder: [...state.messageOrder],
     optimisticByClientId: { ...state.optimisticByClientId },
-    actionCardsById: { ...state.actionCardsById },
+    actionCardsById: Object.fromEntries(
+      Object.entries(state.actionCardsById).map(([actionId, card]) => [
+        actionId,
+        {
+          ...card,
+          payload: card?.payload ? { ...card.payload } : {}
+        }
+      ])
+    ),
     actionCardOrder: [...state.actionCardOrder],
     participantsById: Object.fromEntries(
       Object.entries(state.participantsById).map(([userId, participant]) => [userId, { ...participant }])
@@ -256,7 +396,8 @@ export function applyThreadEvent(state, event) {
         attachments: Array.isArray(payload.attachments) ? payload.attachments.map((att) => ({ ...att })) : [],
         action: payload.action ? { ...payload.action } : null,
         nsfwBand: Number.isInteger(payload.nsfwBand) ? payload.nsfwBand : 0,
-        deliveryState: 'SENT'
+        deliveryState: 'SENT',
+        moderation: normalizeMessageModeration(payload.moderation)
       };
       insertMessageOrdered(next, message);
       if (payload.clientId && next.optimisticByClientId[payload.clientId]) {
@@ -276,9 +417,26 @@ export function applyThreadEvent(state, event) {
         ...existing,
         ...payload,
         createdAt: normalizeTimestamp(payload.createdAt ?? existing.createdAt),
-        deliveryState: existing.deliveryState
+        deliveryState: existing.deliveryState,
+        attachments: Array.isArray(payload.attachments)
+          ? payload.attachments.map((att) => ({ ...att }))
+          : existing.attachments,
+        action: payload.action ? { ...payload.action } : existing.action,
+        moderation: normalizeMessageModeration(payload.moderation, existing.moderation)
       };
       insertMessageOrdered(next, next.messagesById[payload.messageId]);
+      break;
+    }
+    case 'MESSAGE_MODERATION_UPDATED': {
+      const messageId = payload.messageId;
+      if (!messageId || !next.messagesById[messageId]) {
+        break;
+      }
+      const existing = next.messagesById[messageId];
+      next.messagesById[messageId] = {
+        ...existing,
+        moderation: normalizeMessageModeration(payload.moderation ?? payload, existing.moderation)
+      };
       break;
     }
     case 'MESSAGE_FAILED': {
@@ -324,6 +482,16 @@ export function applyThreadEvent(state, event) {
     case 'THREAD_STATUS_CHANGED':
       next.thread.status = payload.status ?? next.thread.status;
       break;
+    case 'THREAD_MODERATION_UPDATED': {
+      next.thread.moderation = normalizeThreadModeration(
+        payload.moderation ?? payload,
+        next.thread.moderation
+      );
+      if (payload.status) {
+        next.thread.status = payload.status ?? next.thread.status;
+      }
+      break;
+    }
     case 'SAFE_MODE_OVERRIDE':
       next.safeMode.override = Boolean(payload.override);
       if (typeof payload.bandMax === 'number') {
@@ -387,7 +555,8 @@ export function enqueueOptimisticMessage(state, input) {
     attachments: Array.isArray(input.attachments) ? input.attachments.map((att) => ({ ...att })) : [],
     action: null,
     nsfwBand: 0,
-    deliveryState: 'SENDING'
+    deliveryState: 'SENDING',
+    moderation: defaultMessageModeration()
   };
   insertMessageOrdered(next, message);
   next.lastEventAt = Date.now();
@@ -418,7 +587,8 @@ export function resolveOptimisticMessage(state, clientId, payload) {
     attachments: Array.isArray(payload.attachments) ? payload.attachments.map((att) => ({ ...att })) : [],
     action: payload.action ? { ...payload.action } : null,
     nsfwBand: Number.isInteger(payload.nsfwBand) ? payload.nsfwBand : 0,
-    deliveryState: 'SENT'
+    deliveryState: 'SENT',
+    moderation: normalizeMessageModeration(payload.moderation)
   });
   next.lastEventAt = Date.now();
   return next;
@@ -518,4 +688,20 @@ export function applyActionCardIntent(state, actionId, intent, options = {}) {
   }
   next.lastEventAt = Date.now();
   return { state: next, auditEvent };
+}
+
+/**
+ * Returns the moderation metadata for the thread.
+ * @param {ReturnType<typeof createThreadState>} state
+ */
+export function getThreadModeration(state) {
+  return state?.thread?.moderation ? { ...state.thread.moderation } : defaultThreadModeration();
+}
+
+/**
+ * Indicates whether the thread is currently locked for messaging.
+ * @param {ReturnType<typeof createThreadState>} state
+ */
+export function isThreadLocked(state) {
+  return Boolean(state?.thread?.moderation?.locked);
 }

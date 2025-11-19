@@ -18,7 +18,8 @@ import {
   getUnreadMessageIds,
   getActionCards,
   getActionCardTransitions,
-  applyActionCardIntent as applyActionCardIntentReducer
+  applyActionCardIntent as applyActionCardIntentReducer,
+  getThreadModeration
 } from './thread_store.mjs';
 import {
   createNotificationQueue,
@@ -27,6 +28,17 @@ import {
   collectDigest as collectNotificationDigestReducer,
   listPendingNotifications
 } from './notification_queue.mjs';
+import {
+  createModerationQueue,
+  enqueueCase as enqueueModerationCase,
+  updateCase as updateModerationCase,
+  resolveCase as resolveModerationCase,
+  removeCase as removeModerationCase,
+  getCase as getModerationCase,
+  selectCases as selectModerationCases,
+  getQueueStats as getModerationQueueStats,
+  getPendingCases as getPendingModerationCases
+} from './moderation_queue.mjs';
 import {
   createUploadManagerState,
   registerClientUpload,
@@ -64,56 +76,84 @@ function mapThreadEventToInbox(event, nextThreadState, viewerUserId) {
     return null;
   }
   const threadId = nextThreadState.thread.threadId;
-  switch (event.type) {
-    case 'MESSAGE_CREATED': {
-      const incrementUnread =
-        event.payload?.authorUserId && viewerUserId && event.payload.authorUserId !== viewerUserId ? 1 : 0;
-      const lastMessageAt = nextThreadState.thread.lastMessageAt ?? event.payload?.createdAt;
-      return {
-        type: 'THREAD_MESSAGE_RECEIVED',
-        payload: {
-          threadId,
-          lastMessageAt,
-          incrementUnread
-        }
-      };
-    }
-    case 'MESSAGE_UPDATED':
-      return {
-        type: 'THREAD_UPDATED',
-        payload: {
-          threadId,
-          lastMessageAt: nextThreadState.thread.lastMessageAt
-        }
-      };
-    case 'THREAD_STATUS_CHANGED':
-      return {
-        type: 'THREAD_UPDATED',
-        payload: {
-          threadId,
-          status: nextThreadState.thread.status
-        }
-      };
-    case 'SAFE_MODE_OVERRIDE':
-      return {
-        type: 'THREAD_UPDATED',
-        payload: {
-          threadId,
-          safeModeRequired: nextThreadState.thread.safeModeRequired
-        }
-      };
-    case 'READ_RECEIPT_UPDATED': {
-      if (viewerUserId && event.payload?.userId === viewerUserId) {
+    switch (event.type) {
+      case 'MESSAGE_CREATED': {
+        const incrementUnread =
+          event.payload?.authorUserId && viewerUserId && event.payload.authorUserId !== viewerUserId ? 1 : 0;
+        const lastMessageAt = nextThreadState.thread.lastMessageAt ?? event.payload?.createdAt;
         return {
-          type: 'THREAD_READ',
-          payload: { threadId }
+          type: 'THREAD_MESSAGE_RECEIVED',
+          payload: {
+            threadId,
+            lastMessageAt,
+            incrementUnread
+          }
         };
       }
-      return null;
+      case 'MESSAGE_UPDATED':
+        return {
+          type: 'THREAD_UPDATED',
+          payload: {
+            threadId,
+            lastMessageAt: nextThreadState.thread.lastMessageAt
+          }
+        };
+      case 'THREAD_STATUS_CHANGED':
+        return {
+          type: 'THREAD_UPDATED',
+          payload: {
+            threadId,
+            status: nextThreadState.thread.status
+          }
+        };
+      case 'THREAD_MODERATION_UPDATED': {
+        const moderation = getThreadModeration(nextThreadState);
+        const blocked =
+          event.payload?.blocked ??
+          event.payload?.moderation?.blocked ??
+          Boolean(moderation?.blocked);
+        const basePayload = {
+          threadId,
+          status: nextThreadState.thread.status,
+          moderation
+        };
+        if (blocked === true) {
+          return {
+            type: 'THREAD_BLOCKED',
+            payload: basePayload
+          };
+        }
+        if (blocked === false) {
+          return {
+            type: 'THREAD_UNBLOCKED',
+            payload: basePayload
+          };
+        }
+        return {
+          type: 'THREAD_UPDATED',
+          payload: basePayload
+        };
+      }
+      case 'SAFE_MODE_OVERRIDE':
+        return {
+          type: 'THREAD_UPDATED',
+          payload: {
+            threadId,
+            safeModeRequired: nextThreadState.thread.safeModeRequired
+          }
+        };
+      case 'READ_RECEIPT_UPDATED': {
+        if (viewerUserId && event.payload?.userId === viewerUserId) {
+          return {
+            type: 'THREAD_READ',
+            payload: { threadId }
+          };
+        }
+        return null;
+      }
+      default:
+        return null;
     }
-    default:
-      return null;
-  }
 }
 
 /**
@@ -134,6 +174,23 @@ export function createMessagingController(options = {}) {
   const nowFn = typeof options.now === 'function' ? options.now : () => Date.now();
   const logger = options.logger ?? null;
   const analytics = typeof options.onAnalyticsEvent === 'function' ? options.onAnalyticsEvent : null;
+  const isoNow = () => new Date(nowFn()).toISOString();
+  const toIsoInput = (value) => {
+    if (value instanceof Date) {
+      return Number.isFinite(value.getTime()) ? value.toISOString() : isoNow();
+    }
+    if (typeof value === 'string' && value.trim().length > 0) {
+      const parsed = Date.parse(value);
+      if (Number.isFinite(parsed)) {
+        return new Date(parsed).toISOString();
+      }
+    }
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      return new Date(value).toISOString();
+    }
+    return isoNow();
+  };
+  const randomId = (prefix) => `${prefix}-${nowFn().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
   const uploadOptions =
     options.uploads && typeof options.uploads === 'object' ? { ...options.uploads } : {};
@@ -154,6 +211,7 @@ export function createMessagingController(options = {}) {
     }
   }
   let notificationState = createNotificationQueue(options.notifications ?? {});
+  let moderationQueueState = createModerationQueue(options.moderationQueue ?? {});
 
   const listeners = new Set();
 
@@ -163,6 +221,7 @@ export function createMessagingController(options = {}) {
       threads: threadStates,
       notifications: notificationState,
       uploads: uploadState,
+      moderationQueue: moderationQueueState,
       viewerUserId
     };
   }
@@ -220,6 +279,18 @@ export function createMessagingController(options = {}) {
       uploadState = next;
       if (result.change) {
         changes.push({ scope: 'uploads', ...result.change });
+      }
+      return true;
+    }
+
+    function updateModerationQueue(updater, change, changes) {
+      const next = updater(moderationQueueState);
+      if (next === moderationQueueState) {
+        return false;
+      }
+      moderationQueueState = next;
+      if (change) {
+        changes.push({ scope: 'moderationQueue', ...change });
       }
       return true;
     }
@@ -637,6 +708,361 @@ export function createMessagingController(options = {}) {
   function unmuteThread(threadId) {
     return muteThread(threadId, { muted: false });
   }
+
+    function hydrateModerationQueue(queueInput = {}) {
+      const normalized = Array.isArray(queueInput) ? { cases: queueInput } : queueInput ?? {};
+      const changes = [];
+      updateModerationQueue(() => createModerationQueue(normalized), { action: 'hydrate' }, changes);
+      if (changes.length) {
+        emit(changes);
+      }
+      return moderationQueueState;
+    }
+
+    function findModerationCase(caseId) {
+      return caseId ? getModerationCase(moderationQueueState, caseId) : null;
+    }
+
+    function enqueueModerationCaseInternal(caseInput, changeMeta, changes) {
+      return updateModerationQueue(
+        (state) => enqueueModerationCase(state, caseInput),
+        changeMeta,
+        changes
+      );
+    }
+
+    function reportMessage(threadId, messageId, optionsReport = {}) {
+      if (!threadId) {
+        throw new Error('reportMessage requires threadId');
+      }
+      if (!messageId) {
+        throw new Error('reportMessage requires messageId');
+      }
+      const reportedAt = toIsoInput(optionsReport.reportedAt);
+      const reporter = optionsReport.reportedBy ?? viewerUserId ?? null;
+      applyThreadEventInternal(threadId, {
+        type: 'MESSAGE_MODERATION_UPDATED',
+        payload: {
+          messageId,
+          moderation: {
+            state:
+              typeof optionsReport.state === 'string'
+                ? optionsReport.state.trim().toUpperCase()
+                : 'REPORTED',
+            reason: optionsReport.reason ?? null,
+            reportedBy: reporter,
+            reportedAt,
+            severity: optionsReport.severity ?? null,
+            auditTrailId: optionsReport.auditTrailId ?? null,
+            notes: optionsReport.notes ?? null
+          }
+        }
+      });
+      if (optionsReport.enqueue === false) {
+        const threadState = threadStates.get(threadId);
+        return threadState?.messagesById[messageId]?.moderation ?? null;
+      }
+      const caseId = optionsReport.caseId ?? randomId(`message-${messageId}`);
+      const changes = [];
+      enqueueModerationCaseInternal(
+        {
+          caseId,
+          type: 'MESSAGE',
+          threadId,
+          messageId,
+          reason: optionsReport.reason ?? 'REPORT',
+          severity: optionsReport.severity ?? 'MEDIUM',
+          reportedBy: reporter,
+          reportedAt,
+          metadata: optionsReport.metadata ?? {}
+        },
+        { action: 'reportMessage', threadId, messageId, caseId },
+        changes
+      );
+      if (changes.length) {
+        emit(changes);
+      }
+      return findModerationCase(caseId);
+    }
+
+    function applyThreadModeration(threadId, moderationPatch = {}, optionsModeration = {}) {
+      return applyThreadEventInternal(
+        threadId,
+        {
+          type: 'THREAD_MODERATION_UPDATED',
+          payload: {
+            ...moderationPatch,
+            updatedAt: moderationPatch.updatedAt ?? isoNow()
+          }
+        },
+        optionsModeration
+      );
+    }
+
+    function reportThread(threadId, optionsReport = {}) {
+      if (!threadId) {
+        throw new Error('reportThread requires threadId');
+      }
+      if (optionsReport.block === true) {
+        return blockThread(threadId, optionsReport);
+      }
+      if (optionsReport.lock === true) {
+        lockThread(threadId, optionsReport);
+      } else {
+        applyThreadModeration(threadId, {
+          reason: optionsReport.reason ?? null,
+          auditTrailId: optionsReport.auditTrailId ?? null,
+          severity: optionsReport.severity ?? null,
+          updatedAt: optionsReport.updatedAt ?? isoNow()
+        });
+      }
+      if (optionsReport.enqueue === false) {
+        const threadState = threadStates.get(threadId);
+        return threadState ? getThreadModeration(threadState) : null;
+      }
+      const caseId = optionsReport.caseId ?? randomId(`thread-${threadId}`);
+      const reportedAt = toIsoInput(optionsReport.reportedAt);
+      const changes = [];
+      enqueueModerationCaseInternal(
+        {
+          caseId,
+          type: 'THREAD',
+          threadId,
+          reason: optionsReport.reason ?? 'REPORT',
+          severity: optionsReport.severity ?? 'HIGH',
+          reportedBy: optionsReport.reportedBy ?? viewerUserId ?? null,
+          reportedAt,
+          metadata: optionsReport.metadata ?? {}
+        },
+        { action: 'reportThread', threadId, caseId },
+        changes
+      );
+      if (changes.length) {
+        emit(changes);
+      }
+      return findModerationCase(caseId);
+    }
+
+    function lockThread(threadId, optionsLock = {}) {
+      if (!threadId) {
+        throw new Error('lockThread requires threadId');
+      }
+      const updatedAt = toIsoInput(optionsLock.updatedAt);
+      applyThreadModeration(threadId, {
+        locked: true,
+        status: optionsLock.status ?? 'LOCKED',
+        reason: optionsLock.reason ?? null,
+        auditTrailId: optionsLock.auditTrailId ?? null,
+        severity: optionsLock.severity ?? null,
+        updatedAt
+      });
+      if (optionsLock.enqueue !== true) {
+        const threadState = threadStates.get(threadId);
+        return threadState ? getThreadModeration(threadState) : null;
+      }
+      const caseId = optionsLock.caseId ?? randomId(`lock-${threadId}`);
+      const reportedAt = toIsoInput(optionsLock.reportedAt ?? updatedAt);
+      const changes = [];
+      enqueueModerationCaseInternal(
+        {
+          caseId,
+          type: 'THREAD',
+          threadId,
+          reason: optionsLock.reason ?? 'LOCK',
+          severity: optionsLock.severity ?? 'HIGH',
+          reportedBy: optionsLock.reportedBy ?? viewerUserId ?? null,
+          reportedAt,
+          metadata: optionsLock.metadata ?? {}
+        },
+        { action: 'lockThread', threadId, caseId },
+        changes
+      );
+      if (changes.length) {
+        emit(changes);
+      }
+      return findModerationCase(caseId);
+    }
+
+    function unlockThread(threadId, optionsUnlock = {}) {
+      if (!threadId) {
+        throw new Error('unlockThread requires threadId');
+      }
+      const updatedAt = toIsoInput(optionsUnlock.updatedAt);
+      applyThreadModeration(threadId, {
+        locked: false,
+        status: optionsUnlock.status ?? 'OPEN',
+        reason: optionsUnlock.reason ?? null,
+        auditTrailId: optionsUnlock.auditTrailId ?? null,
+        updatedAt
+      });
+      if (optionsUnlock.enqueue !== true) {
+        const threadState = threadStates.get(threadId);
+        return threadState ? getThreadModeration(threadState) : null;
+      }
+      const caseId = optionsUnlock.caseId ?? randomId(`unlock-${threadId}`);
+      const reportedAt = toIsoInput(optionsUnlock.reportedAt ?? updatedAt);
+      const changes = [];
+      enqueueModerationCaseInternal(
+        {
+          caseId,
+          type: 'THREAD',
+          threadId,
+          reason: optionsUnlock.reason ?? 'UNLOCK',
+          severity: optionsUnlock.severity ?? 'LOW',
+          reportedBy: optionsUnlock.reportedBy ?? viewerUserId ?? null,
+          reportedAt,
+          metadata: optionsUnlock.metadata ?? {}
+        },
+        { action: 'unlockThread', threadId, caseId },
+        changes
+      );
+      if (changes.length) {
+        emit(changes);
+      }
+      return findModerationCase(caseId);
+    }
+
+    function blockThread(threadId, optionsBlock = {}) {
+      if (!threadId) {
+        throw new Error('blockThread requires threadId');
+      }
+      const updatedAt = optionsBlock.updatedAt ?? isoNow();
+      applyThreadModeration(threadId, {
+        blocked: true,
+        locked: optionsBlock.locked ?? true,
+        status: optionsBlock.status ?? 'LOCKED',
+        reason: optionsBlock.reason ?? null,
+        auditTrailId: optionsBlock.auditTrailId ?? null,
+        severity: optionsBlock.severity ?? null,
+        updatedAt
+      });
+      if (optionsBlock.enqueue === false) {
+        return moderationQueueState;
+      }
+      const changes = [];
+      enqueueModerationCaseInternal(
+        {
+          caseId: optionsBlock.caseId ?? randomId(`block-${threadId}`),
+          type: 'THREAD',
+          threadId,
+          reason: optionsBlock.reason ?? 'BLOCK',
+          severity: optionsBlock.severity ?? 'HIGH',
+          reportedBy: optionsBlock.reportedBy ?? viewerUserId ?? null,
+          reportedAt: optionsBlock.reportedAt ?? updatedAt,
+          metadata: optionsBlock.metadata ?? {}
+        },
+        { action: 'blockThread', threadId },
+        changes
+      );
+      if (changes.length) {
+        emit(changes);
+      }
+      return moderationQueueState;
+    }
+
+    function unblockThread(threadId, optionsUnblock = {}) {
+      if (!threadId) {
+        throw new Error('unblockThread requires threadId');
+      }
+      const updatedAt = optionsUnblock.updatedAt ?? isoNow();
+      applyThreadModeration(threadId, {
+        blocked: false,
+        status: optionsUnblock.status ?? 'OPEN',
+        reason: optionsUnblock.reason ?? null,
+        auditTrailId: optionsUnblock.auditTrailId ?? null,
+        updatedAt
+      });
+      if (optionsUnblock.enqueue !== true) {
+        return moderationQueueState;
+      }
+      const changes = [];
+      enqueueModerationCaseInternal(
+        {
+          caseId: optionsUnblock.caseId ?? randomId(`unblock-${threadId}`),
+          type: 'THREAD',
+          threadId,
+          reason: optionsUnblock.reason ?? 'UNBLOCK',
+          severity: optionsUnblock.severity ?? 'LOW',
+          reportedBy: optionsUnblock.reportedBy ?? viewerUserId ?? null,
+          reportedAt: optionsUnblock.reportedAt ?? updatedAt,
+          metadata: optionsUnblock.metadata ?? {}
+        },
+        { action: 'unblockThread', threadId },
+        changes
+      );
+      if (changes.length) {
+        emit(changes);
+      }
+      return moderationQueueState;
+    }
+
+    function updateModerationQueueCase(caseId, patch = {}) {
+      if (!caseId) {
+        throw new Error('updateModerationQueueCase requires caseId');
+      }
+      const changes = [];
+      updateModerationQueue(
+        (state) => updateModerationCase(state, caseId, patch),
+        { action: 'updateCase', caseId },
+        changes
+      );
+      if (changes.length) {
+        emit(changes);
+      }
+      return moderationQueueState;
+    }
+
+    function resolveModerationQueueCase(caseId, resolution = {}) {
+      if (!caseId) {
+        throw new Error('resolveModerationQueueCase requires caseId');
+      }
+      const changes = [];
+      updateModerationQueue(
+        (state) => resolveModerationCase(state, caseId, resolution),
+        { action: 'resolveCase', caseId },
+        changes
+      );
+      if (changes.length) {
+        emit(changes);
+      }
+      return moderationQueueState;
+    }
+
+    function removeModerationQueueCase(caseId) {
+      if (!caseId) {
+        throw new Error('removeModerationQueueCase requires caseId');
+      }
+      const changes = [];
+      updateModerationQueue(
+        (state) => removeModerationCase(state, caseId),
+        { action: 'removeCase', caseId },
+        changes
+      );
+      if (changes.length) {
+        emit(changes);
+      }
+      return moderationQueueState;
+    }
+
+    function listModerationCases(filters = {}) {
+      return selectModerationCases(moderationQueueState, filters);
+    }
+
+    function listPendingModerationCases() {
+      return getPendingModerationCases(moderationQueueState);
+    }
+
+    function getModerationQueueState() {
+      return moderationQueueState;
+    }
+
+    function getModerationStats() {
+      return getModerationQueueStats(moderationQueueState);
+    }
+
+    function getModerationCase(caseId) {
+      return getModerationCase(moderationQueueState, caseId);
+    }
 
   function getUploadState() {
       return uploadState;

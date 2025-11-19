@@ -9,6 +9,79 @@ const DEFAULT_CREDITS = {
   floor: 0
 };
 
+function cloneThreadModeration(value) {
+  if (!value || typeof value !== 'object') {
+    return null;
+  }
+  return {
+    state: typeof value.state === 'string' ? value.state : null,
+    locked: Boolean(value.locked),
+    lockedAt: value.lockedAt ?? null,
+    lockedBy: value.lockedBy ?? null,
+    blocked: Boolean(value.blocked),
+    blockedAt: value.blockedAt ?? null,
+    blockedBy: value.blockedBy ?? null,
+    reason: value.reason ?? null,
+    auditTrailId: value.auditTrailId ?? null,
+    severity: value.severity ?? null,
+    updatedAt: value.updatedAt ?? null
+  };
+}
+
+function mergeThreadModeration(existing, patch) {
+  const base =
+    cloneThreadModeration(existing) ?? {
+      state: null,
+      locked: false,
+      lockedAt: null,
+      lockedBy: null,
+      blocked: false,
+      blockedAt: null,
+      blockedBy: null,
+      reason: null,
+      auditTrailId: null,
+      severity: null,
+      updatedAt: null
+    };
+  if (!patch || typeof patch !== 'object') {
+    return base;
+  }
+  if (patch.state !== undefined && typeof patch.state === 'string') {
+    base.state = patch.state;
+  }
+  if (patch.locked !== undefined) {
+    base.locked = Boolean(patch.locked);
+  }
+  if (patch.lockedAt !== undefined) {
+    base.lockedAt = patch.lockedAt ?? null;
+  }
+  if (patch.lockedBy !== undefined) {
+    base.lockedBy = patch.lockedBy ?? null;
+  }
+  if (patch.blocked !== undefined) {
+    base.blocked = Boolean(patch.blocked);
+  }
+  if (patch.blockedAt !== undefined) {
+    base.blockedAt = patch.blockedAt ?? null;
+  }
+  if (patch.blockedBy !== undefined) {
+    base.blockedBy = patch.blockedBy ?? null;
+  }
+  if (patch.reason !== undefined) {
+    base.reason = patch.reason ?? null;
+  }
+  if (patch.auditTrailId !== undefined) {
+    base.auditTrailId = patch.auditTrailId ?? null;
+  }
+  if (patch.severity !== undefined) {
+    base.severity = patch.severity ?? null;
+  }
+  if (patch.updatedAt !== undefined) {
+    base.updatedAt = patch.updatedAt ?? null;
+  }
+  return base;
+}
+
 /**
  * Creates a normalized inbox state tree.
  * @param {{
@@ -71,7 +144,9 @@ export function createInboxState(opts = {}) {
       pinned: Boolean(thread.pinned),
       archived: Boolean(thread.archived),
       muted: Boolean(thread.muted),
-      safeModeRequired: Boolean(thread.safeModeRequired)
+      safeModeRequired: Boolean(thread.safeModeRequired),
+      blocked: Boolean(thread.blocked),
+      moderation: cloneThreadModeration(thread.moderation)
     };
     if (normalized.title && typeof normalized.title !== 'string') {
       normalized.title = String(normalized.title);
@@ -121,7 +196,17 @@ export function createInboxState(opts = {}) {
 
 function cloneState(state) {
   return {
-    threadsById: { ...state.threadsById },
+    threadsById: Object.fromEntries(
+      Object.entries(state.threadsById).map(([threadId, thread]) => [
+        threadId,
+        {
+          ...thread,
+          labels: Array.isArray(thread.labels) ? [...thread.labels] : thread.labels,
+          metadata: thread.metadata && typeof thread.metadata === 'object' ? { ...thread.metadata } : thread.metadata,
+          moderation: cloneThreadModeration(thread.moderation)
+        }
+      ])
+    ),
     orderedThreadIds: [...state.orderedThreadIds],
     pinnedThreadIds: [...state.pinnedThreadIds],
     archivedThreadIds: [...state.archivedThreadIds],
@@ -140,27 +225,62 @@ function cloneState(state) {
 
 function ensureThread(state, thread) {
   const next = cloneState(state);
-  if (!next.threadsById[thread.threadId]) {
-    next.orderedThreadIds.unshift(thread.threadId);
-  }
-  next.threadsById[thread.threadId] = {
-    ...next.threadsById[thread.threadId],
+  const existing = next.threadsById[thread.threadId] ?? {};
+  const hasModerationInput = thread.moderation || existing.moderation;
+  const mergedModeration = hasModerationInput
+    ? mergeThreadModeration(existing.moderation, thread.moderation ?? {})
+    : null;
+
+  const merged = {
+    ...existing,
     ...thread
   };
+
+  if (merged.title && typeof merged.title !== 'string') {
+    merged.title = String(merged.title);
+  }
+  if (merged.subtitle && typeof merged.subtitle !== 'string') {
+    merged.subtitle = String(merged.subtitle);
+  }
+  if (merged.labels && !Array.isArray(merged.labels)) {
+    merged.labels = [merged.labels].filter((value) => value != null);
+  } else if (Array.isArray(merged.labels)) {
+    merged.labels = merged.labels.map((value) => (value == null ? value : String(value)));
+  }
+  if (merged.metadata && typeof merged.metadata === 'object') {
+    merged.metadata = { ...merged.metadata };
+  }
+
+  if (mergedModeration) {
+    merged.moderation = mergedModeration;
+  }
+
+  if (thread.blocked !== undefined) {
+    merged.blocked = Boolean(thread.blocked);
+  } else if (mergedModeration) {
+    merged.blocked = Boolean(mergedModeration.blocked);
+  } else if (existing.blocked !== undefined) {
+    merged.blocked = Boolean(existing.blocked);
+  } else {
+    merged.blocked = Boolean(merged.blocked);
+  }
+
+  next.threadsById[thread.threadId] = merged;
+
   if (!next.orderedThreadIds.includes(thread.threadId)) {
     next.orderedThreadIds.unshift(thread.threadId);
   }
   next.unreadByThreadId[thread.threadId] = thread.unreadCount ?? next.unreadByThreadId[thread.threadId] ?? 0;
-  if (thread.pinned && !next.pinnedThreadIds.includes(thread.threadId)) {
+  if (merged.pinned && !next.pinnedThreadIds.includes(thread.threadId)) {
     next.pinnedThreadIds.push(thread.threadId);
   }
-  if (!thread.pinned && next.pinnedThreadIds.includes(thread.threadId)) {
+  if (!merged.pinned && next.pinnedThreadIds.includes(thread.threadId)) {
     next.pinnedThreadIds = next.pinnedThreadIds.filter((id) => id !== thread.threadId);
   }
-  if (thread.archived && !next.archivedThreadIds.includes(thread.threadId)) {
+  if (merged.archived && !next.archivedThreadIds.includes(thread.threadId)) {
     next.archivedThreadIds.push(thread.threadId);
   }
-  if (!thread.archived && next.archivedThreadIds.includes(thread.threadId)) {
+  if (!merged.archived && next.archivedThreadIds.includes(thread.threadId)) {
     next.archivedThreadIds = next.archivedThreadIds.filter((id) => id !== thread.threadId);
   }
   next.lastUpdatedAt = Date.now();
@@ -294,6 +414,20 @@ export function applyInboxEvent(state, event) {
       next.lastUpdatedAt = Date.now();
       return next;
     }
+    case 'THREAD_BLOCKED': {
+      return ensureThread(state, {
+        threadId: event.payload.threadId,
+        blocked: true,
+        moderation: event.payload.moderation ?? { blocked: true }
+      });
+    }
+    case 'THREAD_UNBLOCKED': {
+      return ensureThread(state, {
+        threadId: event.payload.threadId,
+        blocked: false,
+        moderation: event.payload.moderation ?? { blocked: false }
+      });
+    }
     case 'THREAD_MESSAGE_RECEIVED': {
       if (!state.threadsById[event.payload.threadId]) {
         return state;
@@ -308,6 +442,12 @@ export function applyInboxEvent(state, event) {
       };
       next.lastUpdatedAt = Date.now();
       return next;
+    }
+    case 'THREAD_MODERATION_UPDATED': {
+      return ensureThread(state, {
+        threadId: event.payload.threadId,
+        moderation: event.payload.moderation ?? event.payload
+      });
     }
     case 'REQUEST_RECEIVED': {
       const next = cloneState(state);
@@ -510,11 +650,13 @@ function defaultQueryMatch(candidate, query) {
  * @param {ReturnType<typeof createInboxState>} state
  * @param {{
  *   includeArchived?: boolean;
+ *   includeBlocked?: boolean;
  *   folder?: 'default'|'requests'|'pinned'|'archived';
  *   onlyUnread?: boolean;
  *   kinds?: Iterable<string>|string;
  *   muted?: boolean;
  *   safeModeRequired?: boolean;
+ *   blocked?: boolean;
  *   query?: string;
  *   queryMatcher?: (thread: any, normalizedQuery: string) => boolean;
  *   predicate?: (thread: any) => boolean;
@@ -522,10 +664,12 @@ function defaultQueryMatch(candidate, query) {
  */
 export function selectThreads(state, options = {}) {
   const includeArchived = options.includeArchived ?? false;
+  const includeBlocked = options.includeBlocked ?? false;
   const onlyUnread = options.onlyUnread ?? false;
   const kindSet = normalizeKindSet(options.kinds);
   const mutedFilter = options.muted;
   const safeModeFilter = options.safeModeRequired;
+  const blockedFilter = typeof options.blocked === 'boolean' ? options.blocked : null;
   const query =
     typeof options.query === 'string' && options.query.trim().length > 0
       ? options.query.trim().toLowerCase()
@@ -569,6 +713,16 @@ export function selectThreads(state, options = {}) {
       const thread = state.threadsById[threadId];
       if (!thread) return null;
       if (!includeArchived && thread.archived && options.folder !== 'archived') {
+        return null;
+      }
+      const isBlocked = Boolean(thread.blocked);
+      if (!includeBlocked && isBlocked) {
+        return null;
+      }
+      if (blockedFilter === true && !isBlocked) {
+        return null;
+      }
+      if (blockedFilter === false && isBlocked) {
         return null;
       }
       const unreadCount = state.unreadByThreadId[threadId] ?? thread.unreadCount ?? 0;
