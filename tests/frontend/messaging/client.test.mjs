@@ -500,3 +500,43 @@ test('hydrateModerationQueue loads queue data into controller', async () => {
   const controllerState = controller.getModerationQueueState();
   assert.equal(controllerState.order[0], 'case-hydrate-1');
 });
+
+test('resolveModerationQueueCase and removeModerationQueueCase sync controller and mutations', async () => {
+  const controller = createMessagingController({
+    moderationQueue: {
+      cases: [
+        {
+          caseId: 'case-sync-1',
+          status: 'PENDING',
+          severity: 'MEDIUM',
+          type: 'THREAD'
+        }
+      ]
+    }
+  });
+
+  let resolveCalled = false;
+  let removeCalled = false;
+  const client = createMessagingClient({
+    controller,
+    mutations: {
+      resolveModerationQueueCase: async (caseId, resolution) => {
+        resolveCalled = caseId === 'case-sync-1' && resolution.outcome === 'CLEARED';
+      },
+      removeModerationQueueCase: async (caseId) => {
+        removeCalled = caseId === 'case-sync-1';
+      }
+    }
+  });
+
+  await client.resolveModerationQueueCase('case-sync-1', { outcome: 'CLEARED', resolvedBy: 'admin-1' });
+  let queueState = controller.getModerationQueueState();
+  assert.equal(queueState.casesById['case-sync-1'].status, 'RESOLVED');
+  assert.ok(resolveCalled);
+
+  await client.removeModerationQueueCase('case-sync-1');
+  queueState = controller.getModerationQueueState();
+  assert.equal(queueState.casesById['case-sync-1'], undefined);
+  assert.equal(queueState.order.length, 0);
+  assert.ok(removeCalled);
+});

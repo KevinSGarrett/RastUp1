@@ -324,6 +324,19 @@
 - Updated test plan to flag upcoming moderation queue coverage scenarios.
 - Implementation deferred pending backend GraphQL mutations/subscriptions; follow-up run will tackle controller/client wiring once transports are available.
 
+## 2025-11-19 — AGENT-3 (WBS-006) Part 19
+
+- Added dedicated moderation queue reducer tests (`tests/frontend/messaging/moderation_queue.test.mjs`) covering enqueue/update/resolve/remove flows plus selectors/stats, and extended controller/client/react binding suites for moderation case management.
+- Updated messaging implementation/test documentation with moderation coverage status and queue wiring guidance.
+- Ran regression suites to ensure moderation additions integrate cleanly with existing messaging, frontend, search, and booking modules.
+- Tests:
+  - `node --test tests/frontend/messaging/*.test.mjs`
+  - `node --test tests/frontend/**/*.test.mjs`
+  - `node --test tests/search/*.test.mjs`
+  - `python -m unittest tests.search.test_collections_json`
+  - `node --test tests/booking/*.test.mjs`
+  - `make ci`
+
 ## 2025-11-20 — AGENT-3 (WBS-006) Part 11
 
 - Extended `web/lib/messaging/dataSources.mjs` with GraphQL-aware messaging mutations (send, mark read, message requests) plus configurable subscription hooks while preserving Safe-Mode stub fallbacks, and wired the new runtime into `MessagingWorkspaceClient.tsx` so workspace actions operate in Next.js.

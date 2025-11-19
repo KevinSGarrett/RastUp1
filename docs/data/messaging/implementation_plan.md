@@ -146,6 +146,10 @@
   - `MessagingThread` composer should surface “Report message” affordances per entry, render flagged content with caution styling, and disable send when `thread.moderation.locked === true`.  
   - Add `MessagingModerationQueue` component (paginated list, severity badges, dual-approval placeholders) wired through `MessagingWorkspace` via new props `showModerationQueue`/`moderationQueueProps` with default stub data source entries.
 
+- **Status (2025-11-19)**  
+  - Headless queue + controller/client wiring landed with deterministic reducers (`tools/frontend/messaging/moderation_queue.mjs`) and moderation helpers across controller/client/react bindings.  
+  - Node tests now cover queue reducers (`tests/frontend/messaging/moderation_queue.test.mjs`), controller helpers (`controller.test.mjs`), client mutations (`client.test.mjs`), and React bindings (`react_bindings.test.mjs`) to guarantee reporting, resolve/remove, and hydrate flows behave per blueprint.
+
 - **Testing strategy**  
   - Unit coverage across controller/client ensuring `reportMessage` marks messages + enqueues cases, `blockThread` updates inbox filters, queue reducers remain pure.  
   - React tests for the moderation queue component verifying rendering of pending cases and action callbacks.  

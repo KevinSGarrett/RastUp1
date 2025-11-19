@@ -124,6 +124,11 @@ test('MessagingProvider wires client lifecycle and exposes actions', async () =>
     muteThread: async () => lifecycleLog.push('muteThread'),
     unmuteThread: async () => lifecycleLog.push('unmuteThread'),
     recordConversationStart: async () => lifecycleLog.push('recordConversationStart'),
+    reportMessage: async () => lifecycleLog.push('reportMessage'),
+    reportThread: async () => lifecycleLog.push('reportThread'),
+    resolveModerationQueueCase: async () => lifecycleLog.push('resolveModerationQueueCase'),
+    removeModerationQueueCase: async () => lifecycleLog.push('removeModerationQueueCase'),
+    hydrateModerationQueue: async () => lifecycleLog.push('hydrateModerationQueue'),
     dispose() {
       lifecycleLog.push('dispose');
     }
@@ -158,6 +163,11 @@ test('MessagingProvider wires client lifecycle and exposes actions', async () =>
   await actions.unmuteThread('thr-toggle');
   await actions.recordConversationStart();
   await actions.hydrateThread('thr-1');
+  await actions.hydrateModerationQueue();
+  await actions.reportMessage('thr-1', 'msg-1', { reason: 'SPAM' });
+  await actions.reportThread('thr-1', { reason: 'ABUSE' });
+  await actions.resolveModerationQueueCase('case-1', { outcome: 'CLEARED' });
+  await actions.removeModerationQueueCase('case-1');
   const notificationStateResult = actions.enqueueNotification({
     key: 'test:notification',
     message: 'New inbox activity'
@@ -176,6 +186,12 @@ test('MessagingProvider wires client lifecycle and exposes actions', async () =>
 
   const wiringController = useMessagingController();
   assert.ok(wiringController === controller, 'Expected controller from context');
+
+  assert.ok(lifecycleLog.includes('reportMessage'), 'expected reportMessage action to call client');
+  assert.ok(lifecycleLog.includes('reportThread'), 'expected reportThread action to call client');
+  assert.ok(lifecycleLog.includes('resolveModerationQueueCase'), 'expected resolve case action to call client');
+  assert.ok(lifecycleLog.includes('removeModerationQueueCase'), 'expected remove case action to call client');
+  assert.ok(lifecycleLog.includes('hydrateModerationQueue'), 'expected hydrate queue action to call client');
 
   fakeReact.flushEffects();
 

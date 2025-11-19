@@ -408,8 +408,64 @@ test('lockThread and unblockThread update moderation metadata', () => {
   assert.equal(threadState.thread.moderation.locked, true);
   assert.equal(threadState.thread.moderation.reason, 'Investigation');
 
+  controller.unlockThread('thr-2', { reason: 'Cleared' });
+  threadState = controller.getThreadState('thr-2');
+  assert.equal(threadState.thread.moderation.locked, false);
+
+  controller.blockThread('thr-2', { reason: 'Policy breach', severity: 'CRITICAL' });
+  threadState = controller.getThreadState('thr-2');
+  assert.equal(threadState.thread.moderation.blocked, true);
+  assert.equal(threadState.thread.moderation.locked, true);
+
   controller.unblockThread('thr-2', { notes: 'Cleared' });
   threadState = controller.getThreadState('thr-2');
   assert.equal(threadState.thread.moderation.blocked, false);
+  assert.equal(threadState.thread.moderation.locked, true);
+
+  controller.unlockThread('thr-2', { reason: 'Reopen' });
+  threadState = controller.getThreadState('thr-2');
   assert.equal(threadState.thread.moderation.locked, false);
+});
+
+test('moderation queue helpers mutate controller queue state', () => {
+  const controller = createMessagingController();
+  controller.hydrateModerationQueue({
+    cases: [
+      {
+        caseId: 'case-1',
+        status: 'PENDING',
+        severity: 'LOW',
+        type: 'MESSAGE',
+        threadId: 'thr-queue'
+      }
+    ]
+  });
+
+  let queueState = controller.getModerationQueueState();
+  assert.ok(queueState);
+  assert.deepEqual(queueState.order, ['case-1']);
+
+  controller.updateModerationQueueCase('case-1', {
+    status: 'IN_REVIEW',
+    approvals: [{ actorId: 'admin-1', decision: 'approve', decidedAt: '2025-11-19T07:00:00.000Z' }],
+    metadata: { escalated: true }
+  });
+  queueState = controller.getModerationQueueState();
+  assert.equal(queueState.casesById['case-1'].status, 'IN_REVIEW');
+  assert.equal(queueState.casesById['case-1'].approvals.length, 1);
+  assert.equal(queueState.casesById['case-1'].metadata.escalated, true);
+
+  controller.resolveModerationQueueCase('case-1', {
+    outcome: 'CLEARED',
+    resolvedBy: 'admin-2',
+    resolvedAt: '2025-11-19T08:00:00.000Z'
+  });
+  queueState = controller.getModerationQueueState();
+  assert.equal(queueState.casesById['case-1'].status, 'RESOLVED');
+  assert.equal(queueState.order.slice(-1)[0], 'case-1');
+
+  controller.removeModerationQueueCase('case-1');
+  queueState = controller.getModerationQueueState();
+  assert.equal(queueState.order.length, 0);
+  assert.equal(queueState.casesById['case-1'], undefined);
 });
