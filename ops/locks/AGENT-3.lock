@@ -1,4 +1,4 @@
 agent: AGENT-3
-timestamp: 2025-11-19T10:45:00Z
+timestamp: 2025-11-19T12:25:00Z
 status: locked
-notes: "WBS-006 messaging frontend — React provider/hooks over controller+client, docs/tests, run artefacts"
+notes: "WBS-017 availability/calendar follow-up — UI enhancements, ICS outbound helpers, regression + ci"

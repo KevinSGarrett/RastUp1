@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 interface ReschedulePickerStore {
   getState: () => any;
@@ -14,6 +14,7 @@ export interface ReschedulePickerProps {
   store: ReschedulePickerStore;
   onSelectSlot?: (slot: any | null) => void;
   onSubmitHold?: (state: any) => void;
+  onRefresh?: () => void;
 }
 
 function renderSlot(slot: any) {
@@ -22,14 +23,50 @@ function renderSlot(slot: any) {
   return `${start.toUTCString()} → ${end.toUTCString()} (${slot.durationMinutes ?? 0} minutes)`;
 }
 
+function formatCountdown(expiresAt?: string | null) {
+  if (!expiresAt) {
+    return null;
+  }
+  const target = Date.parse(expiresAt);
+  if (!Number.isFinite(target)) {
+    return null;
+  }
+  const diffMs = target - Date.now();
+  if (diffMs <= 0) {
+    return 'expired';
+  }
+  const minutes = Math.floor(diffMs / 60000);
+  const seconds = Math.floor((diffMs % 60000) / 1000);
+  return `${minutes}m ${seconds}s remaining`;
+}
+
 export const ReschedulePicker: React.FC<ReschedulePickerProps> = ({
   store,
   onSelectSlot,
-  onSubmitHold
+  onSubmitHold,
+  onRefresh
 }) => {
   const [state, setState] = useState(() => store.getState());
+  const [tick, setTick] = useState(() => Date.now());
 
   useEffect(() => store.subscribe(setState), [store]);
+
+  useEffect(() => {
+    if (!state.holdStatus?.expiresAt) {
+      return undefined;
+    }
+    const interval = setInterval(() => setTick(Date.now()), 1000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.holdStatus?.expiresAt]);
+
+  useEffect(() => {
+    if (!state.metadata?.lastRecomputedAt) {
+      return;
+    }
+    // trigger tick update to refresh countdown formatting without manual action
+    setTick(Date.now());
+  }, [state.metadata?.lastRecomputedAt]);
 
   const handleSelect = (slotId: string) => {
     store.selectSlot(slotId);
@@ -49,11 +86,37 @@ export const ReschedulePicker: React.FC<ReschedulePickerProps> = ({
     onSubmitHold?.(store.getState());
   };
 
+  const metadata = state.metadata ?? {};
+  const holdCountdown = useMemo(() => formatCountdown(state.holdStatus?.expiresAt), [state.holdStatus, tick]);
+
   return (
     <section className="reschedule-picker">
       <header className="reschedule-picker__header">
         <h2>Reschedule Picker</h2>
-        <p>Select a new slot that satisfies lead time and duration requirements.</p>
+        <p>
+          Select a new slot that satisfies lead time and duration requirements. Showing{' '}
+          {metadata.filteredCount ?? state.filteredSlots?.length ?? 0} of {metadata.totalSourceSlots ?? 0} slots.
+        </p>
+        <div className="reschedule-picker__header-actions">
+          <button
+            type="button"
+            onClick={() =>
+              store.loadSlots({
+                slots: state.sourceSlots,
+                durationMin: state.durationMin,
+                nowUtc: state.now
+              })
+            }
+          >
+            Reapply filters
+          </button>
+          <button type="button" onClick={() => onRefresh?.()}>
+            Refresh slots
+          </button>
+          <span className="reschedule-picker__timestamp">
+            Last recomputed: {metadata.lastRecomputedAt ? new Date(metadata.lastRecomputedAt).toUTCString() : 'n/a'}
+          </span>
+        </div>
       </header>
 
       <div className="reschedule-picker__controls">
@@ -116,6 +179,7 @@ export const ReschedulePicker: React.FC<ReschedulePickerProps> = ({
         {state.holdStatus ? (
           <span className="reschedule-picker__hold-status">
             Hold {state.holdStatus.holdId} — {state.holdStatus.status}
+            {holdCountdown ? ` (${holdCountdown})` : ''}
           </span>
         ) : null}
       </footer>

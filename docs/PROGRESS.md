@@ -151,3 +151,14 @@
 - Introduced documentation guardrail tests (`tests/python/test_comms_docs.py`) to enforce section completeness and prevent placeholder regressions.
 - `python -m unittest tests.python.test_comms_docs` → pass (3 tests).
 - `make ci` → pass (Python booking schema + Node booking suites).
+
+## 2025-11-19 — AGENT-3 (WBS-017) Part 2
+
+- Enhanced calendar frontend surfaces with actionable controls: availability editor now supports inline rule/exception editing, preview option tuning, auto recompute, and metadata; calendar connect exposes sync telemetry, retry/copy actions; reschedule picker surfaces counts, refresh hooks, and hold countdowns.
+- Added outbound ICS generation utilities (`services/calendar/ics-outbound.{js,ts}`) plus shared types, enabling VEVENT/feed creation for booking holds and confirmations; covered with dedicated unit tests (`tests/frontend/calendar/ics-outbound.test.mjs`) and updated test plan documentation.
+- Updated calendar plan/test docs to capture new UI/ICS scope; ensured regression coverage via targeted suites and full frontend/booking/ci runs.
+- Tests:
+  - `node --test tests/frontend/calendar/*.test.mjs` → pass (13 tests including ICS outbound coverage).
+  - `node --test tests/frontend/**/*.test.mjs` → pass (90 tests).
+  - `node --test tests/booking/*.test.mjs` → pass (65 tests).
+  - `make ci` → pass (Python booking schema + Node booking suites).

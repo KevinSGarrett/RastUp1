@@ -16,6 +16,7 @@
   - Reviewed prior AGENT-3 and AGENT-2 run reports (WBS-006, WBS-005) to align dependencies and contracts.
   - Re-confirmed blueprint expectations (§1.12) and updated test strategy before authoring code.
   - Secured `ops/locks/AGENT-3.lock` for WBS-017 scope.
+  - Iterated on availability/calendar UI to add inline editing controls, telemetry surfacing, and ICS outbound helpers (feeds + invites) with accompanying unit coverage.
 - **Pending / Deferred**
   - Backend lambdas/resolvers, persistence wiring, and external webhook integrations (owned by Agents A/B).
   - End-to-end UI integration in Next.js/React and mobile platforms (future WBS iterations).

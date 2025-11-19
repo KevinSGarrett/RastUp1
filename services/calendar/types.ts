@@ -144,3 +144,58 @@ export interface IcsPollResult {
     retriable: boolean;
   };
 }
+
+export interface CalendarInviteOrganizer {
+  email: string;
+  name?: string;
+}
+
+export interface CalendarInviteAttendee {
+  email: string;
+  name?: string;
+  role?: string;
+  status?: string;
+  rsvp?: boolean;
+}
+
+export interface CalendarAlarm {
+  triggerMinutesBefore?: number;
+  action?: 'DISPLAY' | 'EMAIL';
+  description?: string;
+}
+
+export interface CalendarOutboundEvent {
+  uid: string;
+  startUtc: string;
+  endUtc?: string;
+  summary?: string;
+  description?: string;
+  location?: string;
+  url?: string;
+  status?: 'CONFIRMED' | 'TENTATIVE' | 'CANCELLED';
+  transparency?: 'OPAQUE' | 'TRANSPARENT';
+  organizer?: CalendarInviteOrganizer;
+  attendees?: CalendarInviteAttendee[];
+  categories?: string[];
+  sequence?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  recurrenceId?: string;
+  timezone?: string;
+  allDay?: boolean;
+  alarms?: CalendarAlarm[];
+  extraProperties?: Record<string, string | number | boolean>;
+  extra?: Record<string, string | number | boolean>;
+}
+
+export interface CalendarOutboundOptions {
+  productId?: string;
+  calendarName?: string;
+  method?: 'PUBLISH' | 'REQUEST' | 'CANCEL';
+  events: CalendarOutboundEvent[];
+  defaultTimezone?: string;
+  refreshIntervalMinutes?: number;
+  ttlSeconds?: number;
+  url?: string;
+  generatedAtUtc?: string;
+}
