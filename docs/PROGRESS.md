@@ -247,6 +247,19 @@
   - `node --test tests/booking/*.test.mjs`
   - `make ci`
 
+## 2025-11-20 — AGENT-3 (WBS-006) Part 11
+
+- Extended `web/lib/messaging/dataSources.mjs` with GraphQL-aware messaging mutations (send, mark read, message requests) plus configurable subscription hooks while preserving Safe-Mode stub fallbacks, and wired the new runtime into `MessagingWorkspaceClient.tsx` so workspace actions operate in Next.js.
+- Refreshed messaging implementation/test documentation with the runtime configuration guidance and expanded unit coverage for data source mutations/subscriptions (`tests/frontend/messaging/dataSources.test.mjs`).
+- Tests:
+  - `node --test tests/frontend/messaging/dataSources.test.mjs`
+  - `node --test tests/frontend/messaging/*.test.mjs`
+  - `node --test tests/frontend/**/*.test.mjs`
+  - `node --test tests/search/*.test.mjs`
+  - `python -m unittest tests.search.test_collections_json`
+  - `node --test tests/booking/*.test.mjs`
+  - `make ci`
+
 ## 2025-11-19 — AGENT-3 (WBS-017) Part 3
 
 - Implemented `createCalendarController` orchestrating availability, calendar connect, and reschedule stores with hold/event lifecycle hooks, external busy updates, telemetry sync, and preview refresh helpers (`tools/frontend/calendar/controller.mjs`).

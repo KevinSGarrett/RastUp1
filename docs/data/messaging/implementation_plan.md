@@ -86,6 +86,7 @@
 - Layer `createMessagingClient` on top of the controller to wrap GraphQL fetch/mutation/subscribe plumbing, applying `normalize*` helpers, bridging optimistic sends, and auto-refreshing inbox/thread state on transport failures.  
 - Ship `createMessagingReactBindings` (tools/frontend/messaging/react_bindings.mjs) to generate React contexts/hooks (`MessagingProvider`, `useInboxThreads`, `useThread`, etc.) while keeping the underlying controller/client framework-neutral; the Next.js façade lives under `web/components/MessagingProvider/**`.  
 - `selectThreads` / `controller.selectInboxThreads` now accept advanced filters (`onlyUnread`, `kinds`, `muted`, `safeModeRequired`, `query`, `queryMatcher`) aligning inbox UX with blueprint requirements and enabling custom search matching per surface.  
+  - `createMessagingDataSource` exposes fetch helpers plus configurable `mutations`/`subscribe*` hooks with Safe-Mode aware stub fallbacks; pass `graphqlMutations`, `mutations`, or `subscribeInbox/subscribeThread` overrides to integrate AppSync/App Server transports without rewriting the workspace client.  
 - Provide TypeScript declaration files (`.d.ts`) once the Next.js scaffold materialises; for now, JSDoc shapes near functions for editor IntelliSense.  
 - Aim for idempotent helpers to ease unit testing in Node; mirror these in future React hooks (e.g., `useThreadState` delegates to `ThreadStore` reducers).  
 - Document event payload shapes and integration steps in `ui_flows.md` and `test_plan.md` for continuity across agents.  
@@ -102,6 +103,7 @@
 - Introduced Next.js integration utilities (`tools/frontend/messaging/next_adapter.mjs`) providing server-side prefetch + hydration helpers, and packaged a `MessagingWorkspace` layout component (`web/components/Messaging/MessagingWorkspace.tsx`) that composes provider, inbox, thread, and project panel surfaces for immediate route scaffolding.
 - Added query persistence helpers (`tools/frontend/messaging/filter_params.mjs` + unit tests) alongside `MessagingWorkspaceRouteBridge` to sync inbox filters, search, and active thread selection with Next.js query parameters.
 - Created a server/client handoff for the messaging workspace routed through `web/app/messaging/page.tsx`, using `createMessagingNextAdapter` with a shared data source (`web/lib/messaging/dataSources.mjs`) and a client bridge component (`MessagingWorkspaceClient.tsx`) to hydrate `MessagingProvider` from prefetch snapshots while falling back to Safe-Mode aware stub payloads when GraphQL is not yet wired.
+  - Enabled runtime mutations/subscriptions for the workspace by extending `web/lib/messaging/dataSources.mjs` with GraphQL-aware send/read/request helpers plus stub fallbacks, and wiring the new hooks into `MessagingWorkspaceClient.tsx` so messaging actions function even before the backend is live.
 
 ## Performance & Offline
 - Inbox virtualization and timeline windowing: plan to leverage intersection observers + incremental fetch (`cursor` pagination).  

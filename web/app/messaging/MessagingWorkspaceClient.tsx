@@ -41,22 +41,34 @@ export const MessagingWorkspaceClient: React.FC<MessagingWorkspaceClientProps> =
     [queryParamKeys]
   );
 
-  const clientConfig = useMemo(
-    () => ({
+  const clientConfig = useMemo(() => {
+    const baseConfig: Record<string, unknown> = {
       fetchInbox: dataSource.fetchInbox,
       fetchThread: dataSource.fetchThread,
       initialInbox: initialData.initialInbox ?? null,
       initialThreads: Array.isArray(initialData.initialThreads) ? initialData.initialThreads : [],
       initialNotifications: initialData.initialNotifications ?? null
-    }),
-    [
-      dataSource.fetchInbox,
-      dataSource.fetchThread,
-      initialData.initialInbox,
-      initialData.initialThreads,
-      initialData.initialNotifications
-    ]
-  );
+    };
+    if (typeof dataSource.subscribeInbox === 'function') {
+      baseConfig.subscribeInbox = dataSource.subscribeInbox;
+    }
+    if (typeof dataSource.subscribeThread === 'function') {
+      baseConfig.subscribeThread = dataSource.subscribeThread;
+    }
+    if (dataSource.mutations) {
+      baseConfig.mutations = dataSource.mutations;
+    }
+    return baseConfig;
+  }, [
+    dataSource.fetchInbox,
+    dataSource.fetchThread,
+    dataSource.subscribeInbox,
+    dataSource.subscribeThread,
+    dataSource.mutations,
+    initialData.initialInbox,
+    initialData.initialThreads,
+    initialData.initialNotifications
+  ]);
 
   const hydratedThreadIds = useMemo(() => {
     if (Array.isArray(initialData.hydratedThreadIds) && initialData.hydratedThreadIds.length > 0) {
@@ -72,26 +84,26 @@ export const MessagingWorkspaceClient: React.FC<MessagingWorkspaceClientProps> =
     }
   }, [initialData.errors]);
 
-  return (
-    <MessagingProvider
-      viewerUserId={viewerUserId ?? initialData.viewerUserId ?? null}
-      clientConfig={clientConfig}
-      autoStartInbox={false}
-      autoRefreshInbox
-      autoSubscribeThreadIds={hydratedThreadIds}
-      onClientError={(error, context) => {
-        // eslint-disable-next-line no-console
-        console.error('Messaging client error', { error, context });
-      }}
-    >
-      <MessagingWorkspaceRouteBridge
-        initialThreadId={initialThreadId ?? hydratedThreadIds[0] ?? null}
-        inboxProps={{
-          defaultFilters: initialFilters,
-          initialSearch: initialSearchTerm
+    return (
+      <MessagingProvider
+        viewerUserId={viewerUserId ?? initialData.viewerUserId ?? null}
+        clientConfig={clientConfig}
+        autoStartInbox={typeof dataSource.subscribeInbox === 'function'}
+        autoRefreshInbox
+        autoSubscribeThreadIds={hydratedThreadIds}
+        onClientError={(error, context) => {
+          // eslint-disable-next-line no-console
+          console.error('Messaging client error', { error, context });
         }}
-        queryParamKeys={mergedQueryKeys}
-      />
-    </MessagingProvider>
-  );
+      >
+        <MessagingWorkspaceRouteBridge
+          initialThreadId={initialThreadId ?? hydratedThreadIds[0] ?? null}
+          inboxProps={{
+            defaultFilters: initialFilters,
+            initialSearch: initialSearchTerm
+          }}
+          queryParamKeys={mergedQueryKeys}
+        />
+      </MessagingProvider>
+    );
 };

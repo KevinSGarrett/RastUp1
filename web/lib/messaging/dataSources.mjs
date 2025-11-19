@@ -208,6 +208,95 @@ const THREAD_QUERY = `
   }
 `;
 
+const SEND_MESSAGE_MUTATION = `
+  mutation MessagingSendMessage(
+    $threadId: ID!,
+    $body: String!,
+    $clientId: String,
+    $idempotencyKey: String
+  ) {
+    sendMessage(
+      threadId: $threadId,
+      body: $body,
+      clientId: $clientId,
+      idempotencyKey: $idempotencyKey
+    ) {
+      messageId
+      createdAt
+      authorUserId
+      author { userId }
+      type
+      body
+      attachments
+      nsfwBand
+      action {
+        actionId
+        type
+        state
+        version
+        payload
+        createdAt
+        updatedAt
+      }
+    }
+  }
+`;
+
+const MARK_THREAD_READ_MUTATION = `
+  mutation MessagingMarkThreadRead(
+    $threadId: ID!,
+    $lastReadMsgId: ID,
+    $lastReadAt: AWSDateTime
+  ) {
+    markThreadRead(
+      threadId: $threadId,
+      lastReadMsgId: $lastReadMsgId,
+      lastReadAt: $lastReadAt
+    ) {
+      threadId
+      lastReadMsgId
+      lastReadAt
+    }
+  }
+`;
+
+const ACCEPT_MESSAGE_REQUEST_MUTATION = `
+  mutation MessagingAcceptMessageRequest($requestId: ID!) {
+    acceptMessageRequest(requestId: $requestId) {
+      requestId
+      threadId
+      status
+      creditsRemaining
+    }
+  }
+`;
+
+const DECLINE_MESSAGE_REQUEST_MUTATION = `
+  mutation MessagingDeclineMessageRequest($requestId: ID!, $block: Boolean) {
+    declineMessageRequest(requestId: $requestId, block: $block) {
+      requestId
+      threadId
+      status
+    }
+  }
+`;
+
+const RECORD_CONVERSATION_START_MUTATION = `
+  mutation MessagingRecordConversationStart($context: AWSJSON) {
+    recordConversationStart(context: $context) {
+      status
+    }
+  }
+`;
+
+const DEFAULT_GRAPHQL_MUTATIONS = Object.freeze({
+  sendMessage: SEND_MESSAGE_MUTATION,
+  markThreadRead: MARK_THREAD_READ_MUTATION,
+  acceptMessageRequest: ACCEPT_MESSAGE_REQUEST_MUTATION,
+  declineMessageRequest: DECLINE_MESSAGE_REQUEST_MUTATION,
+  recordConversationStart: RECORD_CONVERSATION_START_MUTATION
+});
+
 async function executeGraphQL(query, variables, endpoint, headers, fetchImpl, logger) {
   if (!endpoint || !fetchImpl) {
     return null;
@@ -261,6 +350,189 @@ export function createMessagingDataSource(options = {}) {
   const logger = options.logger;
   const useStubData = Boolean(options.useStubData) || !endpoint || !fetchImpl;
 
+  const graphqlMutations =
+    options.graphqlMutations === false
+      ? {}
+      : { ...DEFAULT_GRAPHQL_MUTATIONS, ...(options.graphqlMutations ?? {}) };
+
+  const subscribeInboxImpl = typeof options.subscribeInbox === 'function' ? options.subscribeInbox : null;
+  const subscribeThreadImpl =
+    typeof options.subscribeThread === 'function' ? options.subscribeThread : null;
+
+  function pruneUndefined(input) {
+    if (!input || typeof input !== 'object') {
+      return input;
+    }
+    const output = {};
+    for (const [key, value] of Object.entries(input)) {
+      if (value !== undefined && value !== null) {
+        output[key] = value;
+      }
+    }
+    return output;
+  }
+
+  function createStubMessageAck(threadId, input = {}) {
+    const messageId = `${threadId}-stub-${Math.random().toString(36).slice(2, 10)}`;
+    const createdAt = new Date().toISOString();
+    return {
+      message: {
+        messageId,
+        createdAt,
+        authorUserId: input.authorUserId ?? 'usr_stub',
+        type: input.type ?? 'TEXT',
+        body: typeof input.body === 'string' ? input.body : '',
+        attachments: Array.isArray(input.attachments) ? clone(input.attachments) : [],
+        action: null,
+        nsfwBand: 0
+      }
+    };
+  }
+
+  async function defaultSendMessage(threadId, input = {}) {
+    if (!threadId) {
+      throw new Error('sendMessage requires threadId');
+    }
+    if (!input?.clientId) {
+      throw new Error('sendMessage requires clientId in input');
+    }
+    if (!useStubData && graphqlMutations.sendMessage) {
+      const variables = pruneUndefined({
+        threadId,
+        body: typeof input.body === 'string' ? input.body : '',
+        clientId: input.clientId,
+        idempotencyKey: input.idempotencyKey
+      });
+      const data = await executeGraphQL(
+        graphqlMutations.sendMessage,
+        variables,
+        endpoint,
+        headers,
+        fetchImpl,
+        logger
+      );
+      const payload = data?.sendMessage ?? data?.message ?? null;
+      if (payload) {
+        return { message: payload };
+      }
+    }
+    return createStubMessageAck(threadId, input);
+  }
+
+  async function defaultMarkThreadRead(threadId, ctx = {}) {
+    if (!threadId) {
+      throw new Error('markThreadRead requires threadId');
+    }
+    if (!useStubData && graphqlMutations.markThreadRead) {
+      const variables = pruneUndefined({
+        threadId,
+        lastReadMsgId: ctx.lastReadMsgId,
+        lastReadAt: ctx.lastReadAt
+      });
+      await executeGraphQL(
+        graphqlMutations.markThreadRead,
+        variables,
+        endpoint,
+        headers,
+        fetchImpl,
+        logger
+      );
+      return { status: 'synced' };
+    }
+    return { status: 'stub' };
+  }
+
+  async function defaultAcceptMessageRequest(requestId, ctx = {}) {
+    if (!requestId) {
+      throw new Error('acceptMessageRequest requires requestId');
+    }
+    if (!useStubData && graphqlMutations.acceptMessageRequest) {
+      const data = await executeGraphQL(
+        graphqlMutations.acceptMessageRequest,
+        { requestId },
+        endpoint,
+        headers,
+        fetchImpl,
+        logger
+      );
+      const payload = data?.acceptMessageRequest ?? data?.messageRequest ?? null;
+      if (payload) {
+        return payload;
+      }
+    }
+    return {
+      requestId,
+      status: 'ACCEPTED',
+      resolvedAt: new Date().toISOString(),
+      creditsRemaining: ctx.creditsRemaining ?? null
+    };
+  }
+
+  async function defaultDeclineMessageRequest(requestId, ctx = {}) {
+    if (!requestId) {
+      throw new Error('declineMessageRequest requires requestId');
+    }
+    const block = Boolean(ctx.block);
+    if (!useStubData && graphqlMutations.declineMessageRequest) {
+      const data = await executeGraphQL(
+        graphqlMutations.declineMessageRequest,
+        { requestId, block },
+        endpoint,
+        headers,
+        fetchImpl,
+        logger
+      );
+      const payload = data?.declineMessageRequest ?? data?.messageRequest ?? null;
+      if (payload) {
+        return payload;
+      }
+    }
+    return {
+      requestId,
+      status: block ? 'BLOCKED' : 'DECLINED',
+      resolvedAt: new Date().toISOString()
+    };
+  }
+
+  async function defaultRecordConversationStart(ctx = {}) {
+    if (!useStubData && graphqlMutations.recordConversationStart) {
+      const serialized = Object.keys(ctx ?? {}).length > 0 ? JSON.stringify(ctx) : null;
+      await executeGraphQL(
+        graphqlMutations.recordConversationStart,
+        pruneUndefined({ context: serialized }),
+        endpoint,
+        headers,
+        fetchImpl,
+        logger
+      );
+      return { status: 'recorded' };
+    }
+    return { status: 'stub-recorded', at: new Date().toISOString() };
+  }
+
+  const mergedMutations = {
+    sendMessage: options.mutations?.sendMessage ?? defaultSendMessage,
+    markThreadRead: options.mutations?.markThreadRead ?? defaultMarkThreadRead,
+    acceptMessageRequest: options.mutations?.acceptMessageRequest ?? defaultAcceptMessageRequest,
+    declineMessageRequest: options.mutations?.declineMessageRequest ?? defaultDeclineMessageRequest,
+    recordConversationStart:
+      options.mutations?.recordConversationStart ?? defaultRecordConversationStart
+  };
+
+  function subscribeInbox(handlers = {}) {
+    if (subscribeInboxImpl) {
+      return subscribeInboxImpl(handlers);
+    }
+    return () => {};
+  }
+
+  function subscribeThread(threadId, handlers = {}) {
+    if (subscribeThreadImpl) {
+      return subscribeThreadImpl(threadId, handlers);
+    }
+    return () => {};
+  }
+
   async function fetchInbox(args = {}) {
     if (!useStubData) {
       const data = await executeGraphQL(
@@ -308,7 +580,10 @@ export function createMessagingDataSource(options = {}) {
 
   return {
     fetchInbox,
-    fetchThread
+    fetchThread,
+    subscribeInbox,
+    subscribeThread,
+    mutations: mergedMutations
   };
 }
 
