@@ -99,3 +99,10 @@
 - `python -m unittest tests.search.test_collections_json` → pass (3 tests).  
 - `node --test tests/booking/*.test.mjs` → pass (65 tests).  
 - `make ci` → failed (`No rule to make target 'ci'`) — repository still lacks CI target; documented for continuity.
+
+## 2025-11-19 — AGENT-1 (WBS-001)
+
+- Authored infrastructure bootstrap roadmap (`docs/infra/bootstrap-plan.md`) covering multi-account setup, Amplify Gen 2/CDK structure, security baseline, CI/CD pipeline, observability, cost controls, phased rollout, and validation strategy aligned to TD-0062 – TD-0114.
+- Added Python unit test (`tests/python/test_infra_docs.py`) to enforce roadmap completeness (required headings, environment matrix integrity, no placeholder text).
+- `python -m unittest tests.python.test_infra_docs` → pass (3 tests).
+- `make ci` → pass (Python booking schema tests + Node booking suites executed via target).
