@@ -289,11 +289,71 @@ const RECORD_CONVERSATION_START_MUTATION = `
   }
 `;
 
+const PIN_THREAD_MUTATION = `
+  mutation MessagingPinThread($threadId: ID!) {
+    pinThread(threadId: $threadId) {
+      threadId
+      pinned
+    }
+  }
+`;
+
+const UNPIN_THREAD_MUTATION = `
+  mutation MessagingUnpinThread($threadId: ID!) {
+    unpinThread(threadId: $threadId) {
+      threadId
+      pinned
+    }
+  }
+`;
+
+const ARCHIVE_THREAD_MUTATION = `
+  mutation MessagingArchiveThread($threadId: ID!) {
+    archiveThread(threadId: $threadId) {
+      threadId
+      archived
+    }
+  }
+`;
+
+const UNARCHIVE_THREAD_MUTATION = `
+  mutation MessagingUnarchiveThread($threadId: ID!) {
+    unarchiveThread(threadId: $threadId) {
+      threadId
+      archived
+    }
+  }
+`;
+
+const MUTE_THREAD_MUTATION = `
+  mutation MessagingMuteThread($threadId: ID!) {
+    muteThread(threadId: $threadId) {
+      threadId
+      muted
+    }
+  }
+`;
+
+const UNMUTE_THREAD_MUTATION = `
+  mutation MessagingUnmuteThread($threadId: ID!) {
+    unmuteThread(threadId: $threadId) {
+      threadId
+      muted
+    }
+  }
+`;
+
 const DEFAULT_GRAPHQL_MUTATIONS = Object.freeze({
   sendMessage: SEND_MESSAGE_MUTATION,
   markThreadRead: MARK_THREAD_READ_MUTATION,
   acceptMessageRequest: ACCEPT_MESSAGE_REQUEST_MUTATION,
   declineMessageRequest: DECLINE_MESSAGE_REQUEST_MUTATION,
+  pinThread: PIN_THREAD_MUTATION,
+  unpinThread: UNPIN_THREAD_MUTATION,
+  archiveThread: ARCHIVE_THREAD_MUTATION,
+  unarchiveThread: UNARCHIVE_THREAD_MUTATION,
+  muteThread: MUTE_THREAD_MUTATION,
+  unmuteThread: UNMUTE_THREAD_MUTATION,
   recordConversationStart: RECORD_CONVERSATION_START_MUTATION
 });
 
@@ -546,6 +606,144 @@ export function createMessagingDataSource(options = {}) {
     };
   }
 
+    async function defaultPinThread(threadId, ctx = {}) {
+      if (!threadId) {
+        throw new Error('pinThread requires threadId');
+      }
+      if (!useStubData && graphqlMutations.pinThread) {
+        await executeGraphQL(
+          graphqlMutations.pinThread,
+          { threadId },
+          endpoint,
+          headers,
+          fetchImpl,
+          logger
+        );
+      }
+      return {
+        threadId,
+        status: 'PINNED',
+        pinned: true,
+        at: new Date().toISOString(),
+        context: ctx
+      };
+    }
+
+    async function defaultUnpinThread(threadId, ctx = {}) {
+      if (!threadId) {
+        throw new Error('unpinThread requires threadId');
+      }
+      if (!useStubData && graphqlMutations.unpinThread) {
+        await executeGraphQL(
+          graphqlMutations.unpinThread,
+          { threadId },
+          endpoint,
+          headers,
+          fetchImpl,
+          logger
+        );
+      }
+      return {
+        threadId,
+        status: 'UNPINNED',
+        pinned: false,
+        at: new Date().toISOString(),
+        context: ctx
+      };
+    }
+
+    async function defaultArchiveThread(threadId, ctx = {}) {
+      if (!threadId) {
+        throw new Error('archiveThread requires threadId');
+      }
+      if (!useStubData && graphqlMutations.archiveThread) {
+        await executeGraphQL(
+          graphqlMutations.archiveThread,
+          { threadId },
+          endpoint,
+          headers,
+          fetchImpl,
+          logger
+        );
+      }
+      return {
+        threadId,
+        status: 'ARCHIVED',
+        archived: true,
+        at: new Date().toISOString(),
+        context: ctx
+      };
+    }
+
+    async function defaultUnarchiveThread(threadId, ctx = {}) {
+      if (!threadId) {
+        throw new Error('unarchiveThread requires threadId');
+      }
+      if (!useStubData && graphqlMutations.unarchiveThread) {
+        await executeGraphQL(
+          graphqlMutations.unarchiveThread,
+          { threadId },
+          endpoint,
+          headers,
+          fetchImpl,
+          logger
+        );
+      }
+      return {
+        threadId,
+        status: 'UNARCHIVED',
+        archived: false,
+        at: new Date().toISOString(),
+        context: ctx
+      };
+    }
+
+    async function defaultMuteThread(threadId, ctx = {}) {
+      if (!threadId) {
+        throw new Error('muteThread requires threadId');
+      }
+      if (!useStubData && graphqlMutations.muteThread) {
+        await executeGraphQL(
+          graphqlMutations.muteThread,
+          { threadId },
+          endpoint,
+          headers,
+          fetchImpl,
+          logger
+        );
+      }
+      return {
+        threadId,
+        status: 'MUTED',
+        muted: true,
+        at: new Date().toISOString(),
+        context: ctx
+      };
+    }
+
+    async function defaultUnmuteThread(threadId, ctx = {}) {
+      if (!threadId) {
+        throw new Error('unmuteThread requires threadId');
+      }
+      if (!useStubData && graphqlMutations.unmuteThread) {
+        await executeGraphQL(
+          graphqlMutations.unmuteThread,
+          { threadId },
+          endpoint,
+          headers,
+          fetchImpl,
+          logger
+        );
+      }
+      return {
+        threadId,
+        status: 'UNMUTED',
+        muted: false,
+        at: new Date().toISOString(),
+        context: ctx
+      };
+    }
+
   async function defaultRecordConversationStart(ctx = {}) {
     if (!useStubData && graphqlMutations.recordConversationStart) {
       const serialized = Object.keys(ctx ?? {}).length > 0 ? JSON.stringify(ctx) : null;
@@ -567,6 +765,12 @@ export function createMessagingDataSource(options = {}) {
     markThreadRead: options.mutations?.markThreadRead ?? defaultMarkThreadRead,
     acceptMessageRequest: options.mutations?.acceptMessageRequest ?? defaultAcceptMessageRequest,
     declineMessageRequest: options.mutations?.declineMessageRequest ?? defaultDeclineMessageRequest,
+    pinThread: options.mutations?.pinThread ?? defaultPinThread,
+    unpinThread: options.mutations?.unpinThread ?? defaultUnpinThread,
+    archiveThread: options.mutations?.archiveThread ?? defaultArchiveThread,
+    unarchiveThread: options.mutations?.unarchiveThread ?? defaultUnarchiveThread,
+    muteThread: options.mutations?.muteThread ?? defaultMuteThread,
+    unmuteThread: options.mutations?.unmuteThread ?? defaultUnmuteThread,
     recordConversationStart:
       options.mutations?.recordConversationStart ?? defaultRecordConversationStart
   };

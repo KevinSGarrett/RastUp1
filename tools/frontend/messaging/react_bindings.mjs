@@ -268,6 +268,12 @@ export function createMessagingReactBindings(options = {}) {
             client.declineMessageRequest,
             'Messaging client missing declineMessageRequest'
           ),
+          pinThread: safeBind(client.pinThread, 'Messaging client missing pinThread'),
+          unpinThread: safeBind(client.unpinThread, 'Messaging client missing unpinThread'),
+          archiveThread: safeBind(client.archiveThread, 'Messaging client missing archiveThread'),
+          unarchiveThread: safeBind(client.unarchiveThread, 'Messaging client missing unarchiveThread'),
+          muteThread: safeBind(client.muteThread, 'Messaging client missing muteThread'),
+          unmuteThread: safeBind(client.unmuteThread, 'Messaging client missing unmuteThread'),
           recordConversationStart:
             typeof client.recordConversationStart === 'function'
               ? client.recordConversationStart.bind(client)
@@ -358,6 +364,12 @@ export function createMessagingReactBindings(options = {}) {
       refreshInbox,
       acceptMessageRequest,
       declineMessageRequest,
+      pinThread,
+      unpinThread,
+      archiveThread,
+      unarchiveThread,
+      muteThread,
+      unmuteThread,
       recordConversationStart,
       startThreadSubscription,
       stopThreadSubscription,
@@ -377,6 +389,12 @@ export function createMessagingReactBindings(options = {}) {
       refreshInbox,
       acceptMessageRequest,
       declineMessageRequest,
+      pinThread,
+      unpinThread,
+      archiveThread,
+      unarchiveThread,
+      muteThread,
+      unmuteThread,
       recordConversationStart,
       startThreadSubscription,
       stopThreadSubscription,

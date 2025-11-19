@@ -583,7 +583,62 @@ export function createMessagingController(options = {}) {
     return inboxState;
   }
 
-    function getUploadState() {
+  function mutateInboxThread(threadId, eventType, changeMeta, analyticsEvent, additionalPayload = {}) {
+    if (!threadId) {
+      throw new Error(`${changeMeta} requires threadId`);
+    }
+    const payload = { threadId, ...additionalPayload };
+    const event = { type: eventType, payload };
+    const changes = [];
+    updateInbox((state) => applyInboxEventReducer(state, event), { action: changeMeta, threadId }, changes);
+    if (changes.length) {
+      emit(changes);
+      if (analytics) {
+        try {
+          analytics({
+            type: analyticsEvent,
+            payload
+          });
+        } catch (error) {
+          logger?.warn?.('messaging-controller: analytics handler failed', { error, analyticsEvent, payload });
+        }
+      }
+    }
+    return inboxState;
+  }
+
+  function pinThread(threadId) {
+    return mutateInboxThread(threadId, 'THREAD_PINNED', 'threadPinned', 'messaging.thread.pin');
+  }
+
+  function unpinThread(threadId) {
+    return mutateInboxThread(threadId, 'THREAD_UNPINNED', 'threadUnpinned', 'messaging.thread.unpin');
+  }
+
+  function archiveThread(threadId) {
+    return mutateInboxThread(threadId, 'THREAD_ARCHIVED', 'threadArchived', 'messaging.thread.archive');
+  }
+
+  function unarchiveThread(threadId) {
+    return mutateInboxThread(threadId, 'THREAD_UNARCHIVED', 'threadUnarchived', 'messaging.thread.unarchive');
+  }
+
+  function muteThread(threadId, optionsMute = {}) {
+    const muted = optionsMute.muted ?? true;
+    return mutateInboxThread(
+      threadId,
+      'THREAD_MUTED',
+      muted ? 'threadMuted' : 'threadUnmuted',
+      muted ? 'messaging.thread.mute' : 'messaging.thread.unmute',
+      { muted }
+    );
+  }
+
+  function unmuteThread(threadId) {
+    return muteThread(threadId, { muted: false });
+  }
+
+  function getUploadState() {
       return uploadState;
     }
 
@@ -864,6 +919,12 @@ export function createMessagingController(options = {}) {
     recordConversationStart,
     acceptMessageRequest,
     declineMessageRequest,
+    pinThread,
+    unpinThread,
+    archiveThread,
+    unarchiveThread,
+    muteThread,
+    unmuteThread,
     getUploadState,
     listUploads,
     getUpload: (clientId) => getUpload(uploadState, clientId),

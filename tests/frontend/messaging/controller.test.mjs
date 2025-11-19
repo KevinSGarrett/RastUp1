@@ -309,3 +309,49 @@ test('upload manager lifecycle updates state and emits changes', () => {
     'expected uploadComplete change'
   );
 });
+
+test('pin, archive, and mute thread helpers update inbox state', () => {
+  const controller = createMessagingController({
+    inbox: {
+      threads: [
+        {
+          threadId: 'thr-manage',
+          kind: 'PROJECT',
+          lastMessageAt: '2025-01-01T00:00:00Z',
+          pinned: false,
+          archived: false,
+          muted: false
+        }
+      ]
+    }
+  });
+
+  controller.pinThread('thr-manage');
+  let inboxState = controller.getInboxState();
+  assert.equal(inboxState.threadsById['thr-manage'].pinned, true);
+  const pinnedThreads = controller.selectInboxThreads({ folder: 'pinned' });
+  assert.equal(pinnedThreads.length, 1);
+  assert.equal(pinnedThreads[0].threadId, 'thr-manage');
+
+  controller.unpinThread('thr-manage');
+  inboxState = controller.getInboxState();
+  assert.equal(inboxState.threadsById['thr-manage'].pinned, false);
+
+  controller.archiveThread('thr-manage');
+  inboxState = controller.getInboxState();
+  assert.equal(inboxState.threadsById['thr-manage'].archived, true);
+  const archivedThreads = controller.selectInboxThreads({ folder: 'archived', includeArchived: true });
+  assert.ok(archivedThreads.some((thread) => thread.threadId === 'thr-manage'));
+
+  controller.unarchiveThread('thr-manage');
+  inboxState = controller.getInboxState();
+  assert.equal(inboxState.threadsById['thr-manage'].archived, false);
+
+  controller.muteThread('thr-manage');
+  inboxState = controller.getInboxState();
+  assert.equal(inboxState.threadsById['thr-manage'].muted, true);
+
+  controller.unmuteThread('thr-manage');
+  inboxState = controller.getInboxState();
+  assert.equal(inboxState.threadsById['thr-manage'].muted, false);
+});

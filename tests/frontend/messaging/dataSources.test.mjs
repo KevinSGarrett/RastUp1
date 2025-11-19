@@ -202,3 +202,62 @@ test('upload handler overrides are invoked when provided', async () => {
   assert.ok(createCalled);
   assert.equal(session.attachmentId, 'att-custom');
 });
+
+test('thread management stub mutations return defaults', async () => {
+  const dataSource = createMessagingDataSource({ useStubData: true });
+
+  const pinResult = await dataSource.mutations.pinThread('thr-123');
+  assert.equal(pinResult.status, 'PINNED');
+  assert.equal(pinResult.pinned, true);
+
+  const archiveResult = await dataSource.mutations.archiveThread('thr-123');
+  assert.equal(archiveResult.archived, true);
+
+  const unarchiveResult = await dataSource.mutations.unarchiveThread('thr-123');
+  assert.equal(unarchiveResult.archived, false);
+
+  const muteResult = await dataSource.mutations.muteThread('thr-123');
+  assert.equal(muteResult.muted, true);
+
+  const unmuteResult = await dataSource.mutations.unmuteThread('thr-123');
+  assert.equal(unmuteResult.muted, false);
+});
+
+test('pinThread mutation executes GraphQL when endpoint configured', async () => {
+  const mutationRequests = [];
+  const fetchImpl = async (_url, init) => {
+    const body = JSON.parse(init.body);
+    if (body.query.includes('MessagingPinThread')) {
+      mutationRequests.push(body);
+      return new Response(
+        JSON.stringify({
+          data: {
+            pinThread: {
+              threadId: body.variables.threadId,
+              pinned: true
+            }
+          }
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
+    return new Response(JSON.stringify({ data: { inbox: getStubInboxPayload() } }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  };
+
+  const dataSource = createMessagingDataSource({
+    endpoint: 'https://example.test/graphql',
+    fetchImpl,
+    useStubData: false
+  });
+
+  const result = await dataSource.mutations.pinThread('thr-pin');
+  assert.equal(mutationRequests.length, 1);
+  assert.equal(mutationRequests[0].variables.threadId, 'thr-pin');
+  assert.equal(result.pinned, true);
+});

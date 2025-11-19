@@ -248,6 +248,12 @@
 - `node --test tests/booking/*.test.mjs` → pass (65 tests).
 - `make ci` → pass (Python booking schema + Node booking suites).
 
+## 2025-11-19 — AGENT-3 (WBS-006) Part 17
+
+- Added thread triage helpers across controller/client/react bindings/data sources to support pin/unpin, archive/unarchive, and mute/unmute, and exposed inline controls in `MessagingInbox` for immediate inbox management.
+- Extended unit coverage for controller (`tests/frontend/messaging/controller.test.mjs`), client (`client.test.mjs`), React bindings (`react_bindings.test.mjs`), and data sources (`dataSources.test.mjs`) to exercise the new mutations with GraphQL/stub paths; updated implementation, test, and UI flow docs to describe the workflows.
+- `node --test tests/frontend/messaging/*.test.mjs`, `node --test tests/frontend/**/*.test.mjs`, `node --test tests/search/*.test.mjs`, `python -m unittest tests.search.test_collections_json`, `node --test tests/booking/*.test.mjs`, `make ci` → pass (artifacts captured under `docs/orchestrator/from-agents/AGENT-3/run-20251119T223500Z/`).
+
 ## 2025-11-19 — AGENT-2 (WBS-007) Part 1
 
 - Authored initial Smart Docs persistence layer (`db/migrations/027_smart_docs.sql`) covering clause, template, pack, doc instance, signer event, and legal hold tables with retention/approval metadata.

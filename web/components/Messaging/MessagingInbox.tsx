@@ -45,6 +45,12 @@ export interface MessagingInboxProps {
   onAcceptRequest?: (requestId: string) => Promise<void> | void;
   onDeclineRequest?: (requestId: string, options?: { block?: boolean }) => Promise<void> | void;
   onStartConversation?: () => Promise<void> | void;
+  onPinThread?: (threadId: string) => Promise<void> | void;
+  onUnpinThread?: (threadId: string) => Promise<void> | void;
+  onArchiveThread?: (threadId: string) => Promise<void> | void;
+  onUnarchiveThread?: (threadId: string) => Promise<void> | void;
+  onMuteThread?: (threadId: string) => Promise<void> | void;
+  onUnmuteThread?: (threadId: string) => Promise<void> | void;
   formatThreadLabel?: (thread: ThreadItem) => ThreadLabel;
   requestActions?: {
     acceptLabel?: string;
@@ -156,6 +162,12 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
   onAcceptRequest,
   onDeclineRequest,
   onStartConversation,
+  onPinThread,
+  onUnpinThread,
+  onArchiveThread,
+  onUnarchiveThread,
+  onMuteThread,
+  onUnmuteThread,
   formatThreadLabel = defaultFormatThreadLabel,
   requestActions,
   timezone = 'UTC',
@@ -416,6 +428,90 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
     await messagingActions.recordConversationStart();
   }, [messagingActions, onStartConversation]);
 
+  const handlePinThread = useCallback(
+    async (threadId: string) => {
+      if (!threadId) return;
+      if (onPinThread) {
+        await onPinThread(threadId);
+        return;
+      }
+      if (typeof messagingActions.pinThread === 'function') {
+        await messagingActions.pinThread(threadId);
+      }
+    },
+    [messagingActions, onPinThread]
+  );
+
+  const handleUnpinThread = useCallback(
+    async (threadId: string) => {
+      if (!threadId) return;
+      if (onUnpinThread) {
+        await onUnpinThread(threadId);
+        return;
+      }
+      if (typeof messagingActions.unpinThread === 'function') {
+        await messagingActions.unpinThread(threadId);
+      }
+    },
+    [messagingActions, onUnpinThread]
+  );
+
+  const handleArchiveThread = useCallback(
+    async (threadId: string) => {
+      if (!threadId) return;
+      if (onArchiveThread) {
+        await onArchiveThread(threadId);
+        return;
+      }
+      if (typeof messagingActions.archiveThread === 'function') {
+        await messagingActions.archiveThread(threadId);
+      }
+    },
+    [messagingActions, onArchiveThread]
+  );
+
+  const handleUnarchiveThread = useCallback(
+    async (threadId: string) => {
+      if (!threadId) return;
+      if (onUnarchiveThread) {
+        await onUnarchiveThread(threadId);
+        return;
+      }
+      if (typeof messagingActions.unarchiveThread === 'function') {
+        await messagingActions.unarchiveThread(threadId);
+      }
+    },
+    [messagingActions, onUnarchiveThread]
+  );
+
+  const handleMuteThread = useCallback(
+    async (threadId: string) => {
+      if (!threadId) return;
+      if (onMuteThread) {
+        await onMuteThread(threadId);
+        return;
+      }
+      if (typeof messagingActions.muteThread === 'function') {
+        await messagingActions.muteThread(threadId);
+      }
+    },
+    [messagingActions, onMuteThread]
+  );
+
+  const handleUnmuteThread = useCallback(
+    async (threadId: string) => {
+      if (!threadId) return;
+      if (onUnmuteThread) {
+        await onUnmuteThread(threadId);
+        return;
+      }
+      if (typeof messagingActions.unmuteThread === 'function') {
+        await messagingActions.unmuteThread(threadId);
+      }
+    },
+    [messagingActions, onUnmuteThread]
+  );
+
   const canStartConversation = summary.canStartConversation ?? { allowed: true };
   const mutedModeLabel = MUTED_MODE_LABELS[effectiveFilters.mutedMode];
 
@@ -534,8 +630,8 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
                   <button type="button" onClick={() => handleDeclineRequest(request.requestId, true)}>
                     {requestLabels.blockLabel}
                   </button>
-                </div>
-              </li>
+                  </div>
+                </li>
             ))}
           </ul>
         </section>
@@ -554,36 +650,76 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
                 const showTags = thread.safeModeRequired || thread.muted;
                 return (
                   <li key={`${section.id}-${thread.threadId}`}>
-                    <button
-                      type="button"
-                      className={`messaging-inbox__thread${active ? ' messaging-inbox__thread--active' : ''}`}
-                      onClick={() => handleSelectThread(thread.threadId)}
-                    >
-                      <div className="messaging-inbox__thread-header">
-                        <span className="messaging-inbox__thread-title">{label.title}</span>
-                        {thread.unreadCount ? (
-                          <span className="messaging-inbox__thread-unread">{thread.unreadCount}</span>
-                        ) : null}
-                      </div>
-                      {label.subtitle ? (
-                        <p className="messaging-inbox__thread-subtitle">{label.subtitle}</p>
-                      ) : null}
-                      {label.meta ? <p className="messaging-inbox__thread-meta">{label.meta}</p> : null}
-                      {showTags ? (
-                        <div className="messaging-inbox__thread-tags">
-                          {thread.safeModeRequired ? (
-                            <span className="messaging-inbox__thread-tag messaging-inbox__thread-tag--safe">
-                              Safe mode
-                            </span>
-                          ) : null}
-                          {thread.muted ? (
-                            <span className="messaging-inbox__thread-tag messaging-inbox__thread-tag--muted">
-                              Muted
-                            </span>
+                    <div className="messaging-inbox__thread-row">
+                      <button
+                        type="button"
+                        className={`messaging-inbox__thread${active ? ' messaging-inbox__thread--active' : ''}`}
+                        onClick={() => handleSelectThread(thread.threadId)}
+                      >
+                        <div className="messaging-inbox__thread-header">
+                          <span className="messaging-inbox__thread-title">{label.title}</span>
+                          {thread.unreadCount ? (
+                            <span className="messaging-inbox__thread-unread">{thread.unreadCount}</span>
                           ) : null}
                         </div>
-                      ) : null}
-                    </button>
+                        {label.subtitle ? (
+                          <p className="messaging-inbox__thread-subtitle">{label.subtitle}</p>
+                        ) : null}
+                        {label.meta ? <p className="messaging-inbox__thread-meta">{label.meta}</p> : null}
+                        {showTags ? (
+                          <div className="messaging-inbox__thread-tags">
+                            {thread.safeModeRequired ? (
+                              <span className="messaging-inbox__thread-tag messaging-inbox__thread-tag--safe">
+                                Safe mode
+                              </span>
+                            ) : null}
+                            {thread.muted ? (
+                              <span className="messaging-inbox__thread-tag messaging-inbox__thread-tag--muted">
+                                Muted
+                              </span>
+                            ) : null}
+                          </div>
+                        ) : null}
+                      </button>
+                      <div className="messaging-inbox__thread-actions">
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            void (thread.pinned
+                              ? handleUnpinThread(thread.threadId)
+                              : handlePinThread(thread.threadId));
+                          }}
+                        >
+                          {thread.pinned ? 'Unpin' : 'Pin'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            void (thread.archived
+                              ? handleUnarchiveThread(thread.threadId)
+                              : handleArchiveThread(thread.threadId));
+                          }}
+                        >
+                          {thread.archived ? 'Unarchive' : 'Archive'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            void (thread.muted
+                              ? handleUnmuteThread(thread.threadId)
+                              : handleMuteThread(thread.threadId));
+                          }}
+                        >
+                          {thread.muted ? 'Unmute' : 'Mute'}
+                        </button>
+                      </div>
+                    </div>
                   </li>
                 );
               })}

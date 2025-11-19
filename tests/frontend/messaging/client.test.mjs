@@ -352,3 +352,82 @@ test('prepareUpload marks upload failed when status polling times out', async ()
   assert.equal(upload.status, 'FAILED');
   assert.equal(upload.errorCode, 'UPLOAD_STATUS_TIMEOUT');
 });
+
+test('pinThread and unpinThread invoke mutations and update controller state', async () => {
+  const controller = createMessagingController({
+    inbox: {
+      threads: [
+        {
+          threadId: 'thr-pin',
+          kind: 'PROJECT',
+          lastMessageAt: '2025-11-18T00:00:00.000Z',
+          pinned: false,
+          archived: false,
+          muted: false
+        }
+      ]
+    }
+  });
+
+  let pinCalled = false;
+  let unpinCalled = false;
+
+  const client = createMessagingClient({
+    controller,
+    mutations: {
+      pinThread: async (threadId) => {
+        pinCalled = threadId === 'thr-pin';
+      },
+      unpinThread: async (threadId) => {
+        unpinCalled = threadId === 'thr-pin';
+      }
+    }
+  });
+
+  await client.pinThread('thr-pin');
+  assert.ok(pinCalled, 'pinThread mutation should be called');
+  let inboxState = controller.getInboxState();
+  assert.equal(inboxState.threadsById['thr-pin'].pinned, true);
+
+  await client.unpinThread('thr-pin');
+  assert.ok(unpinCalled, 'unpinThread mutation should be called');
+  inboxState = controller.getInboxState();
+  assert.equal(inboxState.threadsById['thr-pin'].pinned, false);
+});
+
+test('archiveThread and muteThread fall back when mutations missing', async () => {
+  const controller = createMessagingController({
+    inbox: {
+      threads: [
+        {
+          threadId: 'thr-manage',
+          kind: 'INQUIRY',
+          lastMessageAt: '2025-11-18T05:00:00.000Z',
+          pinned: false,
+          archived: false,
+          muted: false
+        }
+      ]
+    }
+  });
+
+  const client = createMessagingClient({
+    controller
+  });
+
+  await client.archiveThread('thr-manage');
+  let inboxState = controller.getInboxState();
+  assert.equal(inboxState.threadsById['thr-manage'].archived, true);
+
+  await client.unarchiveThread('thr-manage');
+  inboxState = controller.getInboxState();
+  assert.equal(inboxState.threadsById['thr-manage'].archived, false);
+
+  await client.muteThread('thr-manage');
+  inboxState = controller.getInboxState();
+  assert.equal(inboxState.threadsById['thr-manage'].muted, true);
+
+  await client.unmuteThread('thr-manage');
+  inboxState = controller.getInboxState();
+  assert.equal(inboxState.threadsById['thr-manage'].muted, false);
+});

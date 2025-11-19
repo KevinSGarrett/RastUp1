@@ -117,6 +117,12 @@ test('MessagingProvider wires client lifecycle and exposes actions', async () =>
     markThreadRead: async () => lifecycleLog.push('markThreadRead'),
     acceptMessageRequest: async () => lifecycleLog.push('acceptRequest'),
     declineMessageRequest: async () => lifecycleLog.push('declineRequest'),
+    pinThread: async () => lifecycleLog.push('pinThread'),
+    unpinThread: async () => lifecycleLog.push('unpinThread'),
+    archiveThread: async () => lifecycleLog.push('archiveThread'),
+    unarchiveThread: async () => lifecycleLog.push('unarchiveThread'),
+    muteThread: async () => lifecycleLog.push('muteThread'),
+    unmuteThread: async () => lifecycleLog.push('unmuteThread'),
     recordConversationStart: async () => lifecycleLog.push('recordConversationStart'),
     dispose() {
       lifecycleLog.push('dispose');
@@ -144,6 +150,12 @@ test('MessagingProvider wires client lifecycle and exposes actions', async () =>
   await actions.markThreadRead('thr-1');
   await actions.acceptMessageRequest('req-1');
   await actions.declineMessageRequest('req-2');
+  await actions.pinThread('thr-toggle');
+  await actions.unpinThread('thr-toggle');
+  await actions.archiveThread('thr-toggle');
+  await actions.unarchiveThread('thr-toggle');
+  await actions.muteThread('thr-toggle');
+  await actions.unmuteThread('thr-toggle');
   await actions.recordConversationStart();
   await actions.hydrateThread('thr-1');
   const notificationStateResult = actions.enqueueNotification({

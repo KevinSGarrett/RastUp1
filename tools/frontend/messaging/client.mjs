@@ -100,16 +100,22 @@ function safeUnsubscribe(unsubscribeRef, clearFn) {
  * @param {{
  *   controller: ReturnType<typeof import('./controller.mjs').createMessagingController>;
  *   fetchInbox?: (args?: any) => Promise<any>;
- *   fetchThread?: (threadId: string, args?: any) => Promise<any>;
- *   subscribeInbox?: (handlers: { next: (envelope: any) => void; error?: (err: any) => void; complete?: () => void }) => () => void;
- *   subscribeThread?: (threadId: string, handlers: { next: (envelope: any) => void; error?: (err: any) => void; complete?: () => void }) => () => void;
- *   mutations?: {
- *     sendMessage?: (threadId: string, input: Record<string, any>) => Promise<any>;
- *     markThreadRead?: (threadId: string, ctx?: Record<string, any>) => Promise<any>;
- *     acceptMessageRequest?: (requestId: string, ctx?: Record<string, any>) => Promise<any>;
- *     declineMessageRequest?: (requestId: string, ctx?: Record<string, any>) => Promise<any>;
- *     recordConversationStart?: (ctx?: Record<string, any>) => Promise<any>;
- *   };
+   *   fetchThread?: (threadId: string, args?: any) => Promise<any>;
+   *   subscribeInbox?: (handlers: { next: (envelope: any) => void; error?: (err: any) => void; complete?: () => void }) => () => void;
+   *   subscribeThread?: (threadId: string, handlers: { next: (envelope: any) => void; error?: (err: any) => void; complete?: () => void }) => () => void;
+   *   mutations?: {
+   *     sendMessage?: (threadId: string, input: Record<string, any>) => Promise<any>;
+   *     markThreadRead?: (threadId: string, ctx?: Record<string, any>) => Promise<any>;
+   *     acceptMessageRequest?: (requestId: string, ctx?: Record<string, any>) => Promise<any>;
+   *     declineMessageRequest?: (requestId: string, ctx?: Record<string, any>) => Promise<any>;
+   *     pinThread?: (threadId: string, ctx?: Record<string, any>) => Promise<any>;
+   *     unpinThread?: (threadId: string, ctx?: Record<string, any>) => Promise<any>;
+   *     archiveThread?: (threadId: string, ctx?: Record<string, any>) => Promise<any>;
+   *     unarchiveThread?: (threadId: string, ctx?: Record<string, any>) => Promise<any>;
+   *     muteThread?: (threadId: string, ctx?: Record<string, any>) => Promise<any>;
+   *     unmuteThread?: (threadId: string, ctx?: Record<string, any>) => Promise<any>;
+   *     recordConversationStart?: (ctx?: Record<string, any>) => Promise<any>;
+   *   };
  *   logger?: { debug?: Function; warn?: Function; error?: Function };
  *   now?: () => number;
  * }} config
@@ -626,6 +632,109 @@ export function createMessagingClient(config = {}) {
     }
   }
 
+  async function pinThread(threadId, ctx = {}) {
+    if (!threadId) {
+      throw new Error('pinThread requires threadId');
+    }
+    if (typeof mutations.pinThread === 'function') {
+      try {
+        await mutations.pinThread(threadId, ctx);
+      } catch (error) {
+        logger.error?.('messaging-client: pinThread mutation failed', { error, threadId });
+        throw error;
+      }
+    }
+    const inbox = controller.pinThread(threadId);
+    return inbox?.threadsById?.[threadId] ?? null;
+  }
+
+  async function unpinThread(threadId, ctx = {}) {
+    if (!threadId) {
+      throw new Error('unpinThread requires threadId');
+    }
+    if (typeof mutations.unpinThread === 'function') {
+      try {
+        await mutations.unpinThread(threadId, ctx);
+      } catch (error) {
+        logger.error?.('messaging-client: unpinThread mutation failed', { error, threadId });
+        throw error;
+      }
+    }
+    const inbox = controller.unpinThread(threadId);
+    return inbox?.threadsById?.[threadId] ?? null;
+  }
+
+  async function archiveThread(threadId, ctx = {}) {
+    if (!threadId) {
+      throw new Error('archiveThread requires threadId');
+    }
+    if (typeof mutations.archiveThread === 'function') {
+      try {
+        await mutations.archiveThread(threadId, ctx);
+      } catch (error) {
+        logger.error?.('messaging-client: archiveThread mutation failed', { error, threadId });
+        throw error;
+      }
+    }
+    const inbox = controller.archiveThread(threadId);
+    return inbox?.threadsById?.[threadId] ?? null;
+  }
+
+  async function unarchiveThread(threadId, ctx = {}) {
+    if (!threadId) {
+      throw new Error('unarchiveThread requires threadId');
+    }
+    if (typeof mutations.unarchiveThread === 'function') {
+      try {
+        await mutations.unarchiveThread(threadId, ctx);
+      } catch (error) {
+        logger.error?.('messaging-client: unarchiveThread mutation failed', { error, threadId });
+        throw error;
+      }
+    }
+    const inbox = controller.unarchiveThread(threadId);
+    return inbox?.threadsById?.[threadId] ?? null;
+  }
+
+  async function muteThread(threadId, optionsMute = {}) {
+    if (!threadId) {
+      throw new Error('muteThread requires threadId');
+    }
+    const handler = typeof mutations.muteThread === 'function' ? mutations.muteThread : null;
+    if (handler) {
+      try {
+        await handler(threadId, { ...optionsMute, muted: optionsMute.muted ?? true });
+      } catch (error) {
+        logger.error?.('messaging-client: muteThread mutation failed', { error, threadId });
+        throw error;
+      }
+    }
+    const inbox = controller.muteThread(threadId, { muted: true });
+    return inbox?.threadsById?.[threadId] ?? null;
+  }
+
+  async function unmuteThread(threadId, optionsMute = {}) {
+    if (!threadId) {
+      throw new Error('unmuteThread requires threadId');
+    }
+    const handler =
+      typeof mutations.unmuteThread === 'function'
+        ? mutations.unmuteThread
+        : typeof mutations.muteThread === 'function'
+          ? (id, ctxHandler = {}) => mutations.muteThread(id, { ...ctxHandler, muted: false })
+          : null;
+    if (handler) {
+      try {
+        await handler(threadId, optionsMute);
+      } catch (error) {
+        logger.error?.('messaging-client: unmuteThread mutation failed', { error, threadId });
+        throw error;
+      }
+    }
+    const inbox = controller.unmuteThread(threadId);
+    return inbox?.threadsById?.[threadId] ?? null;
+  }
+
   async function recordConversationStart(ctx = {}) {
     controller.recordConversationStart({
       ...ctx,
@@ -668,6 +777,12 @@ export function createMessagingClient(config = {}) {
     markThreadRead,
     acceptMessageRequest,
     declineMessageRequest,
+    pinThread,
+    unpinThread,
+    archiveThread,
+    unarchiveThread,
+    muteThread,
+    unmuteThread,
     recordConversationStart
   };
 }
