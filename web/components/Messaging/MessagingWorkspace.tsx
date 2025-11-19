@@ -6,6 +6,7 @@ import { MessagingInbox, type MessagingInboxProps } from './MessagingInbox';
 import { MessagingThread, type MessagingThreadProps } from './MessagingThread';
 import { ProjectPanelTabs, type ProjectPanelTabsProps } from './ProjectPanelTabs';
 import { MessagingNotificationCenter, type MessagingNotificationCenterProps } from './MessagingNotificationCenter';
+import { MessagingModerationQueue, type MessagingModerationQueueProps } from './MessagingModerationQueue';
 
 type ThreadProps = Omit<MessagingThreadProps, 'threadId' | 'viewerUserId'>;
 
@@ -23,6 +24,8 @@ export interface MessagingWorkspaceProps extends MessagingProviderProps {
   emptyThreadState?: React.ReactNode;
   showNotificationCenter?: boolean;
   notificationCenterProps?: MessagingNotificationCenterProps;
+  showModerationQueue?: boolean;
+  moderationQueueProps?: MessagingModerationQueueProps;
 }
 
 interface ThreadRegionProps {
@@ -90,6 +93,8 @@ export const MessagingWorkspace: React.FC<MessagingWorkspaceProps> = ({
   emptyThreadState,
   showNotificationCenter = false,
   notificationCenterProps,
+  showModerationQueue = false,
+  moderationQueueProps,
   children,
   viewerUserId,
   ...providerProps
@@ -152,6 +157,14 @@ export const MessagingWorkspace: React.FC<MessagingWorkspaceProps> = ({
                 }`}
               />
             ) : null}
+              {showModerationQueue ? (
+                <MessagingModerationQueue
+                  {...moderationQueueProps}
+                  className={`messaging-workspace__moderation-queue${
+                    moderationQueueProps?.className ? ` ${moderationQueueProps.className}` : ''
+                  }`}
+                />
+              ) : null}
           </aside>
           <section className="messaging-workspace__content">
             <ThreadRegion

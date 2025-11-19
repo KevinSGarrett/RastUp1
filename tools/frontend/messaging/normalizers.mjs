@@ -150,6 +150,17 @@ function normalizeMessageNode(node, { partial = false } = {}) {
     result.clientId = clientId;
   }
 
+  if (!partial || node.moderation !== undefined || node.moderationState !== undefined) {
+    const moderationValue = pickFirst(node.moderation, node.moderationState, node.moderationMetadata);
+    if (moderationValue && typeof moderationValue === 'object') {
+      result.moderation = JSON.parse(JSON.stringify(moderationValue));
+    } else if (moderationValue !== undefined) {
+      result.moderation = moderationValue;
+    } else if (!partial) {
+      result.moderation = null;
+    }
+  }
+
   return result;
 }
 
@@ -266,7 +277,11 @@ function normalizeThreadHeader(node) {
     kind: normalizeThreadKind(node.kind),
     status: (node.status ?? node.state ?? 'OPEN').toUpperCase(),
     safeModeRequired: toBoolean(pickFirst(node.safeModeRequired, node.requiresSafeMode)),
-    lastMessageAt: toIso(pickFirst(node.lastMessageAt, node.lastMessage?.createdAt, node.updatedAt, node.createdAt), null)
+    lastMessageAt: toIso(pickFirst(node.lastMessageAt, node.lastMessage?.createdAt, node.updatedAt, node.createdAt), null),
+    moderation:
+      node.moderation && typeof node.moderation === 'object'
+        ? JSON.parse(JSON.stringify(node.moderation))
+        : node.moderation ?? null
   };
 }
 
@@ -395,6 +410,9 @@ const THREAD_EVENT_MAP = {
   MESSAGE_EDITED: 'MESSAGE_UPDATED',
   MESSAGE_FAILED: 'MESSAGE_FAILED',
   MESSAGE_ERROR: 'MESSAGE_FAILED',
+  MESSAGE_FLAGGED: 'MESSAGE_MODERATION_UPDATED',
+  MESSAGE_REPORTED: 'MESSAGE_MODERATION_UPDATED',
+  MESSAGE_MODERATION_UPDATED: 'MESSAGE_MODERATION_UPDATED',
   ACTION_CARD_UPDATED: 'ACTION_CARD_UPSERT',
   ACTION_CARD_CREATED: 'ACTION_CARD_UPSERT',
   ACTION_CARD_UPSERT: 'ACTION_CARD_UPSERT',
@@ -407,6 +425,9 @@ const THREAD_EVENT_MAP = {
   TYPING: 'PRESENCE_EVENT',
   THREAD_STATUS_CHANGED: 'THREAD_STATUS_CHANGED',
   THREAD_STATUS_UPDATED: 'THREAD_STATUS_CHANGED',
+  THREAD_LOCK_STATE: 'THREAD_MODERATION_UPDATED',
+  THREAD_BLOCK_STATE: 'THREAD_MODERATION_UPDATED',
+  THREAD_MODERATION_UPDATED: 'THREAD_MODERATION_UPDATED',
   SAFE_MODE_OVERRIDE: 'SAFE_MODE_OVERRIDE',
   SAFE_MODE_CHANGED: 'SAFE_MODE_OVERRIDE',
   PROJECT_PANEL_UPDATED: 'PROJECT_PANEL_UPDATED',
@@ -447,6 +468,24 @@ export function mapThreadEventEnvelope(envelope) {
       const normalized = normalizeMessageNode(message, { partial: true });
       if (!normalized) return null;
       return { type, payload: normalized };
+    }
+    case 'MESSAGE_MODERATION_UPDATED': {
+      const source = pickFirst(envelope.message, envelope.payload?.message, envelope.payload, envelope.data);
+      const messageId = toStringId(pickFirst(source?.messageId, source?.id, envelope.messageId));
+      if (!messageId) {
+        return null;
+      }
+      const moderation =
+        source?.moderation && typeof source.moderation === 'object'
+          ? JSON.parse(JSON.stringify(source.moderation))
+          : source?.moderation ?? null;
+      return {
+        type,
+        payload: {
+          messageId,
+          moderation
+        }
+      };
     }
     case 'MESSAGE_FAILED': {
       const payload = {
@@ -498,6 +537,25 @@ export function mapThreadEventEnvelope(envelope) {
         }
       };
     }
+    case 'THREAD_MODERATION_UPDATED': {
+      const source = pickFirst(envelope.thread, envelope.payload?.thread, envelope.payload, envelope.data);
+      const threadId = toStringId(pickFirst(source?.threadId, source?.id, envelope.threadId));
+      if (!threadId) {
+        return null;
+      }
+      const moderation =
+        source?.moderation && typeof source.moderation === 'object'
+          ? JSON.parse(JSON.stringify(source.moderation))
+          : source?.moderation ?? null;
+      return {
+        type,
+        payload: {
+          threadId,
+          moderation,
+          status: source?.status ?? source?.state
+        }
+      };
+    }
     case 'SAFE_MODE_OVERRIDE': {
       const safeMode = pickFirst(envelope.safeMode, envelope.payload?.safeMode, envelope.payload, envelope.data);
       if (!safeMode || typeof safeMode !== 'object') return null;
@@ -538,6 +596,8 @@ const INBOX_EVENT_MAP = {
   THREAD_UNARCHIVED: 'THREAD_UNARCHIVED',
   THREAD_MUTED: 'THREAD_MUTED',
   THREAD_UNMUTED: 'THREAD_MUTED',
+  THREAD_BLOCKED: 'THREAD_BLOCKED',
+  THREAD_UNBLOCKED: 'THREAD_UNBLOCKED',
   THREAD_READ: 'THREAD_READ',
   REQUEST_RECEIVED: 'REQUEST_RECEIVED',
   MESSAGE_REQUEST_CREATED: 'REQUEST_RECEIVED'
@@ -590,7 +650,9 @@ export function mapInboxEventEnvelope(envelope) {
     case 'THREAD_UNPINNED':
     case 'THREAD_ARCHIVED':
     case 'THREAD_UNARCHIVED':
-    case 'THREAD_MUTED': {
+    case 'THREAD_MUTED':
+    case 'THREAD_BLOCKED':
+    case 'THREAD_UNBLOCKED': {
       const payload = pickFirst(envelope.payload, envelope.data);
       const threadId = toStringId(pickFirst(payload?.threadId, payload?.thread?.threadId));
       if (!threadId) return null;
@@ -598,7 +660,13 @@ export function mapInboxEventEnvelope(envelope) {
         type,
         payload: {
           threadId,
-          muted: type === 'THREAD_MUTED' ? toBoolean(payload?.muted ?? payload?.isMuted) : undefined
+          muted: type === 'THREAD_MUTED' ? toBoolean(payload?.muted ?? payload?.isMuted) : undefined,
+          blocked: type === 'THREAD_BLOCKED' ? true : type === 'THREAD_UNBLOCKED' ? false : undefined,
+          status: payload?.status ?? payload?.thread?.status ?? undefined,
+          moderation:
+            payload?.moderation && typeof payload.moderation === 'object'
+              ? JSON.parse(JSON.stringify(payload.moderation))
+              : undefined
         }
       };
     }

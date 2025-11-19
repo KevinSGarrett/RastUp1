@@ -105,6 +105,11 @@ export function groupMessagesByDay(threadState, options = {}) {
       safeMode,
       nsfwBand: message.nsfwBand ?? 0
     });
+    const moderation =
+      message.moderation && typeof message.moderation === 'object'
+        ? { ...message.moderation }
+        : null;
+    const moderationState = (moderation?.state ?? 'CLEAN').toUpperCase();
     const attachments = Array.isArray(message.attachments)
       ? message.attachments.map((attachment) => ({
           ...attachment,
@@ -130,6 +135,12 @@ export function groupMessagesByDay(threadState, options = {}) {
       body: body.body,
       redacted: body.redacted,
       attachments,
+      moderation,
+      moderationState,
+      moderationFlagged: moderationState !== 'CLEAN' && moderationState !== 'CLEARED',
+      moderationReason: moderation?.reason ?? null,
+      moderationSeverity: moderation?.severity ?? null,
+      moderationReportedAt: moderation?.reportedAt ?? null,
       deliveryState: message.deliveryState ?? 'SENT',
       optimistic: message.messageId?.startsWith('temp:') ?? false,
       action: message.action ?? null,

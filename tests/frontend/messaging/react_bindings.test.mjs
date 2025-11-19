@@ -230,7 +230,8 @@ test('hooks surface inbox threads, summary, and thread state updates', () => {
     MessagingProvider,
     useInboxThreads,
     useInboxSummary,
-    useThread
+    useThread,
+    useModerationQueue
   } = createMessagingReactBindings({
     react: fakeReact
   });
@@ -250,6 +251,8 @@ test('hooks surface inbox threads, summary, and thread state updates', () => {
 
   const summary = useInboxSummary();
   assert.equal(summary.totalUnread, 0);
+  const moderationQueue = useModerationQueue();
+  assert.ok(moderationQueue, 'expected moderation queue state');
 
   const threadState = useThread('thr-1');
   assert.ok(threadState.messagesById['msg-1'], 'expected existing message');

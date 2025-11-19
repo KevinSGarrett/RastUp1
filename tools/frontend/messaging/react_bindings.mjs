@@ -268,12 +268,34 @@ export function createMessagingReactBindings(options = {}) {
             client.declineMessageRequest,
             'Messaging client missing declineMessageRequest'
           ),
-          pinThread: safeBind(client.pinThread, 'Messaging client missing pinThread'),
-          unpinThread: safeBind(client.unpinThread, 'Messaging client missing unpinThread'),
-          archiveThread: safeBind(client.archiveThread, 'Messaging client missing archiveThread'),
-          unarchiveThread: safeBind(client.unarchiveThread, 'Messaging client missing unarchiveThread'),
-          muteThread: safeBind(client.muteThread, 'Messaging client missing muteThread'),
-          unmuteThread: safeBind(client.unmuteThread, 'Messaging client missing unmuteThread'),
+            pinThread: safeBind(client.pinThread, 'Messaging client missing pinThread'),
+            unpinThread: safeBind(client.unpinThread, 'Messaging client missing unpinThread'),
+            archiveThread: safeBind(client.archiveThread, 'Messaging client missing archiveThread'),
+            unarchiveThread: safeBind(client.unarchiveThread, 'Messaging client missing unarchiveThread'),
+            muteThread: safeBind(client.muteThread, 'Messaging client missing muteThread'),
+            unmuteThread: safeBind(client.unmuteThread, 'Messaging client missing unmuteThread'),
+            lockThread: safeBind(client.lockThread, 'Messaging client missing lockThread'),
+            unlockThread: safeBind(client.unlockThread, 'Messaging client missing unlockThread'),
+            blockThread: safeBind(client.blockThread, 'Messaging client missing blockThread'),
+            unblockThread: safeBind(client.unblockThread, 'Messaging client missing unblockThread'),
+            reportMessage: safeBind(client.reportMessage, 'Messaging client missing reportMessage'),
+            reportThread: safeBind(client.reportThread, 'Messaging client missing reportThread'),
+            hydrateModerationQueue: safeBind(
+              client.hydrateModerationQueue,
+              'Messaging client missing hydrateModerationQueue'
+            ),
+            updateModerationQueueCase: safeBind(
+              client.updateModerationQueueCase,
+              'Messaging client missing updateModerationQueueCase'
+            ),
+            resolveModerationQueueCase: safeBind(
+              client.resolveModerationQueueCase,
+              'Messaging client missing resolveModerationQueueCase'
+            ),
+            removeModerationQueueCase: safeBind(
+              client.removeModerationQueueCase,
+              'Messaging client missing removeModerationQueueCase'
+            ),
           recordConversationStart:
             typeof client.recordConversationStart === 'function'
               ? client.recordConversationStart.bind(client)
@@ -288,7 +310,16 @@ export function createMessagingReactBindings(options = {}) {
           enqueueNotification: controllerBind(controller.enqueueNotification, () => {}),
           flushNotifications: controllerBind(controller.flushNotifications, () => []),
           collectNotificationDigest: controllerBind(controller.collectNotificationDigest, () => []),
-          listPendingNotifications: controllerBind(controller.listPendingNotifications, () => [])
+            listPendingNotifications: controllerBind(controller.listPendingNotifications, () => []),
+            getModerationQueueState: controllerBind(controller.getModerationQueueState, () => null),
+            getModerationStats: controllerBind(controller.getModerationStats, () => ({
+              pending: 0,
+              dualApproval: 0,
+              resolved: 0
+            })),
+            listModerationCases: controllerBind(controller.listModerationCases, () => []),
+            listPendingModerationCases: controllerBind(controller.listPendingModerationCases, () => []),
+            getModerationCase: controllerBind(controller.getModerationCase, () => null)
       };
     }, [controller, client]);
 
@@ -350,7 +381,24 @@ export function createMessagingReactBindings(options = {}) {
       return useControllerStore(controller, matcher, snapshotFactory);
     }
 
-  function useNotifications() {
+    function useModerationQueue(selector) {
+      const { controller } = useMessaging();
+      const matcher = useMemo(() => createMatcher(['moderationQueue']), []);
+      const snapshotFactory = useMemo(() => {
+        if (typeof selector === 'function') {
+          return (ctrl) =>
+            selector(
+              typeof ctrl.getModerationQueueState === 'function' ? ctrl.getModerationQueueState() : null,
+              ctrl
+            );
+        }
+        return (ctrl) =>
+          typeof ctrl.getModerationQueueState === 'function' ? ctrl.getModerationQueueState() : null;
+      }, [selector]);
+      return useControllerStore(controller, matcher, snapshotFactory);
+    }
+
+    function useNotifications() {
     const { controller } = useMessaging();
     const matcher = useMemo(() => createMatcher(['notifications']), []);
     const snapshotFactory = useMemo(() => (ctrl) => ctrl.getNotificationState(), []);
@@ -364,12 +412,22 @@ export function createMessagingReactBindings(options = {}) {
       refreshInbox,
       acceptMessageRequest,
       declineMessageRequest,
-      pinThread,
+        pinThread,
       unpinThread,
       archiveThread,
       unarchiveThread,
       muteThread,
       unmuteThread,
+        lockThread,
+        unlockThread,
+        blockThread,
+        unblockThread,
+        reportMessage,
+        reportThread,
+        hydrateModerationQueue,
+        updateModerationQueueCase,
+        resolveModerationQueueCase,
+        removeModerationQueueCase,
       recordConversationStart,
       startThreadSubscription,
       stopThreadSubscription,
@@ -395,6 +453,16 @@ export function createMessagingReactBindings(options = {}) {
       unarchiveThread,
       muteThread,
       unmuteThread,
+        lockThread,
+        unlockThread,
+        blockThread,
+        unblockThread,
+        reportMessage,
+        reportThread,
+        hydrateModerationQueue,
+        updateModerationQueueCase,
+        resolveModerationQueueCase,
+        removeModerationQueueCase,
       recordConversationStart,
       startThreadSubscription,
       stopThreadSubscription,
@@ -418,9 +486,10 @@ export function createMessagingReactBindings(options = {}) {
     useMessagingClient,
     useMessagingActions,
     useInboxThreads,
-    useInboxSummary,
-    useThread,
+      useInboxSummary,
+      useThread,
       useUploads,
-    useNotifications
+      useModerationQueue,
+      useNotifications
   };
 }

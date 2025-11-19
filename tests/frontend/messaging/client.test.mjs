@@ -431,3 +431,72 @@ test('archiveThread and muteThread fall back when mutations missing', async () =
   inboxState = controller.getInboxState();
   assert.equal(inboxState.threadsById['thr-manage'].muted, false);
 });
+
+test('reportMessage applies mutation result to controller state', async () => {
+  const controller = createMessagingController({
+    viewerUserId: 'usr_viewer',
+    threads: [
+      {
+        thread: { threadId: 'thr-report', kind: 'INQUIRY', lastMessageAt: '2025-11-18T00:00:00.000Z' },
+        messages: [
+          {
+            messageId: 'msg-1',
+            createdAt: '2025-11-18T00:00:00.000Z',
+            authorUserId: 'usr_other',
+            type: 'TEXT',
+            body: 'suspicious text'
+          }
+        ],
+        participants: [{ userId: 'usr_viewer', role: 'BUYER' }]
+      }
+    ]
+  });
+
+  let mutationCalled = false;
+  const client = createMessagingClient({
+    controller,
+    mutations: {
+      reportMessage: async (threadId, messageId, ctx) => {
+        mutationCalled = threadId === 'thr-report' && messageId === 'msg-1' && ctx.reason === 'SPAM';
+        return {
+          caseId: 'case-report-1',
+          moderation: {
+            state: 'FLAGGED',
+            reason: 'SPAM',
+            severity: 'HIGH'
+          }
+        };
+      }
+    }
+  });
+
+  await client.reportMessage('thr-report', 'msg-1', { reason: 'SPAM', severity: 'HIGH' });
+  assert.ok(mutationCalled);
+  const threadState = controller.getThreadState('thr-report');
+  assert.equal(threadState.messagesById['msg-1'].moderation.state, 'FLAGGED');
+  const queue = controller.getModerationQueueState();
+  assert.equal(queue.order.length, 1);
+});
+
+test('hydrateModerationQueue loads queue data into controller', async () => {
+  const controller = createMessagingController();
+  const client = createMessagingClient({
+    controller,
+    fetchModerationQueue: async () => ({
+      cases: [
+        {
+          caseId: 'case-hydrate-1',
+          type: 'THREAD',
+          status: 'PENDING',
+          severity: 'MEDIUM'
+        }
+      ]
+    })
+  });
+
+  const state = await client.hydrateModerationQueue();
+  assert.ok(state);
+  assert.equal(state.casesById['case-hydrate-1'].status, 'PENDING');
+  const controllerState = controller.getModerationQueueState();
+  assert.equal(controllerState.order[0], 'case-hydrate-1');
+});

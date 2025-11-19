@@ -355,3 +355,61 @@ test('pin, archive, and mute thread helpers update inbox state', () => {
   inboxState = controller.getInboxState();
   assert.equal(inboxState.threadsById['thr-manage'].muted, false);
 });
+
+test('reportMessage flags message and enqueues moderation case', () => {
+  const controller = createMessagingController({
+    viewerUserId: 'usr_self',
+    threads: [
+      {
+        thread: { threadId: 'thr-1', kind: 'INQUIRY', lastMessageAt: '2025-01-01T00:00:00Z' },
+        messages: [
+          {
+            messageId: 'msg-1',
+            createdAt: '2025-01-01T00:00:00Z',
+            authorUserId: 'usr_other',
+            type: 'TEXT',
+            body: 'Suspicious content'
+          }
+        ],
+        participants: [{ userId: 'usr_self', role: 'BUYER' }]
+      }
+    ]
+  });
+
+  const moderationCase = controller.reportMessage('thr-1', 'msg-1', {
+    reason: 'SPAM',
+    severity: 'HIGH'
+  });
+
+  const threadState = controller.getThreadState('thr-1');
+  assert.equal(threadState.messagesById['msg-1'].moderation.state, 'REPORTED');
+  assert.equal(threadState.messagesById['msg-1'].moderation.reason, 'SPAM');
+  const queueState = controller.getModerationQueueState();
+  assert.ok(queueState);
+  assert.equal(queueState.order.length, 1);
+  assert.equal(queueState.casesById[queueState.order[0]].reason, 'SPAM');
+  assert.equal(moderationCase.caseId, queueState.order[0]);
+});
+
+test('lockThread and unblockThread update moderation metadata', () => {
+  const controller = createMessagingController({
+    viewerUserId: 'usr_self',
+    threads: [
+      {
+        thread: { threadId: 'thr-2', kind: 'PROJECT', lastMessageAt: '2025-01-01T00:00:00Z' },
+        messages: [],
+        participants: [{ userId: 'usr_self', role: 'SELLER' }]
+      }
+    ]
+  });
+
+  controller.lockThread('thr-2', { reason: 'Investigation', severity: 'HIGH' });
+  let threadState = controller.getThreadState('thr-2');
+  assert.equal(threadState.thread.moderation.locked, true);
+  assert.equal(threadState.thread.moderation.reason, 'Investigation');
+
+  controller.unblockThread('thr-2', { notes: 'Cleared' });
+  threadState = controller.getThreadState('thr-2');
+  assert.equal(threadState.thread.moderation.blocked, false);
+  assert.equal(threadState.thread.moderation.locked, false);
+});

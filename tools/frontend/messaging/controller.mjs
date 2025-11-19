@@ -34,7 +34,7 @@ import {
   updateCase as updateModerationCase,
   resolveCase as resolveModerationCase,
   removeCase as removeModerationCase,
-  getCase as getModerationCase,
+  getCase as getModerationCaseFromState,
   selectCases as selectModerationCases,
   getQueueStats as getModerationQueueStats,
   getPendingCases as getPendingModerationCases
@@ -709,19 +709,19 @@ export function createMessagingController(options = {}) {
     return muteThread(threadId, { muted: false });
   }
 
-    function hydrateModerationQueue(queueInput = {}) {
-      const normalized = Array.isArray(queueInput) ? { cases: queueInput } : queueInput ?? {};
-      const changes = [];
-      updateModerationQueue(() => createModerationQueue(normalized), { action: 'hydrate' }, changes);
-      if (changes.length) {
-        emit(changes);
+      function hydrateModerationQueue(queueInput = {}) {
+        const normalized = Array.isArray(queueInput) ? { cases: queueInput } : queueInput ?? {};
+        const changes = [];
+        updateModerationQueue(() => createModerationQueue(normalized), { action: 'hydrate' }, changes);
+        if (changes.length) {
+          emit(changes);
+        }
+        return moderationQueueState;
       }
-      return moderationQueueState;
-    }
 
-    function findModerationCase(caseId) {
-      return caseId ? getModerationCase(moderationQueueState, caseId) : null;
-    }
+      function findModerationCase(caseId) {
+        return caseId ? getModerationCaseFromState(moderationQueueState, caseId) : null;
+      }
 
     function enqueueModerationCaseInternal(caseInput, changeMeta, changes) {
       return updateModerationQueue(
@@ -1044,29 +1044,29 @@ export function createMessagingController(options = {}) {
       return moderationQueueState;
     }
 
-    function listModerationCases(filters = {}) {
-      return selectModerationCases(moderationQueueState, filters);
-    }
+      function listModerationCases(filters = {}) {
+        return selectModerationCases(moderationQueueState, filters);
+      }
 
-    function listPendingModerationCases() {
-      return getPendingModerationCases(moderationQueueState);
-    }
+      function listPendingModerationCases() {
+        return getPendingModerationCases(moderationQueueState);
+      }
 
-    function getModerationQueueState() {
-      return moderationQueueState;
-    }
+      function getModerationQueueState() {
+        return moderationQueueState;
+      }
 
-    function getModerationStats() {
-      return getModerationQueueStats(moderationQueueState);
-    }
+      function getModerationStats() {
+        return getModerationQueueStats(moderationQueueState);
+      }
 
-    function getModerationCase(caseId) {
-      return getModerationCase(moderationQueueState, caseId);
-    }
+      function getModerationCase(caseId) {
+        return getModerationCaseFromState(moderationQueueState, caseId);
+      }
 
-  function getUploadState() {
-      return uploadState;
-    }
+    function getUploadState() {
+        return uploadState;
+      }
 
     function listUploads(filter = {}) {
       const items = Object.values(uploadState.itemsByClientId ?? {}).map((item) => ({ ...item }));
@@ -1347,10 +1347,25 @@ export function createMessagingController(options = {}) {
     declineMessageRequest,
     pinThread,
     unpinThread,
-    archiveThread,
-    unarchiveThread,
-    muteThread,
-    unmuteThread,
+      archiveThread,
+      unarchiveThread,
+      muteThread,
+      unmuteThread,
+      hydrateModerationQueue,
+      getModerationQueueState,
+      getModerationStats,
+      listModerationCases,
+      listPendingModerationCases,
+      getModerationCase,
+      reportMessage,
+      reportThread,
+      lockThread,
+      unlockThread,
+      blockThread,
+      unblockThread,
+      updateModerationQueueCase,
+      resolveModerationQueueCase,
+      removeModerationQueueCase,
     getUploadState,
     listUploads,
     getUpload: (clientId) => getUpload(uploadState, clientId),

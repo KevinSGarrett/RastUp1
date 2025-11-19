@@ -103,6 +103,7 @@
 - Inbox filter/search bar layers unread/project/inquiry toggles, safe-mode gating, muted cycle states, and free-text search against thread metadata via enhanced `selectThreads` options; behaviour covered by updated inbox/controller unit suites.  
 - Inbox thread rows now expose inline controls for pin/unpin, archive/unarchive, and mute/unmute, wiring through new controller/client/data source mutations so participants can triage conversations without leaving the inbox.  
 - Thread timeline groups messages by day with Safe-Mode aware rendering, optimistic delivery statuses, attachment state pills, action card panels (controller-driven transitions), and a policy-aware composer showing nudges vs hard blocks.  
+- Thread timeline now surfaces moderation state badges, reason summaries, and inline “Report” actions while automatically disabling the composer when conversations are locked or blocked.  
 - Workspace action card panel now consumes `presentActionCard` outputs to surface schedule changes, extras, deliverables, deposits, and disputes with contextual metadata, evidence attachments, and friendly intent labels instead of raw JSON dumps.  
 - Project panel actions tab now consumes `presentProjectPanelActions` (`tools/frontend/messaging/project_panel_presenter.mjs`) to surface pending counts, formatted metadata, and evidence attachments inside `ProjectPanelTabs`, keeping the workspace consistent with the thread timeline presenter.  
 - Composer integrates file attachments via the upload manager pipeline, surfacing Safe-Mode aware preview/status chips and gating send until scans complete.  
@@ -112,6 +113,7 @@
 - Created a server/client handoff for the messaging workspace routed through `web/app/messaging/page.tsx`, using `createMessagingNextAdapter` with a shared data source (`web/lib/messaging/dataSources.mjs`) and a client bridge component (`MessagingWorkspaceClient.tsx`) to hydrate `MessagingProvider` from prefetch snapshots while falling back to Safe-Mode aware stub payloads when GraphQL is not yet wired.
   - Enabled runtime mutations/subscriptions for the workspace by extending `web/lib/messaging/dataSources.mjs` with GraphQL-aware send/read/request helpers plus stub fallbacks, and wiring the new hooks into `MessagingWorkspaceClient.tsx` so messaging actions function even before the backend is live.
   - Delivered an in-app notification center (`web/components/Messaging/MessagingNotificationCenter.tsx`) that reads the controller's notification queue, auto-flushes ready items, surfaces quiet-hour state, and emits digest summaries alongside optional callbacks for thread navigation; exposed via `MessagingWorkspace` as an opt-in sidebar panel.
+   - Introduced a moderation queue sidebar (`web/components/Messaging/MessagingModerationQueue.tsx`) to list pending cases with severity badges, stats, and resolve/remove affordances, toggled via `MessagingWorkspace` props.
 
 ## Performance & Offline
 - Inbox virtualization and timeline windowing: plan to leverage intersection observers + incremental fetch (`cursor` pagination).  

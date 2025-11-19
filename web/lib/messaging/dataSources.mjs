@@ -56,6 +56,34 @@ const STUB_INBOX_PAYLOAD = Object.freeze({
   }
 });
 
+const STUB_MODERATION_QUEUE = Object.freeze({
+  cases: [
+    {
+      caseId: 'case-message-1',
+      type: 'MESSAGE',
+      threadId: 'stub-project-1',
+      messageId: 'stub-project-1-msg-1',
+      status: 'PENDING',
+      severity: 'MEDIUM',
+      reason: 'SPAM',
+      reportedBy: 'usr_buyer',
+      reportedAt: new Date(Date.now() - ONE_HOUR_MS).toISOString(),
+      metadata: { source: 'stub' }
+    },
+    {
+      caseId: 'case-thread-1',
+      type: 'THREAD',
+      threadId: 'stub-inquiry-1',
+      status: 'PENDING',
+      severity: 'HIGH',
+      reason: 'HARASSMENT',
+      reportedBy: 'usr_support',
+      reportedAt: new Date(Date.now() - ONE_HOUR_MS * 3).toISOString(),
+      metadata: { source: 'stub' }
+    }
+  ]
+});
+
 function buildStubThreadPayload(threadId) {
   const now = new Date();
   const createdAt = now.toISOString();
@@ -343,6 +371,173 @@ const UNMUTE_THREAD_MUTATION = `
   }
 `;
 
+const REPORT_MESSAGE_MUTATION = `
+  mutation MessagingReportMessage(
+    $threadId: ID!,
+    $messageId: ID!,
+    $reason: String,
+    $notes: String,
+    $severity: String
+  ) {
+    reportMessage(
+      threadId: $threadId,
+      messageId: $messageId,
+      reason: $reason,
+      notes: $notes,
+      severity: $severity
+    ) {
+      caseId
+      status
+      severity
+      reason
+      moderation {
+        state
+        reason
+        severity
+        reportedAt
+        auditTrailId
+      }
+    }
+  }
+`;
+
+const REPORT_THREAD_MUTATION = `
+  mutation MessagingReportThread($threadId: ID!, $reason: String, $notes: String, $severity: String) {
+    reportThread(threadId: $threadId, reason: $reason, notes: $notes, severity: $severity) {
+      caseId
+      status
+      severity
+      reason
+      moderation {
+        state
+        reason
+        severity
+        updatedAt
+        auditTrailId
+      }
+    }
+  }
+`;
+
+const LOCK_THREAD_MUTATION = `
+  mutation MessagingLockThread($threadId: ID!, $reason: String, $notes: String, $severity: String) {
+    lockThread(threadId: $threadId, reason: $reason, notes: $notes, severity: $severity) {
+      threadId
+      status
+      moderation {
+        state
+        locked
+        lockedAt
+        reason
+        severity
+      }
+    }
+  }
+`;
+
+const UNLOCK_THREAD_MUTATION = `
+  mutation MessagingUnlockThread($threadId: ID!, $notes: String) {
+    unlockThread(threadId: $threadId, notes: $notes) {
+      threadId
+      status
+      moderation {
+        state
+        locked
+        lockedAt
+        reason
+        severity
+      }
+    }
+  }
+`;
+
+const BLOCK_THREAD_MUTATION = `
+  mutation MessagingBlockThread($threadId: ID!, $reason: String, $notes: String, $severity: String) {
+    blockThread(threadId: $threadId, reason: $reason, notes: $notes, severity: $severity) {
+      threadId
+      status
+      moderation {
+        state
+        blocked
+        blockedAt
+        reason
+        severity
+      }
+    }
+  }
+`;
+
+const UNBLOCK_THREAD_MUTATION = `
+  mutation MessagingUnblockThread($threadId: ID!, $notes: String) {
+    unblockThread(threadId: $threadId, notes: $notes) {
+      threadId
+      status
+      moderation {
+        state
+        blocked
+        blockedAt
+        reason
+        severity
+      }
+    }
+  }
+`;
+
+const UPDATE_MODERATION_CASE_MUTATION = `
+  mutation MessagingUpdateModerationCase($caseId: ID!, $patch: ModerationCasePatchInput!) {
+    updateModerationCase(caseId: $caseId, patch: $patch) {
+      caseId
+      status
+      severity
+      reason
+      metadata
+      lastUpdatedAt
+    }
+  }
+`;
+
+const RESOLVE_MODERATION_CASE_MUTATION = `
+  mutation MessagingResolveModerationCase($caseId: ID!, $resolution: ModerationCaseResolutionInput!) {
+    resolveModerationCase(caseId: $caseId, resolution: $resolution) {
+      caseId
+      status
+      resolution {
+        outcome
+        notes
+        resolvedAt
+        resolvedBy
+      }
+    }
+  }
+`;
+
+const REMOVE_MODERATION_CASE_MUTATION = `
+  mutation MessagingRemoveModerationCase($caseId: ID!) {
+    removeModerationCase(caseId: $caseId) {
+      caseId
+      status
+    }
+  }
+`;
+
+const MODERATION_QUEUE_QUERY = `
+  query MessagingModerationQueue($status: String, $limit: Int) {
+    moderationQueue(status: $status, limit: $limit) {
+      caseId
+      type
+      threadId
+      messageId
+      status
+      severity
+      reason
+      reportedBy
+      reportedAt
+      metadata
+      lastUpdatedAt
+    }
+  }
+`;
+
 const DEFAULT_GRAPHQL_MUTATIONS = Object.freeze({
   sendMessage: SEND_MESSAGE_MUTATION,
   markThreadRead: MARK_THREAD_READ_MUTATION,
@@ -354,6 +549,15 @@ const DEFAULT_GRAPHQL_MUTATIONS = Object.freeze({
   unarchiveThread: UNARCHIVE_THREAD_MUTATION,
   muteThread: MUTE_THREAD_MUTATION,
   unmuteThread: UNMUTE_THREAD_MUTATION,
+  reportMessage: REPORT_MESSAGE_MUTATION,
+  reportThread: REPORT_THREAD_MUTATION,
+  lockThread: LOCK_THREAD_MUTATION,
+  unlockThread: UNLOCK_THREAD_MUTATION,
+  blockThread: BLOCK_THREAD_MUTATION,
+  unblockThread: UNBLOCK_THREAD_MUTATION,
+  updateModerationQueueCase: UPDATE_MODERATION_CASE_MUTATION,
+  resolveModerationQueueCase: RESOLVE_MODERATION_CASE_MUTATION,
+  removeModerationQueueCase: REMOVE_MODERATION_CASE_MUTATION,
   recordConversationStart: RECORD_CONVERSATION_START_MUTATION
 });
 
@@ -744,6 +948,274 @@ export function createMessagingDataSource(options = {}) {
       };
     }
 
+  async function defaultReportMessage(threadId, messageId, ctx = {}) {
+    if (!threadId) {
+      throw new Error('reportMessage requires threadId');
+    }
+    if (!messageId) {
+      throw new Error('reportMessage requires messageId');
+    }
+    if (!useStubData && graphqlMutations.reportMessage) {
+      const variables = pruneUndefined({
+        threadId,
+        messageId,
+        reason: ctx.reason,
+        notes: ctx.notes,
+        severity: ctx.severity
+      });
+      const data = await executeGraphQL(
+        graphqlMutations.reportMessage,
+        variables,
+        endpoint,
+        headers,
+        fetchImpl,
+        logger
+      );
+      return data?.reportMessage ?? data?.case ?? null;
+    }
+    return {
+      caseId: ctx.caseId ?? `stub-case-${Math.random().toString(36).slice(2, 8)}`,
+      status: 'PENDING',
+      severity: ctx.severity ?? 'MEDIUM',
+      reason: ctx.reason ?? null,
+      moderation: {
+        state: 'REPORTED',
+        reason: ctx.reason ?? null,
+        severity: ctx.severity ?? 'MEDIUM',
+        reportedAt: new Date().toISOString()
+      }
+    };
+  }
+
+  async function defaultReportThread(threadId, ctx = {}) {
+    if (!threadId) {
+      throw new Error('reportThread requires threadId');
+    }
+    if (!useStubData && graphqlMutations.reportThread) {
+      const variables = pruneUndefined({
+        threadId,
+        reason: ctx.reason,
+        notes: ctx.notes,
+        severity: ctx.severity
+      });
+      const data = await executeGraphQL(
+        graphqlMutations.reportThread,
+        variables,
+        endpoint,
+        headers,
+        fetchImpl,
+        logger
+      );
+      return data?.reportThread ?? data?.case ?? null;
+    }
+    return {
+      caseId: ctx.caseId ?? `stub-thread-case-${Math.random().toString(36).slice(2, 8)}`,
+      status: 'PENDING',
+      severity: ctx.severity ?? 'HIGH',
+      reason: ctx.reason ?? null,
+      moderation: {
+        state: 'UNDER_REVIEW',
+        reason: ctx.reason ?? null,
+        severity: ctx.severity ?? 'HIGH',
+        updatedAt: new Date().toISOString()
+      }
+    };
+  }
+
+  async function defaultLockThread(threadId, ctx = {}) {
+    if (!threadId) {
+      throw new Error('lockThread requires threadId');
+    }
+    if (!useStubData && graphqlMutations.lockThread) {
+      const variables = pruneUndefined({
+        threadId,
+        reason: ctx.reason,
+        notes: ctx.notes,
+        severity: ctx.severity
+      });
+      const data = await executeGraphQL(
+        graphqlMutations.lockThread,
+        variables,
+        endpoint,
+        headers,
+        fetchImpl,
+        logger
+      );
+      return data?.lockThread ?? data?.thread ?? null;
+    }
+    return {
+      threadId,
+      status: 'LOCKED',
+      moderation: {
+        state: 'LOCKED',
+        locked: true,
+        lockedAt: new Date().toISOString(),
+        reason: ctx.reason ?? null,
+        severity: ctx.severity ?? 'HIGH'
+      }
+    };
+  }
+
+  async function defaultUnlockThread(threadId, ctx = {}) {
+    if (!threadId) {
+      throw new Error('unlockThread requires threadId');
+    }
+    if (!useStubData && graphqlMutations.unlockThread) {
+      const variables = pruneUndefined({
+        threadId,
+        notes: ctx.notes
+      });
+      const data = await executeGraphQL(
+        graphqlMutations.unlockThread,
+        variables,
+        endpoint,
+        headers,
+        fetchImpl,
+        logger
+      );
+      return data?.unlockThread ?? data?.thread ?? null;
+    }
+    return {
+      threadId,
+      status: 'OPEN',
+      moderation: {
+        state: 'OPEN',
+        locked: false,
+        lockedAt: null
+      }
+    };
+  }
+
+  async function defaultBlockThread(threadId, ctx = {}) {
+    if (!threadId) {
+      throw new Error('blockThread requires threadId');
+    }
+    if (!useStubData && graphqlMutations.blockThread) {
+      const variables = pruneUndefined({
+        threadId,
+        reason: ctx.reason,
+        notes: ctx.notes,
+        severity: ctx.severity
+      });
+      const data = await executeGraphQL(
+        graphqlMutations.blockThread,
+        variables,
+        endpoint,
+        headers,
+        fetchImpl,
+        logger
+      );
+      return data?.blockThread ?? data?.thread ?? null;
+    }
+    return {
+      threadId,
+      status: 'LOCKED',
+      moderation: {
+        state: 'BLOCKED',
+        blocked: true,
+        blockedAt: new Date().toISOString(),
+        reason: ctx.reason ?? null,
+        severity: ctx.severity ?? 'HIGH'
+      }
+    };
+  }
+
+  async function defaultUnblockThread(threadId, ctx = {}) {
+    if (!threadId) {
+      throw new Error('unblockThread requires threadId');
+    }
+    if (!useStubData && graphqlMutations.unblockThread) {
+      const variables = pruneUndefined({
+        threadId,
+        notes: ctx.notes
+      });
+      const data = await executeGraphQL(
+        graphqlMutations.unblockThread,
+        variables,
+        endpoint,
+        headers,
+        fetchImpl,
+        logger
+      );
+      return data?.unblockThread ?? data?.thread ?? null;
+    }
+    return {
+      threadId,
+      status: 'OPEN',
+      moderation: {
+        state: 'OPEN',
+        blocked: false,
+        blockedAt: null
+      }
+    };
+  }
+
+  async function defaultUpdateModerationCase(caseId, patch = {}) {
+    if (!caseId) {
+      throw new Error('updateModerationQueueCase requires caseId');
+    }
+    if (!useStubData && graphqlMutations.updateModerationQueueCase) {
+      const data = await executeGraphQL(
+        graphqlMutations.updateModerationQueueCase,
+        { caseId, patch },
+        endpoint,
+        headers,
+        fetchImpl,
+        logger
+      );
+      return data?.updateModerationCase ?? data?.case ?? null;
+    }
+    return {
+      caseId,
+      ...patch,
+      lastUpdatedAt: new Date().toISOString()
+    };
+  }
+
+  async function defaultResolveModerationCase(caseId, resolution = {}) {
+    if (!caseId) {
+      throw new Error('resolveModerationQueueCase requires caseId');
+    }
+    if (!useStubData && graphqlMutations.resolveModerationQueueCase) {
+      const data = await executeGraphQL(
+        graphqlMutations.resolveModerationQueueCase,
+        { caseId, resolution },
+        endpoint,
+        headers,
+        fetchImpl,
+        logger
+      );
+      return data?.resolveModerationCase ?? data?.case ?? null;
+    }
+    return {
+      caseId,
+      status: 'RESOLVED',
+      resolution: {
+        outcome: resolution.outcome ?? 'RESOLVED',
+        notes: resolution.notes ?? null,
+        resolvedAt: new Date().toISOString(),
+        resolvedBy: resolution.resolvedBy ?? null
+      }
+    };
+  }
+
+  async function defaultRemoveModerationCase(caseId) {
+    if (!caseId) {
+      throw new Error('removeModerationQueueCase requires caseId');
+    }
+    if (!useStubData && graphqlMutations.removeModerationQueueCase) {
+      await executeGraphQL(
+        graphqlMutations.removeModerationQueueCase,
+        { caseId },
+        endpoint,
+        headers,
+        fetchImpl,
+        logger
+      );
+    }
+    return { caseId, removed: true };
+  }
+
   async function defaultRecordConversationStart(ctx = {}) {
     if (!useStubData && graphqlMutations.recordConversationStart) {
       const serialized = Object.keys(ctx ?? {}).length > 0 ? JSON.stringify(ctx) : null;
@@ -771,6 +1243,18 @@ export function createMessagingDataSource(options = {}) {
     unarchiveThread: options.mutations?.unarchiveThread ?? defaultUnarchiveThread,
     muteThread: options.mutations?.muteThread ?? defaultMuteThread,
     unmuteThread: options.mutations?.unmuteThread ?? defaultUnmuteThread,
+    reportMessage: options.mutations?.reportMessage ?? defaultReportMessage,
+    reportThread: options.mutations?.reportThread ?? defaultReportThread,
+    lockThread: options.mutations?.lockThread ?? defaultLockThread,
+    unlockThread: options.mutations?.unlockThread ?? defaultUnlockThread,
+    blockThread: options.mutations?.blockThread ?? defaultBlockThread,
+    unblockThread: options.mutations?.unblockThread ?? defaultUnblockThread,
+    updateModerationQueueCase:
+      options.mutations?.updateModerationQueueCase ?? defaultUpdateModerationCase,
+    resolveModerationQueueCase:
+      options.mutations?.resolveModerationQueueCase ?? defaultResolveModerationCase,
+    removeModerationQueueCase:
+      options.mutations?.removeModerationQueueCase ?? defaultRemoveModerationCase,
     recordConversationStart:
       options.mutations?.recordConversationStart ?? defaultRecordConversationStart
   };
@@ -834,6 +1318,29 @@ export function createMessagingDataSource(options = {}) {
     return buildStubThreadPayload(threadId);
   }
 
+  async function fetchModerationQueueData(args = {}) {
+    if (!useStubData) {
+      const variables = pruneUndefined({
+        status: args.status,
+        limit: args.limit
+      });
+      const data = await executeGraphQL(
+        MODERATION_QUEUE_QUERY,
+        variables,
+        endpoint,
+        headers,
+        fetchImpl,
+        logger
+      );
+      if (data?.moderationQueue) {
+        return {
+          cases: Array.isArray(data.moderationQueue) ? data.moderationQueue : []
+        };
+      }
+    }
+    return clone(STUB_MODERATION_QUEUE);
+  }
+
     async function createUploadSession(threadId, descriptor = {}) {
       if (!threadId) {
         throw new Error('createUploadSession requires threadId');
@@ -892,6 +1399,7 @@ export function createMessagingDataSource(options = {}) {
   return {
     fetchInbox,
     fetchThread,
+    fetchModerationQueue: fetchModerationQueueData,
     createUploadSession,
     completeUpload,
     getUploadStatus,

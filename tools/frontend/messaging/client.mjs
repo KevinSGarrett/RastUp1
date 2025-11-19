@@ -99,23 +99,33 @@ function safeUnsubscribe(unsubscribeRef, clearFn) {
  * and optimistic mutations for messaging threads.
  * @param {{
  *   controller: ReturnType<typeof import('./controller.mjs').createMessagingController>;
- *   fetchInbox?: (args?: any) => Promise<any>;
-   *   fetchThread?: (threadId: string, args?: any) => Promise<any>;
-   *   subscribeInbox?: (handlers: { next: (envelope: any) => void; error?: (err: any) => void; complete?: () => void }) => () => void;
-   *   subscribeThread?: (threadId: string, handlers: { next: (envelope: any) => void; error?: (err: any) => void; complete?: () => void }) => () => void;
-   *   mutations?: {
-   *     sendMessage?: (threadId: string, input: Record<string, any>) => Promise<any>;
-   *     markThreadRead?: (threadId: string, ctx?: Record<string, any>) => Promise<any>;
-   *     acceptMessageRequest?: (requestId: string, ctx?: Record<string, any>) => Promise<any>;
-   *     declineMessageRequest?: (requestId: string, ctx?: Record<string, any>) => Promise<any>;
-   *     pinThread?: (threadId: string, ctx?: Record<string, any>) => Promise<any>;
-   *     unpinThread?: (threadId: string, ctx?: Record<string, any>) => Promise<any>;
-   *     archiveThread?: (threadId: string, ctx?: Record<string, any>) => Promise<any>;
-   *     unarchiveThread?: (threadId: string, ctx?: Record<string, any>) => Promise<any>;
-   *     muteThread?: (threadId: string, ctx?: Record<string, any>) => Promise<any>;
-   *     unmuteThread?: (threadId: string, ctx?: Record<string, any>) => Promise<any>;
-   *     recordConversationStart?: (ctx?: Record<string, any>) => Promise<any>;
-   *   };
+*   fetchInbox?: (args?: any) => Promise<any>;
+*   fetchThread?: (threadId: string, args?: any) => Promise<any>;
+*   fetchModerationQueue?: (args?: any) => Promise<any>;
+*   subscribeInbox?: (handlers: { next: (envelope: any) => void; error?: (err: any) => void; complete?: () => void }) => () => void;
+*   subscribeThread?: (threadId: string, handlers: { next: (envelope: any) => void; error?: (err: any) => void; complete?: () => void }) => () => void;
+*   mutations?: {
+*     sendMessage?: (threadId: string, input: Record<string, any>) => Promise<any>;
+*     markThreadRead?: (threadId: string, ctx?: Record<string, any>) => Promise<any>;
+*     acceptMessageRequest?: (requestId: string, ctx?: Record<string, any>) => Promise<any>;
+*     declineMessageRequest?: (requestId: string, ctx?: Record<string, any>) => Promise<any>;
+*     pinThread?: (threadId: string, ctx?: Record<string, any>) => Promise<any>;
+*     unpinThread?: (threadId: string, ctx?: Record<string, any>) => Promise<any>;
+*     archiveThread?: (threadId: string, ctx?: Record<string, any>) => Promise<any>;
+*     unarchiveThread?: (threadId: string, ctx?: Record<string, any>) => Promise<any>;
+*     muteThread?: (threadId: string, ctx?: Record<string, any>) => Promise<any>;
+*     unmuteThread?: (threadId: string, ctx?: Record<string, any>) => Promise<any>;
+*     reportMessage?: (threadId: string, messageId: string, ctx?: Record<string, any>) => Promise<any>;
+*     reportThread?: (threadId: string, ctx?: Record<string, any>) => Promise<any>;
+*     lockThread?: (threadId: string, ctx?: Record<string, any>) => Promise<any>;
+*     unlockThread?: (threadId: string, ctx?: Record<string, any>) => Promise<any>;
+*     blockThread?: (threadId: string, ctx?: Record<string, any>) => Promise<any>;
+*     unblockThread?: (threadId: string, ctx?: Record<string, any>) => Promise<any>;
+*     updateModerationQueueCase?: (caseId: string, patch?: Record<string, any>) => Promise<any>;
+*     resolveModerationQueueCase?: (caseId: string, resolution?: Record<string, any>) => Promise<any>;
+*     removeModerationQueueCase?: (caseId: string) => Promise<any>;
+*     recordConversationStart?: (ctx?: Record<string, any>) => Promise<any>;
+*   };
  *   logger?: { debug?: Function; warn?: Function; error?: Function };
  *   now?: () => number;
  * }} config
@@ -126,13 +136,16 @@ export function createMessagingClient(config = {}) {
     throw new Error('createMessagingClient requires a messaging controller instance');
   }
 
-  const fetchInbox = config.fetchInbox ?? null;
-  const fetchThread = config.fetchThread ?? null;
+    const fetchInbox = config.fetchInbox ?? null;
+    const fetchThread = config.fetchThread ?? null;
+    const fetchModerationQueue = config.fetchModerationQueue ?? null;
   const subscribeInbox = config.subscribeInbox ?? null;
   const subscribeThread = config.subscribeThread ?? null;
-  const mutations = config.mutations ?? {};
-  const uploadHandlers = config.uploads ?? {};
-  const logger = config.logger ?? defaultLogger();
+    const mutations = config.mutations ?? {};
+    const uploadHandlers = config.uploads ?? {};
+    const logger = config.logger ?? defaultLogger();
+    const deepClone = (value) =>
+      value && typeof value === 'object' ? JSON.parse(JSON.stringify(value)) : value;
   const nowFn = typeof config.now === 'function' ? config.now : () => Date.now();
 
   let inboxUnsubscribe = null;
@@ -735,6 +748,298 @@ export function createMessagingClient(config = {}) {
     return inbox?.threadsById?.[threadId] ?? null;
   }
 
+  async function hydrateModerationQueueClient(args = {}) {
+    if (fetchModerationQueue) {
+      const payload = await fetchModerationQueue(args);
+      controller.hydrateModerationQueue(payload ?? {});
+    } else if (args && typeof args === 'object') {
+      controller.hydrateModerationQueue(args);
+    } else {
+      controller.hydrateModerationQueue();
+    }
+    return typeof controller.getModerationQueueState === 'function'
+      ? controller.getModerationQueueState()
+      : null;
+  }
+
+  function applyRemoteModeration(threadId, messageId, response) {
+    if (!response || typeof response !== 'object') {
+      return;
+    }
+    if (messageId && response.moderation) {
+      controller.reportMessage(threadId, messageId, { ...response.moderation, enqueue: false });
+    } else if (response.moderation) {
+      controller.applyThreadEvent(threadId, {
+        type: 'THREAD_MODERATION_UPDATED',
+        payload: response.moderation
+      });
+    }
+    if (response.caseId && response.casePatch && typeof controller.updateModerationQueueCase === 'function') {
+      controller.updateModerationQueueCase(response.caseId, response.casePatch);
+    }
+  }
+
+  function markModerationFailure(caseId, error, snapshot) {
+    if (!caseId || typeof controller.updateModerationQueueCase !== 'function') {
+      return;
+    }
+    controller.updateModerationQueueCase(caseId, {
+      status: 'FAILED',
+      metadata: {
+        ...(snapshot?.metadata ?? {}),
+        errorCode: error?.code ?? error?.name ?? 'MODERATION_FAILED',
+        errorMessage: error?.message ?? String(error)
+      },
+      lastUpdatedAt: new Date(nowFn()).toISOString()
+    });
+  }
+
+  async function reportMessageAction(threadId, messageId, optionsReport = {}) {
+    if (!threadId) {
+      throw new Error('reportMessage requires threadId');
+    }
+    if (!messageId) {
+      throw new Error('reportMessage requires messageId');
+    }
+    const caseSnapshot = controller.reportMessage(threadId, messageId, optionsReport);
+    try {
+      if (typeof mutations.reportMessage === 'function') {
+        const response = await mutations.reportMessage(threadId, messageId, optionsReport);
+        applyRemoteModeration(threadId, messageId, response);
+        return response ?? caseSnapshot;
+      }
+      return caseSnapshot;
+    } catch (error) {
+      if (caseSnapshot?.caseId) {
+        markModerationFailure(caseSnapshot.caseId, error, caseSnapshot);
+      }
+      throw error;
+    }
+  }
+
+  async function reportThreadAction(threadId, optionsReport = {}) {
+    if (!threadId) {
+      throw new Error('reportThread requires threadId');
+    }
+    const caseSnapshot = controller.reportThread(threadId, optionsReport);
+    try {
+      if (typeof mutations.reportThread === 'function') {
+        const response = await mutations.reportThread(threadId, optionsReport);
+        applyRemoteModeration(threadId, null, response);
+        return response ?? caseSnapshot;
+      }
+      return caseSnapshot;
+    } catch (error) {
+      if (caseSnapshot?.caseId) {
+        markModerationFailure(caseSnapshot.caseId, error, caseSnapshot);
+      }
+      throw error;
+    }
+  }
+
+  async function lockThreadAction(threadId, optionsLock = {}) {
+    if (!threadId) {
+      throw new Error('lockThread requires threadId');
+    }
+    const threadState = controller.getThreadState(threadId);
+    const previousModeration = threadState?.thread?.moderation
+      ? deepClone(threadState.thread.moderation)
+      : null;
+    const queueSnapshot =
+      typeof controller.getModerationQueueState === 'function'
+        ? deepClone(controller.getModerationQueueState())
+        : null;
+    const result = controller.lockThread(threadId, optionsLock);
+    try {
+      if (typeof mutations.lockThread === 'function') {
+        const response = await mutations.lockThread(threadId, optionsLock);
+        applyRemoteModeration(threadId, null, response);
+        return response ?? result;
+      }
+      return result;
+    } catch (error) {
+      if (previousModeration) {
+        controller.applyThreadEvent(threadId, {
+          type: 'THREAD_MODERATION_UPDATED',
+          payload: previousModeration
+        });
+      }
+      if (queueSnapshot) {
+        controller.hydrateModerationQueue(queueSnapshot);
+      }
+      throw error;
+    }
+  }
+
+  async function unlockThreadAction(threadId, optionsUnlock = {}) {
+    if (!threadId) {
+      throw new Error('unlockThread requires threadId');
+    }
+    const threadState = controller.getThreadState(threadId);
+    const previousModeration = threadState?.thread?.moderation
+      ? deepClone(threadState.thread.moderation)
+      : null;
+    const queueSnapshot =
+      typeof controller.getModerationQueueState === 'function'
+        ? deepClone(controller.getModerationQueueState())
+        : null;
+    const result = controller.unlockThread(threadId, optionsUnlock);
+    try {
+      if (typeof mutations.unlockThread === 'function') {
+        const response = await mutations.unlockThread(threadId, optionsUnlock);
+        applyRemoteModeration(threadId, null, response);
+        return response ?? result;
+      }
+      return result;
+    } catch (error) {
+      if (previousModeration) {
+        controller.applyThreadEvent(threadId, {
+          type: 'THREAD_MODERATION_UPDATED',
+          payload: previousModeration
+        });
+      }
+      if (queueSnapshot) {
+        controller.hydrateModerationQueue(queueSnapshot);
+      }
+      throw error;
+    }
+  }
+
+  async function blockThreadAction(threadId, optionsBlock = {}) {
+    if (!threadId) {
+      throw new Error('blockThread requires threadId');
+    }
+    const threadState = controller.getThreadState(threadId);
+    const previousModeration = threadState?.thread?.moderation
+      ? deepClone(threadState.thread.moderation)
+      : null;
+    const queueSnapshot =
+      typeof controller.getModerationQueueState === 'function'
+        ? deepClone(controller.getModerationQueueState())
+        : null;
+    controller.blockThread(threadId, optionsBlock);
+    try {
+      if (typeof mutations.blockThread === 'function') {
+        const response = await mutations.blockThread(threadId, optionsBlock);
+        applyRemoteModeration(threadId, null, response);
+        return response ?? controller.getThreadState(threadId)?.thread?.moderation ?? null;
+      }
+      return controller.getThreadState(threadId)?.thread?.moderation ?? null;
+    } catch (error) {
+      if (previousModeration) {
+        controller.applyThreadEvent(threadId, {
+          type: 'THREAD_MODERATION_UPDATED',
+          payload: previousModeration
+        });
+      }
+      if (queueSnapshot) {
+        controller.hydrateModerationQueue(queueSnapshot);
+      }
+      throw error;
+    }
+  }
+
+  async function unblockThreadAction(threadId, optionsUnblock = {}) {
+    if (!threadId) {
+      throw new Error('unblockThread requires threadId');
+    }
+    const threadState = controller.getThreadState(threadId);
+    const previousModeration = threadState?.thread?.moderation
+      ? deepClone(threadState.thread.moderation)
+      : null;
+    const queueSnapshot =
+      typeof controller.getModerationQueueState === 'function'
+        ? deepClone(controller.getModerationQueueState())
+        : null;
+    controller.unblockThread(threadId, optionsUnblock);
+    try {
+      if (typeof mutations.unblockThread === 'function') {
+        const response = await mutations.unblockThread(threadId, optionsUnblock);
+        applyRemoteModeration(threadId, null, response);
+        return response ?? controller.getThreadState(threadId)?.thread?.moderation ?? null;
+      }
+      return controller.getThreadState(threadId)?.thread?.moderation ?? null;
+    } catch (error) {
+      if (previousModeration) {
+        controller.applyThreadEvent(threadId, {
+          type: 'THREAD_MODERATION_UPDATED',
+          payload: previousModeration
+        });
+      }
+      if (queueSnapshot) {
+        controller.hydrateModerationQueue(queueSnapshot);
+      }
+      throw error;
+    }
+  }
+
+  async function updateModerationQueueCaseAction(caseId, patch = {}) {
+    if (!caseId) {
+      throw new Error('updateModerationQueueCase requires caseId');
+    }
+    const previous = typeof controller.getModerationCase === 'function'
+      ? deepClone(controller.getModerationCase(caseId))
+      : null;
+    controller.updateModerationQueueCase(caseId, patch);
+    try {
+      if (typeof mutations.updateModerationQueueCase === 'function') {
+        await mutations.updateModerationQueueCase(caseId, patch);
+      }
+      return typeof controller.getModerationCase === 'function'
+        ? controller.getModerationCase(caseId)
+        : null;
+    } catch (error) {
+      if (previous) {
+        controller.updateModerationQueueCase(caseId, previous);
+      }
+      throw error;
+    }
+  }
+
+  async function resolveModerationQueueCaseAction(caseId, resolution = {}) {
+    if (!caseId) {
+      throw new Error('resolveModerationQueueCase requires caseId');
+    }
+    const previous = typeof controller.getModerationCase === 'function'
+      ? deepClone(controller.getModerationCase(caseId))
+      : null;
+    controller.resolveModerationQueueCase(caseId, resolution);
+    try {
+      if (typeof mutations.resolveModerationQueueCase === 'function') {
+        await mutations.resolveModerationQueueCase(caseId, resolution);
+      }
+      return typeof controller.getModerationCase === 'function'
+        ? controller.getModerationCase(caseId)
+        : null;
+    } catch (error) {
+      if (previous) {
+        controller.updateModerationQueueCase(caseId, previous);
+      }
+      throw error;
+    }
+  }
+
+  async function removeModerationQueueCaseAction(caseId) {
+    if (!caseId) {
+      throw new Error('removeModerationQueueCase requires caseId');
+    }
+    const previous = typeof controller.getModerationCase === 'function'
+      ? deepClone(controller.getModerationCase(caseId))
+      : null;
+    controller.removeModerationQueueCase(caseId);
+    try {
+      if (typeof mutations.removeModerationQueueCase === 'function') {
+        await mutations.removeModerationQueueCase(caseId);
+      }
+      return null;
+    } catch (error) {
+      if (previous) {
+        controller.updateModerationQueueCase(caseId, previous);
+      }
+      throw error;
+    }
+  }
+
   async function recordConversationStart(ctx = {}) {
     controller.recordConversationStart({
       ...ctx,
@@ -778,11 +1083,21 @@ export function createMessagingClient(config = {}) {
     acceptMessageRequest,
     declineMessageRequest,
     pinThread,
-    unpinThread,
-    archiveThread,
-    unarchiveThread,
-    muteThread,
-    unmuteThread,
+      unpinThread,
+      archiveThread,
+      unarchiveThread,
+      muteThread,
+      unmuteThread,
+      hydrateModerationQueue: hydrateModerationQueueClient,
+      reportMessage: reportMessageAction,
+      reportThread: reportThreadAction,
+      lockThread: lockThreadAction,
+      unlockThread: unlockThreadAction,
+      blockThread: blockThreadAction,
+      unblockThread: unblockThreadAction,
+      updateModerationQueueCase: updateModerationQueueCaseAction,
+      resolveModerationQueueCase: resolveModerationQueueCaseAction,
+      removeModerationQueueCase: removeModerationQueueCaseAction,
     recordConversationStart
   };
 }

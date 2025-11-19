@@ -64,6 +64,7 @@ export const MessagingThread: React.FC<MessagingThreadProps> = ({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [pendingUploadIds, setPendingUploadIds] = useState<string[]>([]);
   const [isUploadInFlight, setIsUploadInFlight] = useState(false);
+    const [reportingMessageId, setReportingMessageId] = useState<string | null>(null);
 
   const [{ state: initialPolicyState, result: initialPolicyResult }] = useState(() =>
     buildPolicyResult(threadId, viewerUserId)
@@ -184,6 +185,11 @@ export const MessagingThread: React.FC<MessagingThreadProps> = ({
       allowOverride: allowSafeModeOverride
     });
   }, [threadState, viewerIsVerifiedAdult, safeModeOverride, allowSafeModeOverride]);
+
+    const threadModeration = threadState?.thread?.moderation ?? null;
+    const isThreadLocked = threadModeration?.locked ?? false;
+    const isThreadBlocked = threadModeration?.blocked ?? false;
+    const composerUnavailable = isThreadLocked || isThreadBlocked;
 
   const messageGroups = useMemo(() => {
     if (!threadState) {
@@ -311,7 +317,8 @@ export const MessagingThread: React.FC<MessagingThreadProps> = ({
     threadId,
     threadState,
     uploadsReady,
-    viewerUserId
+      viewerUserId,
+      composerUnavailable
   ]);
 
   const handleActionCardIntent = useCallback(
@@ -378,6 +385,26 @@ export const MessagingThread: React.FC<MessagingThreadProps> = ({
     },
     [messagingActions]
   );
+
+    const handleReportMessage = useCallback(
+      async (messageId: string) => {
+        if (!messageId) {
+          return;
+        }
+        setReportingMessageId(messageId);
+        try {
+          await messagingActions.reportMessage?.(threadId, messageId, {
+            reason: 'USER_REPORT',
+            severity: 'MEDIUM'
+          });
+        } catch (error) {
+          console.error('MessagingThread: reportMessage failed', error);
+        } finally {
+          setReportingMessageId(null);
+        }
+      },
+      [messagingActions, threadId]
+    );
 
   if (!threadState) {
     return (
@@ -448,7 +475,21 @@ export const MessagingThread: React.FC<MessagingThreadProps> = ({
                       <span className="messaging-thread__message-status messaging-thread__message-status--error">
                         failed
                       </span>
+                      ) : message.moderationFlagged ? (
+                        <span className="messaging-thread__message-status messaging-thread__message-status--flagged">
+                          {message.moderationState ?? 'FLAGGED'}
+                        </span>
                     ) : null}
+                      {!message.moderationFlagged && (
+                        <button
+                          type="button"
+                          className="messaging-thread__message-report"
+                          onClick={() => void handleReportMessage(message.messageId)}
+                          disabled={reportingMessageId === message.messageId}
+                        >
+                          {reportingMessageId === message.messageId ? 'Reporting…' : 'Report'}
+                        </button>
+                      )}
                   </div>
                   {message.redacted ? (
                     <p className="messaging-thread__message-body messaging-thread__message-body--redacted">
@@ -457,6 +498,11 @@ export const MessagingThread: React.FC<MessagingThreadProps> = ({
                   ) : (
                     <p className="messaging-thread__message-body">{message.body}</p>
                   )}
+                    {message.moderationFlagged ? (
+                      <div className="messaging-thread__message-moderation">
+                        Flagged for review{message.moderationReason ? `: ${message.moderationReason}` : ''}
+                      </div>
+                    ) : null}
                   {Array.isArray(message.attachments) && message.attachments.length > 0 ? (
                     <ul className="messaging-thread__attachments">
                       {message.attachments.map((attachment) => (
@@ -559,10 +605,16 @@ export const MessagingThread: React.FC<MessagingThreadProps> = ({
         ) : null}
 
       <section className="messaging-thread__composer">
-        {policyResult.status === 'NUDGE' ? (
-          <div className="messaging-thread__composer-warning">
-            <strong>Moderation notice:</strong> Please review your message before sending.
-          </div>
+      {composerUnavailable ? (
+        <div className="messaging-thread__composer-warning messaging-thread__composer-warning--locked">
+          {isThreadBlocked
+            ? 'This conversation is blocked. Messaging is disabled pending moderation review.'
+            : 'This conversation is locked. Messaging is temporarily disabled.'}
+        </div>
+      ) : policyResult.status === 'NUDGE' ? (
+        <div className="messaging-thread__composer-warning">
+          <strong>Moderation notice:</strong> Please review your message before sending.
+        </div>
         ) : null}
         {composerError ? <div className="messaging-thread__composer-error">{composerError}</div> : null}
         <div className="messaging-thread__composer-upload">
@@ -570,7 +622,7 @@ export const MessagingThread: React.FC<MessagingThreadProps> = ({
             type="button"
             className="messaging-thread__upload-button"
             onClick={handleUploadButtonClick}
-            disabled={isUploadInFlight}
+          disabled={isUploadInFlight || composerUnavailable}
           >
             {isUploadInFlight ? 'Preparing…' : 'Attach files'}
           </button>
@@ -579,7 +631,8 @@ export const MessagingThread: React.FC<MessagingThreadProps> = ({
             type="file"
             multiple
             hidden
-            onChange={handleSelectFiles}
+          onChange={handleSelectFiles}
+          disabled={composerUnavailable}
           />
         </div>
         {pendingUploads.length > 0 ? (
@@ -638,6 +691,7 @@ export const MessagingThread: React.FC<MessagingThreadProps> = ({
           placeholder={composerPlaceholder}
           rows={3}
           className="messaging-thread__composer-input"
+          disabled={composerUnavailable}
         />
         <div className="messaging-thread__composer-footer">
           <span className="messaging-thread__composer-policy">{policyResult.status}</span>
@@ -649,7 +703,8 @@ export const MessagingThread: React.FC<MessagingThreadProps> = ({
               isUploadInFlight ||
               composerText.trim().length === 0 ||
               policyResult.status === 'BLOCK' ||
-              !uploadsReady
+              !uploadsReady ||
+              composerUnavailable
             }
           >
             {isSending ? 'Sending…' : 'Send'}

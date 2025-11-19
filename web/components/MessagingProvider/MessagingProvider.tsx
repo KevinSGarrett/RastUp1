@@ -17,4 +17,6 @@ export const useMessagingActions = bindings.useMessagingActions;
 export const useInboxThreads = bindings.useInboxThreads;
 export const useInboxSummary = bindings.useInboxSummary;
 export const useThread = bindings.useThread;
+export const useUploads = bindings.useUploads;
+export const useModerationQueue = bindings.useModerationQueue;
 export const useNotifications = bindings.useNotifications;
