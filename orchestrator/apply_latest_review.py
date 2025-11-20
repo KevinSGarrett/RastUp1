@@ -1,103 +1,45 @@
 from __future__ import annotations
-
-import re
-import subprocess
-import sys
-from dataclasses import dataclass
+import re, subprocess, sys
 from pathlib import Path
-from typing import Optional
-
 
 ROOT = Path(__file__).resolve().parent.parent
-REVIEWS_DIR = ROOT / "docs" / "orchestrator" / "reviews"
+REVIEWS = ROOT / "docs" / "orchestrator" / "reviews"
+RUNS = ROOT / "docs" / "runs"
 
+def sh(args: list[str]) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(args, cwd=ROOT, text=True, capture_output=True)
 
-@dataclass
-class ReviewFile:
-    path: Path
-    modified_at: float
+def latest_review() -> tuple[Path, str]:
+    if not REVIEWS.exists():
+        raise SystemExit("no reviews dir")
+    cands = sorted(REVIEWS.glob("orchestrator-review-*.md"), key=lambda p: p.stat().st_mtime, reverse=True)
+    if not cands:
+        raise SystemExit("no reviews found")
+    p = cands[0]
+    return p, p.read_text(encoding="utf-8", errors="ignore")
 
+def run_ci() -> bool:
+    proc = sh(["make", "ci"])
+    sys.stdout.write(proc.stdout or "")
+    sys.stderr.write(proc.stderr or "")
+    return proc.returncode == 0
 
-def find_latest_review() -> Optional[ReviewFile]:
-    if not REVIEWS_DIR.exists():
-        print("[apply_latest_review] No reviews directory found; nothing to do.")
-        return None
+def apply():
+    p, body = latest_review()
+    m = re.search(r"(WBS-\d+)", p.name); wbs = m.group(1) if m else None
+    if not wbs: raise SystemExit("no WBS in review filename")
 
-    candidates = [
-        p for p in REVIEWS_DIR.glob("orchestrator-review-*.md")
-        if p.is_file()
-    ]
-    if not candidates:
-        print("[apply_latest_review] No review files found; nothing to do.")
-        return None
+    decision = "in_progress"
+    dm = re.search(r"Decision:\s*(done|in_progress)", body, re.IGNORECASE)
+    if dm: decision = dm.group(1).lower()
 
-    latest = max(candidates, key=lambda p: p.stat().st_mtime)
-    return ReviewFile(path=latest, modified_at=latest.stat().st_mtime)
+    run_report_exists = any(RUNS.glob(f"*{wbs}*.md"))
+    acceptance_met = bool(re.search(r"ACCEPTANCE:\s*met", body, re.IGNORECASE))
+    ok_ci = run_ci()
 
-
-def read_text(path: Path) -> str:
-    return path.read_text(encoding="utf-8", errors="replace")
-
-
-def decide_status(review_text: str, task_id: str) -> str:
-    """
-    Very simple rule:
-    - If the review explicitly says "Do NOT mark ... as complete"
-      or "remains IN PROGRESS" → keep it in_progress.
-    - Otherwise → assume done.
-    """
-    lowered = review_text.lower()
-    task_lower = task_id.lower()
-
-    if f"do not mark {task_lower} as complete" in lowered:
-        return "in_progress"
-
-    if "remains in progress" in lowered and task_lower in lowered:
-        return "in_progress"
-
-    if "blocked" in lowered and task_lower in lowered:
-        # Conservative: if it says the task is blocked, don't mark done.
-        return "in_progress"
-
-    # Default: treat as done
-    return "done"
-
-
-def set_task_status(task_id: str, status: str) -> None:
-    print(f"[apply_latest_review] Setting {task_id} -> {status}")
-    subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "orchestrator.task_status",
-            "set",
-            "--id",
-            task_id,
-            "--status",
-            status,
-        ],
-        cwd=ROOT,
-        text=True,
-        check=True,
-    )
-
-
-def main() -> None:
-    review = find_latest_review()
-    if review is None:
-        return
-
-    text = read_text(review.path)
-    # Grab the first WBS-XXX we see
-    match = re.search(r"WBS-\d+", text)
-    if not match:
-        print(f"[apply_latest_review] Could not find WBS id in {review.path}; skipping.")
-        return
-
-    task_id = match.group(0)
-    status = decide_status(text, task_id)
-    set_task_status(task_id, status)
-
+    status = "done" if (run_report_exists and ok_ci and acceptance_met and decision == "done") else "in_progress"
+    sh(["python", "-m", "orchestrator.task_status", "set", "--id", wbs, "--status", status])
+    print(f"[apply_latest_review] {wbs} -> {status} (report={run_report_exists}, ci={ok_ci}, acceptance={acceptance_met}, decision={decision})")
 
 if __name__ == "__main__":
-    main()
+    apply()

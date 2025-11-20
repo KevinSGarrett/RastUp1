@@ -5,3 +5,1224 @@
 [run-next] No unblocked todo items found.
 [autopilot] No unblocked todo items found. Stopping autopilot.
 [autopilot] Autopilot loop finished.
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/mnt/c/RastUp1/orchestrator/review_latest.py", line 63, in <module>
+    main()
+  File "/mnt/c/RastUp1/orchestrator/review_latest.py", line 55, in main
+    out = guarded_review(body)
+          ^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/RastUp1/orchestrator/llm.py", line 156, in guarded_review
+    merged = call_anthropic(merge_messages, model=model_anthropic) or oai_only
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/RastUp1/orchestrator/llm.py", line 64, in call_anthropic
+    resp = client.messages.create(
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/RastUp1/.venv/lib/python3.12/site-packages/anthropic/_utils/_utils.py", line 282, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/RastUp1/.venv/lib/python3.12/site-packages/anthropic/resources/messages/messages.py", line 930, in create
+    return self._post(
+           ^^^^^^^^^^^
+  File "/mnt/c/RastUp1/.venv/lib/python3.12/site-packages/anthropic/_base_client.py", line 1326, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/RastUp1/.venv/lib/python3.12/site-packages/anthropic/_base_client.py", line 1114, in request
+    raise self._make_status_error_from_response(err.response) from None
+anthropic.NotFoundError: Error code: 404 - {'type': 'error', 'error': {'type': 'not_found_error', 'message': 'model: claude-3-5-sonnet-20240620'}, 'request_id': 'req_011CVJN8hK2kFbBtGkzp8HyE'}
+npx -y tsc --noEmit
+services/search/indexer.ts(1,33): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/search/indexer.ts(2,37): error TS2307: Cannot find module 'node:timers/promises' or its corresponding type declarations.
+web/app/calendar/CalendarDashboardClient.tsx(3,63): error TS2307: Cannot find module 'react' or its corresponding type declarations.
+web/app/calendar/CalendarDashboardClient.tsx(8,42): error TS7016: Could not find a declaration file for module '../../lib/calendar/dataSource.mjs'. '/mnt/c/RastUp1/web/lib/calendar/dataSource.mjs' implicitly has an 'any' type.
+web/app/calendar/CalendarDashboardClient.tsx(9,42): error TS7016: Could not find a declaration file for module '../../../tools/frontend/calendar/controller.mjs'. '/mnt/c/RastUp1/tools/frontend/calendar/controller.mjs' implicitly has an 'any' type.
+web/app/calendar/CalendarDashboardClient.tsx(52,3): error TS7031: Binding element 'initialRole' implicitly has an 'any' type.
+web/app/calendar/CalendarDashboardClient.tsx(53,3): error TS7031: Binding element 'initialDashboard' implicitly has an 'any' type.
+web/app/calendar/CalendarDashboardClient.tsx(54,3): error TS7031: Binding element 'dataSourceMode' implicitly has an 'any' type.
+web/app/calendar/CalendarDashboardClient.tsx(55,3): error TS7031: Binding element 'viewerTimeZone' implicitly has an 'any' type.
+web/app/calendar/CalendarDashboardClient.tsx(457,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(457,5): error TS2875: This JSX tag requires the module path 'react/jsx-runtime' to exist, but none could be found. Make sure you have types for the appropriate package installed.
+web/app/calendar/CalendarDashboardClient.tsx(458,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(459,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(460,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(460,36): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(461,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(466,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(467,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(468,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(469,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(471,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(474,26): error TS7006: Parameter 'event' implicitly has an 'any' type.
+web/app/calendar/CalendarDashboardClient.tsx(477,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(478,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(480,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(481,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(483,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(484,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(486,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(487,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(488,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(490,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(492,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(493,30): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(493,54): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(494,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(496,26): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(496,94): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(497,25): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(497,90): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(498,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(498,80): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(499,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(501,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(502,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(502,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(503,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(504,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(505,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(508,26): error TS7006: Parameter 'event' implicitly has an 'any' type.
+web/app/calendar/CalendarDashboardClient.tsx(512,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(513,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(515,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(516,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(518,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(519,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(520,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(522,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(536,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(544,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(545,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(545,29): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(546,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(551,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(552,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(552,28): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(553,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(555,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(556,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/CalendarDashboardClient.tsx(557,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/app/calendar/page.tsx(1,25): error TS2307: Cannot find module 'next/headers' or its corresponding type declarations.
+web/app/calendar/page.tsx(2,31): error TS2307: Cannot find module 'next' or its corresponding type declarations.
+web/app/calendar/page.tsx(5,42): error TS7016: Could not find a declaration file for module '../../lib/calendar/dataSource.mjs'. '/mnt/c/RastUp1/web/lib/calendar/dataSource.mjs' implicitly has an 'any' type.
+web/app/calendar/page.tsx(7,22): error TS2580: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
+web/app/calendar/page.tsx(36,20): error TS2580: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
+web/app/calendar/page.tsx(37,18): error TS2580: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
+web/app/calendar/page.tsx(47,11): error TS2580: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
+web/app/calendar/page.tsx(64,5): error TS2875: This JSX tag requires the module path 'react/jsx-runtime' to exist, but none could be found. Make sure you have types for the appropriate package installed.
+web/app/messaging/MessagingWorkspaceClient.tsx(3,51): error TS2307: Cannot find module 'react' or its corresponding type declarations.
+web/app/messaging/MessagingWorkspaceClient.tsx(11,15): error TS2724: '"../../components/Messaging/MessagingModerationQueue"' has no exported member named 'MessagingModerationQueueProps'. Did you mean 'MessagingModerationQueue'?
+web/app/messaging/MessagingWorkspaceClient.tsx(12,43): error TS7016: Could not find a declaration file for module '../../lib/messaging/dataSources.mjs'. '/mnt/c/RastUp1/web/lib/messaging/dataSources.mjs' implicitly has an 'any' type.
+web/app/messaging/MessagingWorkspaceClient.tsx(13,36): error TS7016: Could not find a declaration file for module '../../../tools/frontend/messaging/filter_params.mjs'. '/mnt/c/RastUp1/tools/frontend/messaging/filter_params.mjs' implicitly has an 'any' type.
+web/app/messaging/MessagingWorkspaceClient.tsx(29,76): error TS7031: Binding element 'enabled' implicitly has an 'any' type.
+web/app/messaging/MessagingWorkspaceClient.tsx(43,17): error TS7006: Parameter 'error' implicitly has an 'any' type.
+web/app/messaging/MessagingWorkspaceClient.tsx(62,3): error TS7031: Binding element 'initialData' implicitly has an 'any' type.
+web/app/messaging/MessagingWorkspaceClient.tsx(63,3): error TS7031: Binding element 'viewerUserId' implicitly has an 'any' type.
+web/app/messaging/MessagingWorkspaceClient.tsx(64,3): error TS7031: Binding element 'initialThreadId' implicitly has an 'any' type.
+web/app/messaging/MessagingWorkspaceClient.tsx(65,3): error TS7031: Binding element 'initialFilters' implicitly has an 'any' type.
+web/app/messaging/MessagingWorkspaceClient.tsx(66,3): error TS7031: Binding element 'initialSearchTerm' implicitly has an 'any' type.
+web/app/messaging/MessagingWorkspaceClient.tsx(67,3): error TS7031: Binding element 'queryParamKeys' implicitly has an 'any' type.
+web/app/messaging/MessagingWorkspaceClient.tsx(69,3): error TS7031: Binding element 'moderationQueueProps' implicitly has an 'any' type.
+web/app/messaging/MessagingWorkspaceClient.tsx(146,5): error TS2875: This JSX tag requires the module path 'react/jsx-runtime' to exist, but none could be found. Make sure you have types for the appropriate package installed.
+web/app/messaging/MessagingWorkspaceClient.tsx(152,23): error TS7006: Parameter 'error' implicitly has an 'any' type.
+web/app/messaging/MessagingWorkspaceClient.tsx(152,30): error TS7006: Parameter 'context' implicitly has an 'any' type.
+web/app/messaging/page.tsx(1,25): error TS2307: Cannot find module 'next/headers' or its corresponding type declarations.
+web/app/messaging/page.tsx(2,31): error TS2307: Cannot find module 'next' or its corresponding type declarations.
+web/app/messaging/page.tsx(5,43): error TS7016: Could not find a declaration file for module '../../lib/messaging/dataSources.mjs'. '/mnt/c/RastUp1/web/lib/messaging/dataSources.mjs' implicitly has an 'any' type.
+web/app/messaging/page.tsx(6,44): error TS7016: Could not find a declaration file for module '../../../tools/frontend/messaging/next_adapter.mjs'. '/mnt/c/RastUp1/tools/frontend/messaging/next_adapter.mjs' implicitly has an 'any' type.
+web/app/messaging/page.tsx(10,8): error TS7016: Could not find a declaration file for module '../../../tools/frontend/messaging/filter_params.mjs'. '/mnt/c/RastUp1/tools/frontend/messaging/filter_params.mjs' implicitly has an 'any' type.
+web/app/messaging/page.tsx(15,13): error TS2580: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
+web/app/messaging/page.tsx(18,9): error TS2580: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
+web/app/messaging/page.tsx(19,44): error TS2580: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
+web/app/messaging/page.tsx(23,17): error TS2580: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
+web/app/messaging/page.tsx(78,15): error TS7006: Parameter 'entry' implicitly has an 'any' type.
+web/app/messaging/page.tsx(84,7): error TS2580: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
+web/app/messaging/page.tsx(85,12): error TS2580: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
+web/app/messaging/page.tsx(85,63): error TS7006: Parameter 'entry' implicitly has an 'any' type.
+web/app/messaging/page.tsx(93,24): error TS2580: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
+web/app/messaging/page.tsx(124,5): error TS2875: This JSX tag requires the module path 'react/jsx-runtime' to exist, but none could be found. Make sure you have types for the appropriate package installed.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(1,66): error TS2307: Cannot find module 'react' or its corresponding type declarations.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(112,3): error TS7031: Binding element 'store' implicitly has an 'any' type.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(113,3): error TS7031: Binding element 'onSaveRules' implicitly has an 'any' type.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(114,3): error TS7031: Binding element 'onRecompute' implicitly has an 'any' type.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(209,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(209,5): error TS2875: This JSX tag requires the module path 'react/jsx-runtime' to exist, but none could be found. Make sure you have types for the appropriate package installed.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(210,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(211,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(212,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(212,33): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(213,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(215,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(216,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(217,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(218,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(219,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(222,26): error TS7006: Parameter 'event' implicitly has an 'any' type.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(225,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(226,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(227,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(227,46): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(228,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(230,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(231,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(234,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(235,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(236,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(237,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(239,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(240,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(242,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(243,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(244,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(245,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(247,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(248,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(249,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(249,32): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(250,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(252,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(255,26): error TS7006: Parameter 'event' implicitly has an 'any' type.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(257,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(258,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(260,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(263,26): error TS7006: Parameter 'event' implicitly has an 'any' type.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(265,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(266,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(268,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(269,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(269,34): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(270,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(272,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(276,26): error TS7006: Parameter 'event' implicitly has an 'any' type.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(280,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(281,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(283,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(287,26): error TS7006: Parameter 'event' implicitly has an 'any' type.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(291,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(292,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(294,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(298,26): error TS7006: Parameter 'event' implicitly has an 'any' type.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(302,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(303,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(305,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(309,26): error TS7006: Parameter 'event' implicitly has an 'any' type.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(316,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(317,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(319,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(323,26): error TS7006: Parameter 'event' implicitly has an 'any' type.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(327,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(328,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(330,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(334,26): error TS7006: Parameter 'event' implicitly has an 'any' type.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(338,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(339,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(341,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(345,26): error TS7006: Parameter 'event' implicitly has an 'any' type.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(352,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(353,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(355,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(359,26): error TS7006: Parameter 'event' implicitly has an 'any' type.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(363,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(364,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(365,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(367,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(368,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(369,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(369,27): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(370,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(382,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(383,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(385,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(386,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(387,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(387,59): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(388,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(390,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(391,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(392,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(395,34): error TS7006: Parameter 'event' implicitly has an 'any' type.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(398,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(399,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(409,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(410,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(411,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(412,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(414,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(417,34): error TS7006: Parameter 'event' implicitly has an 'any' type.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(419,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(420,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(422,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(425,34): error TS7006: Parameter 'event' implicitly has an 'any' type.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(428,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(429,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(431,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(434,34): error TS7006: Parameter 'event' implicitly has an 'any' type.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(436,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(437,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(439,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(442,34): error TS7006: Parameter 'event' implicitly has an 'any' type.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(444,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(445,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(447,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(451,34): error TS7006: Parameter 'event' implicitly has an 'any' type.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(457,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(458,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(460,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(464,34): error TS7006: Parameter 'event' implicitly has an 'any' type.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(470,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(471,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(473,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(477,34): error TS7006: Parameter 'event' implicitly has an 'any' type.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(483,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(484,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(486,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(490,34): error TS7006: Parameter 'event' implicitly has an 'any' type.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(496,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(497,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(499,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(503,34): error TS7006: Parameter 'event' implicitly has an 'any' type.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(509,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(510,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(511,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(513,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(514,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(517,36): error TS7006: Parameter 'event' implicitly has an 'any' type.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(528,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(530,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(531,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(533,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(534,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(536,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(537,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(537,37): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(538,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(550,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(551,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(555,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(556,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(557,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(557,75): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(558,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(558,50): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(559,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(569,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(570,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(571,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(572,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(574,25): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(576,38): error TS7006: Parameter 'event' implicitly has an 'any' type.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(580,27): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(580,71): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(581,27): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(581,77): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(582,25): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(583,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(584,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(586,25): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(589,38): error TS7006: Parameter 'event' implicitly has an 'any' type.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(593,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(594,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(596,25): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(599,38): error TS7006: Parameter 'event' implicitly has an 'any' type.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(603,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(604,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(606,25): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(610,38): error TS7006: Parameter 'event' implicitly has an 'any' type.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(624,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(625,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(627,25): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(631,38): error TS7006: Parameter 'event' implicitly has an 'any' type.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(635,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(636,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(638,25): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(642,38): error TS7006: Parameter 'event' implicitly has an 'any' type.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(646,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(647,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(649,25): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(652,38): error TS7006: Parameter 'event' implicitly has an 'any' type.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(657,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(658,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(659,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(662,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(663,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(665,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(666,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(666,28): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(667,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(672,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(673,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(675,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(676,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(676,45): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(678,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(678,92): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(680,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(682,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(684,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(686,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(689,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(689,90): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(691,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(694,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(696,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(697,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/AvailabilityEditor/AvailabilityEditor.tsx(698,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(1,66): error TS2307: Cannot find module 'react' or its corresponding type declarations.
+web/components/CalendarConnect/CalendarConnect.tsx(62,3): error TS7031: Binding element 'store' implicitly has an 'any' type.
+web/components/CalendarConnect/CalendarConnect.tsx(63,3): error TS7031: Binding element 'onConnect' implicitly has an 'any' type.
+web/components/CalendarConnect/CalendarConnect.tsx(64,3): error TS7031: Binding element 'onDisconnect' implicitly has an 'any' type.
+web/components/CalendarConnect/CalendarConnect.tsx(65,3): error TS7031: Binding element 'onRetry' implicitly has an 'any' type.
+web/components/CalendarConnect/CalendarConnect.tsx(66,3): error TS7031: Binding element 'onCopyFeed' implicitly has an 'any' type.
+web/components/CalendarConnect/CalendarConnect.tsx(151,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(151,5): error TS2875: This JSX tag requires the module path 'react/jsx-runtime' to exist, but none could be found. Make sure you have types for the appropriate package installed.
+web/components/CalendarConnect/CalendarConnect.tsx(152,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(153,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(153,33): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(154,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(154,87): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(155,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(157,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(158,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(162,22): error TS7006: Parameter 'event' implicitly has an 'any' type.
+web/components/CalendarConnect/CalendarConnect.tsx(164,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(166,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(167,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(170,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(171,25): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(171,51): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(172,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(175,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(180,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(181,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(182,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(183,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(183,68): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(184,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(184,88): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(185,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(186,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(188,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(190,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(192,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(194,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(195,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(196,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(197,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(200,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(202,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(203,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(205,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(208,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(211,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(213,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(215,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(218,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(221,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(222,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(222,32): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(223,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(223,67): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(224,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(227,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(228,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(230,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(231,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(233,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(234,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(238,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(239,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(239,29): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(240,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(242,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(243,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(243,37): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(245,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(247,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(248,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(252,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(253,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(253,29): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(256,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/CalendarConnect/CalendarConnect.tsx(258,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(1,66): error TS2307: Cannot find module 'react' or its corresponding type declarations.
+web/components/Messaging/MessagingInbox.tsx(4,41): error TS7016: Could not find a declaration file for module '../../../tools/frontend/messaging/ui_helpers.mjs'. '/mnt/c/RastUp1/tools/frontend/messaging/ui_helpers.mjs' implicitly has an 'any' type.
+web/components/Messaging/MessagingInbox.tsx(103,3): error TS2322: Type '{ onlyUnread: boolean; includeInquiries: boolean; includeProjects: boolean; mutedMode: string; safeModeOnly: boolean; }' is not assignable to type 'MessagingInboxFilterState'.
+  Types of property 'mutedMode' are incompatible.
+    Type 'string' is not assignable to type 'MessagingInboxMutedMode'.
+web/components/Messaging/MessagingInbox.tsx(147,32): error TS2345: Argument of type 'string | 0' is not assignable to parameter of type 'string'.
+  Type 'number' is not assignable to type 'string'.
+web/components/Messaging/MessagingInbox.tsx(148,32): error TS2345: Argument of type 'string | 0' is not assignable to parameter of type 'string'.
+  Type 'number' is not assignable to type 'string'.
+web/components/Messaging/MessagingInbox.tsx(161,3): error TS7031: Binding element 'onSelectThread' implicitly has an 'any' type.
+web/components/Messaging/MessagingInbox.tsx(162,3): error TS7031: Binding element 'onAcceptRequest' implicitly has an 'any' type.
+web/components/Messaging/MessagingInbox.tsx(163,3): error TS7031: Binding element 'onDeclineRequest' implicitly has an 'any' type.
+web/components/Messaging/MessagingInbox.tsx(164,3): error TS7031: Binding element 'onStartConversation' implicitly has an 'any' type.
+web/components/Messaging/MessagingInbox.tsx(165,3): error TS7031: Binding element 'onPinThread' implicitly has an 'any' type.
+web/components/Messaging/MessagingInbox.tsx(166,3): error TS7031: Binding element 'onUnpinThread' implicitly has an 'any' type.
+web/components/Messaging/MessagingInbox.tsx(167,3): error TS7031: Binding element 'onArchiveThread' implicitly has an 'any' type.
+web/components/Messaging/MessagingInbox.tsx(168,3): error TS7031: Binding element 'onUnarchiveThread' implicitly has an 'any' type.
+web/components/Messaging/MessagingInbox.tsx(169,3): error TS7031: Binding element 'onMuteThread' implicitly has an 'any' type.
+web/components/Messaging/MessagingInbox.tsx(170,3): error TS7031: Binding element 'onUnmuteThread' implicitly has an 'any' type.
+web/components/Messaging/MessagingInbox.tsx(172,3): error TS7031: Binding element 'requestActions' implicitly has an 'any' type.
+web/components/Messaging/MessagingInbox.tsx(174,16): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(174,16): error TS2875: This JSX tag requires the module path 'react/jsx-runtime' to exist, but none could be found. Make sure you have types for the appropriate package installed.
+web/components/Messaging/MessagingInbox.tsx(174,69): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(175,3): error TS7031: Binding element 'defaultFilters' implicitly has an 'any' type.
+web/components/Messaging/MessagingInbox.tsx(176,12): error TS7031: Binding element 'controlledFilters' implicitly has an 'any' type.
+web/components/Messaging/MessagingInbox.tsx(177,3): error TS7031: Binding element 'onFiltersChange' implicitly has an 'any' type.
+web/components/Messaging/MessagingInbox.tsx(179,15): error TS7031: Binding element 'controlledSearchTerm' implicitly has an 'any' type.
+web/components/Messaging/MessagingInbox.tsx(180,3): error TS7031: Binding element 'onSearchChange' implicitly has an 'any' type.
+web/components/Messaging/MessagingInbox.tsx(247,20): error TS7006: Parameter 'previous' implicitly has an 'any' type.
+web/components/Messaging/MessagingInbox.tsx(255,22): error TS7006: Parameter 'previous' implicitly has an 'any' type.
+web/components/Messaging/MessagingInbox.tsx(272,20): error TS7006: Parameter 'previous' implicitly has an 'any' type.
+web/components/Messaging/MessagingInbox.tsx(287,20): error TS7006: Parameter 'previous' implicitly has an 'any' type.
+web/components/Messaging/MessagingInbox.tsx(388,34): error TS7006: Parameter 'sum' implicitly has an 'any' type.
+web/components/Messaging/MessagingInbox.tsx(388,39): error TS7006: Parameter 'section' implicitly has an 'any' type.
+web/components/Messaging/MessagingInbox.tsx(516,26): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type 'Record<MessagingInboxMutedMode, string>'.
+web/components/Messaging/MessagingInbox.tsx(519,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(520,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(521,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(522,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(522,58): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(523,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(525,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(526,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(527,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(528,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(535,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(537,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(541,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(544,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(549,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(551,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(552,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(554,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(555,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(556,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(563,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(564,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(565,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(567,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(568,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(574,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(575,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(581,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(582,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(588,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(589,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(595,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(596,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(597,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(601,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(602,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(605,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(606,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(606,31): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(607,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(609,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(610,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(611,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(611,93): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(612,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(613,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(615,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(617,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(619,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(621,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(622,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(623,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(624,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(626,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(627,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(629,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(630,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(632,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(633,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(634,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(636,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(637,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(643,29): error TS7006: Parameter 'section' implicitly has an 'any' type.
+web/components/Messaging/MessagingInbox.tsx(644,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(645,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(645,32): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(646,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(647,37): error TS7006: Parameter 'thread' implicitly has an 'any' type.
+web/components/Messaging/MessagingInbox.tsx(652,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(653,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(654,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(659,25): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(660,27): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(660,88): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(662,29): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(662,98): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(664,25): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(666,27): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(666,91): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(668,39): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(668,95): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(670,27): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(672,31): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(674,31): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(677,31): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(679,31): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(681,27): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(683,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(684,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(685,25): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(687,37): error TS7006: Parameter 'event' implicitly has an 'any' type.
+web/components/Messaging/MessagingInbox.tsx(696,25): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(697,25): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(699,37): error TS7006: Parameter 'event' implicitly has an 'any' type.
+web/components/Messaging/MessagingInbox.tsx(708,25): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(709,25): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(711,37): error TS7006: Parameter 'event' implicitly has an 'any' type.
+web/components/Messaging/MessagingInbox.tsx(720,25): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(721,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(722,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(723,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(726,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(727,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingInbox.tsx(730,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(1,42): error TS2307: Cannot find module 'react' or its corresponding type declarations.
+web/components/Messaging/MessagingModerationQueue.tsx(77,3): error TS7031: Binding element 'className' implicitly has an 'any' type.
+web/components/Messaging/MessagingModerationQueue.tsx(79,3): error TS7031: Binding element 'statusFilter' implicitly has an 'any' type.
+web/components/Messaging/MessagingModerationQueue.tsx(80,3): error TS7031: Binding element 'severityFilter' implicitly has an 'any' type.
+web/components/Messaging/MessagingModerationQueue.tsx(81,16): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(81,16): error TS2875: This JSX tag requires the module path 'react/jsx-runtime' to exist, but none could be found. Make sure you have types for the appropriate package installed.
+web/components/Messaging/MessagingModerationQueue.tsx(81,100): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(82,3): error TS7031: Binding element 'decisionOptions' implicitly has an 'any' type.
+web/components/Messaging/MessagingModerationQueue.tsx(83,3): error TS7031: Binding element 'onResolveCase' implicitly has an 'any' type.
+web/components/Messaging/MessagingModerationQueue.tsx(84,3): error TS7031: Binding element 'onRemoveCase' implicitly has an 'any' type.
+web/components/Messaging/MessagingModerationQueue.tsx(85,3): error TS7031: Binding element 'onSubmitDecision' implicitly has an 'any' type.
+web/components/Messaging/MessagingModerationQueue.tsx(90,47): error TS7006: Parameter 'state' implicitly has an 'any' type.
+web/components/Messaging/MessagingModerationQueue.tsx(95,8): error TS7006: Parameter 'option' implicitly has an 'any' type.
+web/components/Messaging/MessagingModerationQueue.tsx(178,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(179,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(180,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(180,20): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(182,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(183,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(183,64): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(184,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(184,79): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(185,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(185,75): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(186,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(186,66): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(187,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(189,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(193,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(194,23): error TS7006: Parameter 'entry' implicitly has an 'any' type.
+web/components/Messaging/MessagingModerationQueue.tsx(206,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(207,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(208,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(212,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(213,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(213,87): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(214,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(214,99): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(215,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(215,85): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(217,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(219,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(221,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(222,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(225,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(225,33): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(226,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(226,41): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(231,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(231,33): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(232,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(232,43): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(237,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(237,34): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(238,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(238,44): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(243,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(243,38): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(244,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(244,45): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(249,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(249,38): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(250,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(251,25): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(251,76): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(252,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(257,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(257,40): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(258,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(258,88): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(263,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(263,36): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(264,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(265,25): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(266,49): error TS7006: Parameter 'approval' implicitly has an 'any' type.
+web/components/Messaging/MessagingModerationQueue.tsx(266,59): error TS7006: Parameter 'index' implicitly has an 'any' type.
+web/components/Messaging/MessagingModerationQueue.tsx(270,31): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(271,33): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(275,33): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(277,35): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(277,114): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(280,35): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(285,35): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(288,35): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(288,112): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(290,31): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(293,25): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(294,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(299,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(299,37): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(300,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(301,25): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(305,25): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(307,27): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(309,27): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(312,27): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(317,27): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(320,27): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(320,114): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(322,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(325,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(326,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(328,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(329,55): error TS7006: Parameter 'option' implicitly has an 'any' type.
+web/components/Messaging/MessagingModerationQueue.tsx(334,27): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(343,27): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(346,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(348,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(350,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(351,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(353,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(354,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(355,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(358,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingModerationQueue.tsx(360,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(1,66): error TS2307: Cannot find module 'react' or its corresponding type declarations.
+web/components/Messaging/MessagingNotificationCenter.tsx(4,36): error TS7016: Could not find a declaration file for module '../../../tools/frontend/messaging/notification_queue.mjs'. '/mnt/c/RastUp1/tools/frontend/messaging/notification_queue.mjs' implicitly has an 'any' type.
+web/components/Messaging/MessagingNotificationCenter.tsx(5,41): error TS7016: Could not find a declaration file for module '../../../tools/frontend/messaging/ui_helpers.mjs'. '/mnt/c/RastUp1/tools/frontend/messaging/ui_helpers.mjs' implicitly has an 'any' type.
+web/components/Messaging/MessagingNotificationCenter.tsx(60,3): error TS7031: Binding element 'className' implicitly has an 'any' type.
+web/components/Messaging/MessagingNotificationCenter.tsx(64,3): error TS7031: Binding element 'autoFlushIntervalMs' implicitly has an 'any' type.
+web/components/Messaging/MessagingNotificationCenter.tsx(65,3): error TS7031: Binding element 'autoDigestIntervalMs' implicitly has an 'any' type.
+web/components/Messaging/MessagingNotificationCenter.tsx(68,3): error TS7031: Binding element 'onNotificationClick' implicitly has an 'any' type.
+web/components/Messaging/MessagingNotificationCenter.tsx(101,32): error TS7006: Parameter 'prev' implicitly has an 'any' type.
+web/components/Messaging/MessagingNotificationCenter.tsx(210,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(211,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(216,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(217,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(219,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(221,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(223,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(226,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(226,98): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(228,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(229,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(230,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(230,61): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(231,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(232,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(233,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(240,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(240,5): error TS2875: This JSX tag requires the module path 'react/jsx-runtime' to exist, but none could be found. Make sure you have types for the appropriate package installed.
+web/components/Messaging/MessagingNotificationCenter.tsx(241,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(242,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(242,26): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(243,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(244,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(246,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(247,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(251,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(252,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(253,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(254,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(256,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(257,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(259,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(261,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(263,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(265,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(266,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(267,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(269,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(271,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(271,90): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(274,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(274,92): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(276,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(277,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(278,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(279,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(279,33): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(281,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(281,84): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(283,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(284,38): error TS7006: Parameter 'notification' implicitly has an 'any' type.
+web/components/Messaging/MessagingNotificationCenter.tsx(285,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(287,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(288,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(289,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(289,38): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(291,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(291,78): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(293,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(294,40): error TS7006: Parameter 'notification' implicitly has an 'any' type.
+web/components/Messaging/MessagingNotificationCenter.tsx(295,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(296,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(297,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(298,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(300,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(302,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(307,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(309,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(310,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(311,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(311,74): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(312,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(313,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(314,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(316,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(318,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(320,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(321,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(321,31): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(323,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(323,95): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(325,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(326,29): error TS7006: Parameter 'digest' implicitly has an 'any' type.
+web/components/Messaging/MessagingNotificationCenter.tsx(327,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(328,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(329,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(330,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(332,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(333,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(333,104): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(335,25): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(340,25): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(342,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(343,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(344,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(345,33): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(345,75): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(346,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(348,25): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(349,55): error TS7006: Parameter 'message' implicitly has an 'any' type.
+web/components/Messaging/MessagingNotificationCenter.tsx(349,64): error TS7006: Parameter 'index' implicitly has an 'any' type.
+web/components/Messaging/MessagingNotificationCenter.tsx(350,29): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(350,97): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(352,25): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(354,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(355,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(356,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(358,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(360,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingNotificationCenter.tsx(362,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(1,74): error TS2307: Cannot find module 'react' or its corresponding type declarations.
+web/components/Messaging/MessagingThread.tsx(15,8): error TS7016: Could not find a declaration file for module '../../../tools/frontend/messaging/ui_helpers.mjs'. '/mnt/c/RastUp1/tools/frontend/messaging/ui_helpers.mjs' implicitly has an 'any' type.
+web/components/Messaging/MessagingThread.tsx(16,38): error TS7016: Could not find a declaration file for module '../../../tools/frontend/messaging/safe_mode.mjs'. '/mnt/c/RastUp1/tools/frontend/messaging/safe_mode.mjs' implicitly has an 'any' type.
+web/components/Messaging/MessagingThread.tsx(17,54): error TS7016: Could not find a declaration file for module '../../../tools/frontend/messaging/policy.mjs'. '/mnt/c/RastUp1/tools/frontend/messaging/policy.mjs' implicitly has an 'any' type.
+web/components/Messaging/MessagingThread.tsx(21,8): error TS7016: Could not find a declaration file for module '../../../tools/frontend/messaging/action_card_presenter.mjs'. '/mnt/c/RastUp1/tools/frontend/messaging/action_card_presenter.mjs' implicitly has an 'any' type.
+web/components/Messaging/MessagingThread.tsx(47,3): error TS7031: Binding element 'threadId' implicitly has an 'any' type.
+web/components/Messaging/MessagingThread.tsx(48,3): error TS7031: Binding element 'viewerUserId' implicitly has an 'any' type.
+web/components/Messaging/MessagingThread.tsx(51,3): error TS7031: Binding element 'initialSafeModeOverride' implicitly has an 'any' type.
+web/components/Messaging/MessagingThread.tsx(90,13): error TS7006: Parameter 'clientId' implicitly has an 'any' type.
+web/components/Messaging/MessagingThread.tsx(95,33): error TS7006: Parameter 'upload' implicitly has an 'any' type.
+web/components/Messaging/MessagingThread.tsx(102,18): error TS7006: Parameter 'upload' implicitly has an 'any' type.
+web/components/Messaging/MessagingThread.tsx(103,15): error TS7006: Parameter 'upload' implicitly has an 'any' type.
+web/components/Messaging/MessagingThread.tsx(218,13): error TS7006: Parameter 'actionId' implicitly has an 'any' type.
+web/components/Messaging/MessagingThread.tsx(224,24): error TS7006: Parameter 'card' implicitly has an 'any' type.
+web/components/Messaging/MessagingThread.tsx(257,23): error TS7006: Parameter 'previous' implicitly has an 'any' type.
+web/components/Messaging/MessagingThread.tsx(351,25): error TS18046: 'file' is of type 'unknown'.
+web/components/Messaging/MessagingThread.tsx(352,25): error TS18046: 'file' is of type 'unknown'.
+web/components/Messaging/MessagingThread.tsx(353,26): error TS18046: 'file' is of type 'unknown'.
+web/components/Messaging/MessagingThread.tsx(357,36): error TS7006: Parameter 'previous' implicitly has an 'any' type.
+web/components/Messaging/MessagingThread.tsx(379,28): error TS7006: Parameter 'previous' implicitly has an 'any' type.
+web/components/Messaging/MessagingThread.tsx(379,58): error TS7006: Parameter 'id' implicitly has an 'any' type.
+web/components/Messaging/MessagingThread.tsx(411,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(411,7): error TS2875: This JSX tag requires the module path 'react/jsx-runtime' to exist, but none could be found. Make sure you have types for the appropriate package installed.
+web/components/Messaging/MessagingThread.tsx(412,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(412,53): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(413,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(418,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(419,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(420,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(421,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(421,121): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(422,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(424,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(425,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(426,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(427,44): error TS7006: Parameter 'participant' implicitly has an 'any' type.
+web/components/Messaging/MessagingThread.tsx(428,52): error TS7006: Parameter 'entry' implicitly has an 'any' type.
+web/components/Messaging/MessagingThread.tsx(430,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(433,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(436,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(438,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(439,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(440,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(443,54): error TS7006: Parameter 'prev' implicitly has an 'any' type.
+web/components/Messaging/MessagingThread.tsx(447,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(449,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(449,100): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(451,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(453,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(455,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(457,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(459,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(460,29): error TS7006: Parameter 'group' implicitly has an 'any' type.
+web/components/Messaging/MessagingThread.tsx(461,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(462,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(462,73): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(463,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(464,36): error TS7006: Parameter 'message' implicitly has an 'any' type.
+web/components/Messaging/MessagingThread.tsx(465,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(469,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(470,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(470,107): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(471,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(471,89): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(473,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(473,82): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(475,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(477,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(479,25): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(481,25): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(484,25): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(491,25): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(493,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(495,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(497,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(499,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(499,81): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(502,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(504,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(507,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(508,49): error TS7006: Parameter 'attachment' implicitly has an 'any' type.
+web/components/Messaging/MessagingThread.tsx(509,25): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(513,27): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(513,134): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(514,27): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(514,114): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(515,25): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(517,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(520,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(521,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(521,96): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(522,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(522,98): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(523,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(525,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(527,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(528,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(530,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(533,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(534,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(534,34): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(535,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(536,44): error TS7031: Binding element 'card' implicitly has an 'any' type.
+web/components/Messaging/MessagingThread.tsx(536,50): error TS7031: Binding element 'presentation' implicitly has an 'any' type.
+web/components/Messaging/MessagingThread.tsx(543,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(544,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(545,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(545,91): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(546,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(550,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(551,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(553,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(554,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(556,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(556,93): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(559,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(560,53): error TS7006: Parameter 'entry' implicitly has an 'any' type.
+web/components/Messaging/MessagingThread.tsx(560,60): error TS7006: Parameter 'index' implicitly has an 'any' type.
+web/components/Messaging/MessagingThread.tsx(561,27): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(565,29): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(565,46): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(566,29): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(566,46): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(567,27): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(569,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(572,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(573,56): error TS7006: Parameter 'attachment' implicitly has an 'any' type.
+web/components/Messaging/MessagingThread.tsx(573,68): error TS7006: Parameter 'index' implicitly has an 'any' type.
+web/components/Messaging/MessagingThread.tsx(574,27): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(575,29): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(575,107): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(576,29): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(576,107): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(577,27): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(579,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(582,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(583,43): error TS7006: Parameter 'transition' implicitly has an 'any' type.
+web/components/Messaging/MessagingThread.tsx(583,55): error TS7006: Parameter 'index' implicitly has an 'any' type.
+web/components/Messaging/MessagingThread.tsx(589,29): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(595,29): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(598,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(600,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(603,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(604,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(607,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(609,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(613,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(615,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(616,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(616,37): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(617,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(619,26): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(619,91): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(620,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(621,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(628,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(629,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(637,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(639,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(640,34): error TS7006: Parameter 'upload' implicitly has an 'any' type.
+web/components/Messaging/MessagingThread.tsx(654,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(658,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(659,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(661,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(663,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(663,90): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(665,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(666,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(667,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(667,108): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(669,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(669,94): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(671,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(677,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(678,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(679,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(682,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(685,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(685,75): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(687,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(696,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(697,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(697,84): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(698,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(711,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(712,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(713,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingThread.tsx(714,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingWorkspace.tsx(1,66): error TS2307: Cannot find module 'react' or its corresponding type declarations.
+web/components/Messaging/MessagingWorkspace.tsx(6,32): error TS2724: '"./MessagingThread"' has no exported member named 'MessagingThreadProps'. Did you mean 'MessagingThread'?
+web/components/Messaging/MessagingWorkspace.tsx(9,41): error TS2724: '"./MessagingModerationQueue"' has no exported member named 'MessagingModerationQueueProps'. Did you mean 'MessagingModerationQueue'?
+web/components/Messaging/MessagingWorkspace.tsx(39,54): error TS7031: Binding element 'threadId' implicitly has an 'any' type.
+web/components/Messaging/MessagingWorkspace.tsx(39,64): error TS7031: Binding element 'viewerUserId' implicitly has an 'any' type.
+web/components/Messaging/MessagingWorkspace.tsx(39,78): error TS7031: Binding element 'threadProps' implicitly has an 'any' type.
+web/components/Messaging/MessagingWorkspace.tsx(39,91): error TS7031: Binding element 'panelProps' implicitly has an 'any' type.
+web/components/Messaging/MessagingWorkspace.tsx(39,103): error TS7031: Binding element 'emptyState' implicitly has an 'any' type.
+web/components/Messaging/MessagingWorkspace.tsx(44,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingWorkspace.tsx(44,7): error TS2875: This JSX tag requires the module path 'react/jsx-runtime' to exist, but none could be found. Make sure you have types for the appropriate package installed.
+web/components/Messaging/MessagingWorkspace.tsx(45,24): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingWorkspace.tsx(45,70): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingWorkspace.tsx(46,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingWorkspace.tsx(65,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingWorkspace.tsx(78,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingWorkspace.tsx(83,3): error TS7031: Binding element 'className' implicitly has an 'any' type.
+web/components/Messaging/MessagingWorkspace.tsx(86,21): error TS7031: Binding element 'controlledThreadId' implicitly has an 'any' type.
+web/components/Messaging/MessagingWorkspace.tsx(87,3): error TS7031: Binding element 'header' implicitly has an 'any' type.
+web/components/Messaging/MessagingWorkspace.tsx(88,3): error TS7031: Binding element 'sidebar' implicitly has an 'any' type.
+web/components/Messaging/MessagingWorkspace.tsx(89,3): error TS7031: Binding element 'onThreadChange' implicitly has an 'any' type.
+web/components/Messaging/MessagingWorkspace.tsx(90,3): error TS7031: Binding element 'inboxProps' implicitly has an 'any' type.
+web/components/Messaging/MessagingWorkspace.tsx(91,3): error TS7031: Binding element 'threadProps' implicitly has an 'any' type.
+web/components/Messaging/MessagingWorkspace.tsx(92,3): error TS7031: Binding element 'projectPanelProps' implicitly has an 'any' type.
+web/components/Messaging/MessagingWorkspace.tsx(93,3): error TS7031: Binding element 'emptyThreadState' implicitly has an 'any' type.
+web/components/Messaging/MessagingWorkspace.tsx(95,3): error TS7031: Binding element 'notificationCenterProps' implicitly has an 'any' type.
+web/components/Messaging/MessagingWorkspace.tsx(97,3): error TS7031: Binding element 'moderationQueueProps' implicitly has an 'any' type.
+web/components/Messaging/MessagingWorkspace.tsx(98,3): error TS7031: Binding element 'children' implicitly has an 'any' type.
+web/components/Messaging/MessagingWorkspace.tsx(99,3): error TS7031: Binding element 'viewerUserId' implicitly has an 'any' type.
+web/components/Messaging/MessagingWorkspace.tsx(142,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingWorkspace.tsx(143,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingWorkspace.tsx(143,72): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingWorkspace.tsx(144,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingWorkspace.tsx(145,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingWorkspace.tsx(168,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingWorkspace.tsx(169,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingWorkspace.tsx(178,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingWorkspace.tsx(179,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingWorkspace.tsx(180,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/MessagingWorkspaceRouteBridge.tsx(3,74): error TS2307: Cannot find module 'react' or its corresponding type declarations.
+web/components/Messaging/MessagingWorkspaceRouteBridge.tsx(4,57): error TS2307: Cannot find module 'next/navigation' or its corresponding type declarations.
+web/components/Messaging/MessagingWorkspaceRouteBridge.tsx(12,8): error TS7016: Could not find a declaration file for module '../../../tools/frontend/messaging/filter_params.mjs'. '/mnt/c/RastUp1/tools/frontend/messaging/filter_params.mjs' implicitly has an 'any' type.
+web/components/Messaging/MessagingWorkspaceRouteBridge.tsx(23,3): error TS7031: Binding element 'queryParamKeys' implicitly has an 'any' type.
+web/components/Messaging/MessagingWorkspaceRouteBridge.tsx(25,3): error TS7031: Binding element 'inboxProps' implicitly has an 'any' type.
+web/components/Messaging/MessagingWorkspaceRouteBridge.tsx(26,3): error TS7031: Binding element 'onThreadChange' implicitly has an 'any' type.
+web/components/Messaging/MessagingWorkspaceRouteBridge.tsx(137,5): error TS2875: This JSX tag requires the module path 'react/jsx-runtime' to exist, but none could be found. Make sure you have types for the appropriate package installed.
+web/components/Messaging/ProjectPanelTabs.tsx(1,32): error TS2307: Cannot find module 'react' or its corresponding type declarations.
+web/components/Messaging/ProjectPanelTabs.tsx(3,44): error TS7016: Could not find a declaration file for module '../../../tools/frontend/messaging/project_panel_presenter.mjs'. '/mnt/c/RastUp1/tools/frontend/messaging/project_panel_presenter.mjs' implicitly has an 'any' type.
+web/components/Messaging/ProjectPanelTabs.tsx(4,41): error TS7016: Could not find a declaration file for module '../../../tools/frontend/messaging/ui_helpers.mjs'. '/mnt/c/RastUp1/tools/frontend/messaging/ui_helpers.mjs' implicitly has an 'any' type.
+web/components/Messaging/ProjectPanelTabs.tsx(26,76): error TS7031: Binding element 'entries' implicitly has an 'any' type.
+web/components/Messaging/ProjectPanelTabs.tsx(26,85): error TS7031: Binding element 'emptyState' implicitly has an 'any' type.
+web/components/Messaging/ProjectPanelTabs.tsx(29,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(30,24): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(30,90): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(31,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(36,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(37,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(38,25): error TS7031: Binding element 'card' implicitly has an 'any' type.
+web/components/Messaging/ProjectPanelTabs.tsx(38,31): error TS7031: Binding element 'presentation' implicitly has an 'any' type.
+web/components/Messaging/ProjectPanelTabs.tsx(38,47): error TS7006: Parameter 'index' implicitly has an 'any' type.
+web/components/Messaging/ProjectPanelTabs.tsx(54,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(55,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(56,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(57,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(57,113): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(58,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(62,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(63,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(65,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(65,102): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(67,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(69,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(69,94): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(72,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(74,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(77,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(78,34): error TS7006: Parameter 'entry' implicitly has an 'any' type.
+web/components/Messaging/ProjectPanelTabs.tsx(78,41): error TS7006: Parameter 'metaIndex' implicitly has an 'any' type.
+web/components/Messaging/ProjectPanelTabs.tsx(79,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(83,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(83,40): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(84,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(84,40): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(85,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(87,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(90,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(91,37): error TS7006: Parameter 'attachment' implicitly has an 'any' type.
+web/components/Messaging/ProjectPanelTabs.tsx(91,49): error TS7006: Parameter 'attachmentIndex' implicitly has an 'any' type.
+web/components/Messaging/ProjectPanelTabs.tsx(92,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(93,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(95,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(96,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(98,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(99,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(101,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(103,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(106,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(107,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(125,12): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(125,12): error TS2875: This JSX tag requires the module path 'react/jsx-runtime' to exist, but none could be found. Make sure you have types for the appropriate package installed.
+web/components/Messaging/ProjectPanelTabs.tsx(125,70): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(128,12): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(128,73): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(132,14): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(132,71): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(135,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(137,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(137,51): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(139,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(144,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(146,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(149,10): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(149,75): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(153,3): error TS7031: Binding element 'projectPanel' implicitly has an 'any' type.
+web/components/Messaging/ProjectPanelTabs.tsx(154,16): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(154,113): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(155,3): error TS7031: Binding element 'actionsEmptyState' implicitly has an 'any' type.
+web/components/Messaging/ProjectPanelTabs.tsx(167,36): error TS7006: Parameter 'entry' implicitly has an 'any' type.
+web/components/Messaging/ProjectPanelTabs.tsx(172,12): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(172,96): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(176,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(177,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(178,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(178,26): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(180,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(180,92): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(182,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(183,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(185,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(186,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(189,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(193,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(195,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(196,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(202,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(203,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(205,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/Messaging/ProjectPanelTabs.tsx(206,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/MessagingProvider/MessagingProvider.tsx(1,42): error TS2307: Cannot find module 'react' or its corresponding type declarations.
+web/components/MessagingProvider/MessagingProvider.tsx(2,46): error TS7016: Could not find a declaration file for module '../../../tools/frontend/messaging/react_bindings.mjs'. '/mnt/c/RastUp1/tools/frontend/messaging/react_bindings.mjs' implicitly has an 'any' type.
+web/components/MessagingProvider/MessagingProvider.tsx(10,69): error TS7006: Parameter 'props' implicitly has an 'any' type.
+web/components/ReschedulePicker/ReschedulePicker.tsx(1,53): error TS2307: Cannot find module 'react' or its corresponding type declarations.
+web/components/ReschedulePicker/ReschedulePicker.tsx(44,3): error TS7031: Binding element 'store' implicitly has an 'any' type.
+web/components/ReschedulePicker/ReschedulePicker.tsx(45,3): error TS7031: Binding element 'onSelectSlot' implicitly has an 'any' type.
+web/components/ReschedulePicker/ReschedulePicker.tsx(46,3): error TS7031: Binding element 'onSubmitHold' implicitly has an 'any' type.
+web/components/ReschedulePicker/ReschedulePicker.tsx(47,3): error TS7031: Binding element 'onRefresh' implicitly has an 'any' type.
+web/components/ReschedulePicker/ReschedulePicker.tsx(93,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(93,5): error TS2875: This JSX tag requires the module path 'react/jsx-runtime' to exist, but none could be found. Make sure you have types for the appropriate package installed.
+web/components/ReschedulePicker/ReschedulePicker.tsx(94,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(95,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(95,30): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(96,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(99,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(100,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(101,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(112,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(113,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(115,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(116,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(118,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(119,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(120,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(122,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(123,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(125,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(129,24): error TS7006: Parameter 'event' implicitly has an 'any' type.
+web/components/ReschedulePicker/ReschedulePicker.tsx(131,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(132,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(134,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(136,24): error TS7006: Parameter 'event' implicitly has an 'any' type.
+web/components/ReschedulePicker/ReschedulePicker.tsx(138,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(138,40): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(139,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(139,44): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(140,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(140,44): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(141,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(142,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(143,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(145,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(147,24): error TS7006: Parameter 'event' implicitly has an 'any' type.
+web/components/ReschedulePicker/ReschedulePicker.tsx(149,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(149,41): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(150,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(150,44): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(151,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(151,48): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(152,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(152,44): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(153,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(153,40): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(154,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(155,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(156,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(158,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(160,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(168,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(170,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(171,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(173,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(175,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(176,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(178,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(180,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(183,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(185,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/components/ReschedulePicker/ReschedulePicker.tsx(186,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+web/playwright.config.ts(2,18): error TS2307: Cannot find module 'node:path' or its corresponding type declarations.
+web/playwright.config.ts(5,22): error TS2304: Cannot find name '__dirname'.
+web/playwright.config.ts(11,14): error TS2580: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
+web/playwright.config.ts(23,14): error TS2580: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
+web/playwright.config.ts(24,10): error TS2304: Cannot find name '__dirname'.
+web/playwright.config.ts(25,18): error TS2580: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
+web/playwright.config.ts(26,27): error TS2580: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
+make: *** [Makefile:58: typecheck] Error 2
+[apply_latest_review] WBS-017 -> in_progress (report=True, ci=False, acceptance=False, decision=in_progress)
+[autopilot] Starting orchestrator autopilot loop.
+
+[autopilot] === Iteration 1 ===
+[autopilot] Dispatching next task with `run-next` ...
+[run-next] No unblocked todo items found.
+[autopilot] Sleeping 10s ...
+[autopilot] Autopilot loop finished.

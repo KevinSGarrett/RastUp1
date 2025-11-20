@@ -20,3 +20,6 @@ ops/tasks/
 ops/locks/*.lock
 
 logs/
+
+# build output
+**/dist/

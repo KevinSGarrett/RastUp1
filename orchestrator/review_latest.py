@@ -1,79 +1,171 @@
 from __future__ import annotations
-import argparse, json, os, re
-from dataclasses import dataclass
-from datetime import datetime, timezone
+import os
+import re
+import time
 from pathlib import Path
-from typing import Optional
-from openai import OpenAI
+from typing import List, Tuple
 
-ROOT = Path(__file__).resolve().parent.parent
-RUNS_DIR = ROOT / "docs" / "runs"
-REVIEWS_DIR = ROOT / "docs" / "orchestrator" / "reviews"
-FROM_AGENTS = ROOT / "docs" / "orchestrator" / "from-agents"
+from .model_router import ModelRouter
+from .providers.base import _stub_reply, LLMResponse
 
-@dataclass
-class RunReport:
-    wbs: str
-    path: Path
-    modified_at: float
+RUN_DIR = Path("docs/runs")
+OUT_DIR = Path("docs/orchestrator/reviews")
+OUT_DIR.mkdir(parents=True, exist_ok=True)
 
-def _pick_latest(cands: list[Path]) -> Optional[RunReport]:
-    if not cands: return None
-    p = max(cands, key=lambda x: x.stat().st_mtime)
-    m = re.search(r"(WBS-\d+)", p.name)
-    wbs = m.group(1) if m else "WBS-UNKNOWN"
-    return RunReport(wbs=wbs, path=p, modified_at=p.stat().st_mtime)
+HEADER = "# Orchestrator Review\n"
 
-def _find_for_wbs(wbs: str) -> Optional[RunReport]:
-    cands = []
-    if RUNS_DIR.exists():
-        cands += [p for p in RUNS_DIR.glob(f"*{wbs}*.md")]
-    if FROM_AGENTS.exists():
-        cands += [p for p in FROM_AGENTS.glob("AGENT-*/*/run-report.md")]
-        cands += [p for p in FROM_AGENTS.glob("AGENT-*/*/*.md") if wbs in p.name]
-    return _pick_latest(cands)
+ASSISTANT_MANAGER_SYSTEM = (
+    "You are the assistant manager reviewer. Your job is to critically review the agent run report, "
+    "surface risks, missing deliverables, and propose concrete follow-up tasks the orchestrator should queue."
+)
 
-def _find_latest_any() -> Optional[RunReport]:
-    cands = []
-    if RUNS_DIR.exists():
-        cands += list(RUNS_DIR.glob("*.md"))
-    if FROM_AGENTS.exists():
-        cands += [p for p in FROM_AGENTS.glob("AGENT-*/*/run-report.md")]
-        cands += [p for p in FROM_AGENTS.glob("AGENT-*/*/*.md")]
-    return _pick_latest(cands)
+PRIMARY_DECIDER_SYSTEM = (
+    "You are the orchestrator's primary reviewer/decider. Consider the assistant-manager review, "
+    "produce the final review with accept/reject decisions and a prioritized set of next actions for the orchestrator."
+)
 
-def call_openai(model: str, system_prompt: str, user_content: str) -> str:
-    client = OpenAI()
-    resp = client.chat.completions.create(
-        model=model,
-        messages=[
-            {"role":"system","content":system_prompt},
-            {"role":"user","content":user_content},
-        ],
+def _latest_run_file() -> Path:
+    md_files = sorted(RUN_DIR.glob("*.md"), key=lambda p: p.stat().st_mtime, reverse=True)
+    if not md_files:
+        raise FileNotFoundError(f"No run reports found in {RUN_DIR}")
+    return md_files[0]
+
+def _call_provider(provider, model: str, system: str, prompt: str) -> LLMResponse:
+    """Best-effort call; falls back to stub if keys/libs not present or call fails."""
+    start = time.time()
+    name = getattr(provider, "name", str(provider))
+    use_stub = os.getenv("ORCHESTRATOR_LLM_STUB", "0") == "1"
+    text, raw, tokens = None, None, None
+
+    if not use_stub:
+        try:
+            if name == "openai":
+                # OpenAI
+                api_key = os.getenv("OPENAI_API_KEY")
+                if not api_key:
+                    raise RuntimeError("Missing OPENAI_API_KEY")
+                try:
+                    import openai
+                    client = openai.OpenAI(api_key=api_key)
+                except Exception:
+                    # Back-compat for older SDKs
+                    import openai  # type: ignore
+                    openai.api_key = api_key
+                    client = openai  # type: ignore
+
+                try:
+                    resp = client.chat.completions.create(
+                        model=model,
+                        messages=[
+                            {"role": "system", "content": system},
+                            {"role": "user", "content": prompt},
+                        ],
+                        temperature=0.2,
+                    )
+                    # New SDK
+                    choice = resp.choices[0]
+                    text = getattr(choice.message, "content", None) or getattr(choice, "text", None)
+                    raw = resp.model_dump() if hasattr(resp, "model_dump") else resp
+                    tokens = getattr(resp, "usage", None)
+                    tokens = getattr(tokens, "total_tokens", None) if tokens else None
+                except AttributeError:
+                    # Older SDK shape
+                    resp = client.ChatCompletion.create(
+                        model=model,
+                        messages=[
+                            {"role": "system", "content": system},
+                            {"role": "user", "content": prompt},
+                        ],
+                        temperature=0.2,
+                    )
+                    text = resp["choices"][0]["message"]["content"]
+                    raw = resp
+                    tokens = resp.get("usage", {}).get("total_tokens")
+
+            elif name == "anthropic":
+                # Anthropic
+                api_key = os.getenv("ANTHROPIC_API_KEY")
+                if not api_key:
+                    raise RuntimeError("Missing ANTHROPIC_API_KEY")
+                import anthropic
+                client = anthropic.Anthropic(api_key=api_key)
+                msg = client.messages.create(
+                    model=model,
+                    system=PRIMARY_DECIDER_SYSTEM if "decid" in system.lower() else system,
+                    messages=[{"role": "user", "content": prompt}],
+                    max_tokens=1200,
+                    temperature=0.2,
+                )
+                # msg.content is a list of blocks
+                try:
+                    text = "".join(
+                        blk.text for blk in msg.content if getattr(blk, "type", "") == "text"
+                    )
+                except Exception:
+                    text = str(msg.content)
+                raw = msg.to_dict() if hasattr(msg, "to_dict") else msg
+                if hasattr(msg, "usage"):
+                    try:
+                        tokens = msg.usage.input_tokens + msg.usage.output_tokens
+                    except Exception:
+                        tokens = None
+        except Exception as e:
+            text = f"{_stub_reply(name, prompt)} (fallback: {e.__class__.__name__})"
+
+    if text is None:
+        text = _stub_reply(name, prompt)
+
+    latency_ms = int((time.time() - start) * 1000)
+    return LLMResponse(text=text, model=model, tokens=tokens, raw=raw, provider=name, latency_ms=latency_ms)
+
+def compile_dual_review(report_md: str, router: ModelRouter) -> str:
+    """Run assistant‑manager then primary‑decider and merge into one markdown document."""
+    am_prompt = (
+        "Review the following agent run report. Identify concrete risks, missing deliverables, "
+        "and propose actionable follow-ups the orchestrator should queue.\n\n"
+        f"{report_md}"
     )
-    return resp.choices[0].message.content
+    plan = router.providers_for_kind("review")
+
+    # Assistant‑manager
+    am_provider, am_model = plan[0]
+    am = _call_provider(am_provider, am_model, ASSISTANT_MANAGER_SYSTEM, am_prompt)
+
+    # Primary decider
+    pd_provider, pd_model = plan[1] if len(plan) > 1 else plan[0]
+    pd_prompt = (
+        f"{am.text}\n\nNow decide: accept or reject the work, and output a prioritized list of next actions "
+        "for the orchestrator with owners and due dates when possible."
+    )
+    pd = _call_provider(pd_provider, pd_model, PRIMARY_DECIDER_SYSTEM, pd_prompt)
+
+    merged = [
+        HEADER,
+        f"- Assistant‑manager: **{am.provider}/{am.model}** ({am.latency_ms} ms)",
+        f"- Primary‑decider: **{pd.provider}/{pd.model}** ({pd.latency_ms} ms)",
+        "\n## Assistant‑Manager Review\n",
+        am.text.strip(),
+        "\n## Final Orchestrator Decision\n",
+        pd.text.strip(),
+        "",
+    ]
+    return "\n".join(merged)
 
 def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--wbs", default=None, help="e.g., WBS-005")
-    ap.add_argument("--model", default=os.getenv("ORCHESTRATOR_MODEL_HIGH","gpt-4.1"))
-    args = ap.parse_args()
+    latest = _latest_run_file()
+    print(f"[orchestrator.review_latest] Found latest run report: {latest}")
+    print("[orchestrator.review_latest] Using providers per policy (kind=review) ...")
+    router = ModelRouter()
+    report_md = latest.read_text(encoding="utf-8")
+    merged = compile_dual_review(report_md, router)
 
-    rr = _find_for_wbs(args.wbs) if args.wbs else _find_latest_any()
-    if not rr:
-        print("[orchestrator.review_latest] No run report found.")
-        return
+    # Derive WBS tag from filename if present
+    m = re.search(r"(WBS-\d+)", latest.name)
+    wbs = m.group(1) if m else "RUN"
+    ts = time.strftime("%Y%m%d-%H%M%SZ", time.gmtime())
+    out_path = OUT_DIR / f"orchestrator-review-{wbs}-{ts}.md"
+    out_path.write_text(merged, encoding="utf-8")
+    print(f"[orchestrator.review_latest] Wrote orchestrator review to: {out_path}")
 
-    text = rr.path.read_text(encoding="utf-8", errors="replace")
-    system = "You are the Orchestrator Auditor. Produce a crisp, actionable status verdict."
-    user = f"Run report for {rr.wbs}:\n\n{text}"
-
-    md = call_openai(args.model, system, user)
-
-    REVIEWS_DIR.mkdir(parents=True, exist_ok=True)
-    ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%SZ")
-    out = REVIEWS_DIR / f"orchestrator-review-{rr.wbs}-{ts}.md"
-    out.write_text(md, encoding="utf-8")
-    print(f"[orchestrator.review_latest] {rr.wbs} -> {out}")
 if __name__ == "__main__":
     main()

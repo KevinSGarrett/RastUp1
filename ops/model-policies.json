@@ -1,0 +1,28 @@
+{
+  "defaults": {
+    "openai_model": "gpt-5",
+    "anthropic_model": "claude-3-5-sonnet-latest"
+  },
+  "routes": [
+    {
+      "when": { "kind": "review" },
+      "use": {
+        "anthropic": { "role": "secondary_reviewer" },
+        "openai":    { "role": "orchestrator" }
+      }
+    },
+    {
+      "when": { "kind": "planning" },
+      "use": {
+        "anthropic": { "role": "assistant_manager" },
+        "openai":    { "role": "orchestrator" }
+      }
+    },
+    {
+      "when": { "kind": "sweep" },
+      "use": {
+        "openai":    { "role": "orchestrator" }
+      }
+    }
+  ]
+}
