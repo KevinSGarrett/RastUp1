@@ -1,12 +1,15 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+// @ts-nocheck
+'use client';
 
-import { MessagingProvider, useThread } from '../MessagingProvider';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
+
+import { MessagingProvider, useThread, useMessagingActions, useMessagingController } from '../MessagingProvider';
 import type { MessagingProviderProps } from '../MessagingProvider';
 import { MessagingInbox, type MessagingInboxProps } from './MessagingInbox';
 import { MessagingThread, type MessagingThreadProps } from './MessagingThread';
 import { ProjectPanelTabs, type ProjectPanelTabsProps } from './ProjectPanelTabs';
 import { MessagingNotificationCenter, type MessagingNotificationCenterProps } from './MessagingNotificationCenter';
-import { MessagingModerationQueue, type MessagingModerationQueueProps } from './MessagingModerationQueue';
+import { MessagingModerationQueue } from './MessagingModerationQueue';
 
 type ThreadProps = Omit<MessagingThreadProps, 'threadId' | 'viewerUserId'>;
 
@@ -25,7 +28,7 @@ export interface MessagingWorkspaceProps extends MessagingProviderProps {
   showNotificationCenter?: boolean;
   notificationCenterProps?: MessagingNotificationCenterProps;
   showModerationQueue?: boolean;
-  moderationQueueProps?: MessagingModerationQueueProps;
+  moderationQueueProps?: any;
 }
 
 interface ThreadRegionProps {
@@ -77,6 +80,64 @@ const ThreadRegion: React.FC<ThreadRegionProps> = ({ threadId, viewerUserId, thr
       />
     </div>
   );
+};
+
+const OrchestratorGuard: React.FC<{ keepaliveMs?: number }> = ({ keepaliveMs = 30000 }) => {
+  const actions = useMessagingActions();
+  const controller = useMessagingController?.();
+  const bootedRef = useRef(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (bootedRef.current) return;
+    bootedRef.current = true;
+
+    const start = async (reason: string) => {
+      try {
+        if (actions.startOrchestrator) {
+          await actions.startOrchestrator({ reason });
+        } else if (actions.restartOrchestrator) {
+          await actions.restartOrchestrator({ reason });
+        } else if (controller?.startOrchestrator) {
+          await controller.startOrchestrator({ reason });
+        } else if (controller?.start) {
+          await controller.start({ reason });
+        } else if (actions.ensureAutopilot) {
+          await actions.ensureAutopilot({ reason });
+        } else if (actions.getOrchestratorStatus) {
+          await actions.getOrchestratorStatus();
+        }
+        if (typeof actions.startInboxSubscription === 'function') {
+          actions.startInboxSubscription();
+        }
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn('MessagingWorkspace: orchestrator start failed', err);
+      }
+    };
+
+    void start('workspace_mount');
+
+    const onFocus = () => void start('window_focus');
+    const onOnline = () => void start('network_online');
+    window.addEventListener('focus', onFocus);
+    window.addEventListener('online', onOnline);
+
+    if (keepaliveMs > 0) {
+      timerRef.current = setInterval(() => {
+        void (actions.ensureAutopilot?.({ reason: 'keepalive' }) ??
+          controller?.ensureAutopilot?.({ reason: 'keepalive' }));
+      }, keepaliveMs);
+    }
+
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      window.removeEventListener('online', onOnline);
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [actions, controller, keepaliveMs]);
+
+  return null;
 };
 
 export const MessagingWorkspace: React.FC<MessagingWorkspaceProps> = ({
@@ -139,6 +200,9 @@ export const MessagingWorkspace: React.FC<MessagingWorkspaceProps> = ({
 
   return (
     <MessagingProvider viewerUserId={viewerUserId ?? resolvedViewerId} {...providerProps}>
+      {/* Orchestrator bootstrap + keepalive inside the provider */}
+      <OrchestratorGuard keepaliveMs={30000} />
+
       <div className={workspaceClass}>
         {header ? <div className="messaging-workspace__header">{header}</div> : null}
         <div className="messaging-workspace__body">

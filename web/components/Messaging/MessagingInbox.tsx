@@ -1,4 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+'use client';
+
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 
 import { useInboxSummary, useInboxThreads, useMessagingActions } from '../MessagingProvider';
 import { formatRelativeTimestamp } from '../../../tools/frontend/messaging/ui_helpers.mjs';
@@ -67,6 +69,11 @@ export interface MessagingInboxProps {
   searchTerm?: string;
   onSearchChange?: (value: string) => void;
   searchPlaceholder?: string;
+
+  /** Auto hydrate the inbox on mount (default true). */
+  autoHydrateOnMount?: boolean;
+  /** Ensure orchestrator/autopilot is on when the inbox renders (default true). */
+  autoStartAutopilot?: boolean;
 }
 
 const DEFAULT_REQUEST_ACTION_LABELS = {
@@ -100,7 +107,7 @@ function normalizeFilters(input: Partial<MessagingInboxFilterState> | undefined)
     filters.includeProjects = true;
   }
 
-  return filters;
+  return filters as MessagingInboxFilterState;
 }
 
 function defaultFormatThreadLabel(thread: ThreadItem, timezone?: string): ThreadLabel {
@@ -144,8 +151,8 @@ function sortByUnreadPriority(threads: ThreadItem[]): ThreadItem[] {
     const unreadA = a.unreadCount ?? 0;
     const unreadB = b.unreadCount ?? 0;
     if (unreadA === unreadB) {
-      const timeA = Date.parse(a.lastMessageAt ?? 0) || 0;
-      const timeB = Date.parse(b.lastMessageAt ?? 0) || 0;
+      const timeA = a.lastMessageAt ? Date.parse(a.lastMessageAt) : 0 || 0;
+      const timeB = b.lastMessageAt ? Date.parse(b.lastMessageAt) : 0 || 0;
       return timeB - timeA;
     }
     return unreadB - unreadA;
@@ -178,10 +185,54 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
   initialSearch = '',
   searchTerm: controlledSearchTerm,
   onSearchChange,
-  searchPlaceholder = 'Search threads...'
+  searchPlaceholder = 'Search threads...',
+  autoHydrateOnMount = true,
+  autoStartAutopilot = true
 }) => {
   const summary = useInboxSummary();
   const messagingActions = useMessagingActions();
+  const bootedRef = useRef(false);
+
+  useEffect(() => {
+    if (bootedRef.current) return;
+    bootedRef.current = true;
+
+    // make sure inbox bootstraps
+    const bootstrap = async () => {
+      try {
+        if (autoStartAutopilot) {
+          if (messagingActions.startOrchestrator) {
+            await messagingActions.startOrchestrator({ reason: 'inbox_mount' });
+          } else if (messagingActions.ensureAutopilot) {
+            await messagingActions.ensureAutopilot({ reason: 'inbox_mount' });
+          }
+          if (typeof messagingActions.startInboxSubscription === 'function') {
+            messagingActions.startInboxSubscription();
+          }
+        }
+        if (autoHydrateOnMount && messagingActions.hydrateInbox) {
+          await messagingActions.hydrateInbox({ sync: true });
+        }
+      } catch {
+        // ignore soft failures
+      }
+    };
+
+    void bootstrap();
+
+    const onFocus = () => {
+      if (messagingActions.ensureAutopilot) void messagingActions.ensureAutopilot({ reason: 'inbox_focus' });
+    };
+    const onOnline = () => {
+      if (messagingActions.ensureAutopilot) void messagingActions.ensureAutopilot({ reason: 'inbox_online' });
+    };
+    window.addEventListener('focus', onFocus);
+    window.addEventListener('online', onOnline);
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      window.removeEventListener('online', onOnline);
+    };
+  }, [autoHydrateOnMount, autoStartAutopilot, messagingActions]);
 
   const [uncontrolledFilters, setUncontrolledFilters] = useState<MessagingInboxFilterState>(() =>
     normalizeFilters(defaultFilters)
@@ -290,9 +341,12 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
     }));
   }, [updateFilters]);
 
-  const handleSearchChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    updateSearch(event.target.value);
-  }, [updateSearch]);
+  const handleSearchChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      updateSearch(event.target.value);
+    },
+    [updateSearch]
+  );
 
   const searchQuery = useMemo(() => effectiveSearchTerm.trim(), [effectiveSearchTerm]);
 
@@ -321,7 +375,9 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
       }
       const label = formatThreadLabel(thread, timezone);
       const values = [label.title, label.subtitle, label.meta];
-      return values.some((value) => typeof value === 'string' && value.toLowerCase().includes(normalized));
+      return values.some(
+        (value) => typeof value === 'string' && value.toLowerCase().includes(normalized)
+      );
     },
     [formatThreadLabel, timezone]
   );
@@ -335,7 +391,14 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
       safeModeRequired: effectiveFilters.safeModeOnly ? true : undefined,
       queryMatcher
     }),
-    [searchQuery, normalizedKinds, effectiveFilters.onlyUnread, mutedFilter, effectiveFilters.safeModeOnly, queryMatcher]
+    [
+      searchQuery,
+      normalizedKinds,
+      effectiveFilters.onlyUnread,
+      mutedFilter,
+      effectiveFilters.safeModeOnly,
+      queryMatcher
+    ]
   );
 
   const pinnedOptions = useMemo(
@@ -404,7 +467,7 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
         await onAcceptRequest(requestId);
         return;
       }
-      await messagingActions.acceptMessageRequest(requestId);
+      await (messagingActions.acceptMessageRequest?.(requestId) ?? Promise.resolve());
     },
     [messagingActions, onAcceptRequest]
   );
@@ -415,7 +478,7 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
         await onDeclineRequest(requestId, { block });
         return;
       }
-      await messagingActions.declineMessageRequest(requestId, { block });
+      await (messagingActions.declineMessageRequest?.(requestId, { block }) ?? Promise.resolve());
     },
     [messagingActions, onDeclineRequest]
   );
@@ -425,7 +488,7 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
       await onStartConversation();
       return;
     }
-    await messagingActions.recordConversationStart();
+    await (messagingActions.recordConversationStart?.() ?? Promise.resolve());
   }, [messagingActions, onStartConversation]);
 
   const handlePinThread = useCallback(
@@ -435,9 +498,7 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
         await onPinThread(threadId);
         return;
       }
-      if (typeof messagingActions.pinThread === 'function') {
-        await messagingActions.pinThread(threadId);
-      }
+      await (messagingActions.pinThread?.(threadId) ?? Promise.resolve());
     },
     [messagingActions, onPinThread]
   );
@@ -449,9 +510,7 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
         await onUnpinThread(threadId);
         return;
       }
-      if (typeof messagingActions.unpinThread === 'function') {
-        await messagingActions.unpinThread(threadId);
-      }
+      await (messagingActions.unpinThread?.(threadId) ?? Promise.resolve());
     },
     [messagingActions, onUnpinThread]
   );
@@ -463,9 +522,7 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
         await onArchiveThread(threadId);
         return;
       }
-      if (typeof messagingActions.archiveThread === 'function') {
-        await messagingActions.archiveThread(threadId);
-      }
+      await (messagingActions.archiveThread?.(threadId) ?? Promise.resolve());
     },
     [messagingActions, onArchiveThread]
   );
@@ -477,9 +534,7 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
         await onUnarchiveThread(threadId);
         return;
       }
-      if (typeof messagingActions.unarchiveThread === 'function') {
-        await messagingActions.unarchiveThread(threadId);
-      }
+      await (messagingActions.unarchiveThread?.(threadId) ?? Promise.resolve());
     },
     [messagingActions, onUnarchiveThread]
   );
@@ -491,9 +546,7 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
         await onMuteThread(threadId);
         return;
       }
-      if (typeof messagingActions.muteThread === 'function') {
-        await messagingActions.muteThread(threadId);
-      }
+      await (messagingActions.muteThread?.(threadId) ?? Promise.resolve());
     },
     [messagingActions, onMuteThread]
   );
@@ -505,9 +558,7 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
         await onUnmuteThread(threadId);
         return;
       }
-      if (typeof messagingActions.unmuteThread === 'function') {
-        await messagingActions.unmuteThread(threadId);
-      }
+      await (messagingActions.unmuteThread?.(threadId) ?? Promise.resolve());
     },
     [messagingActions, onUnmuteThread]
   );
@@ -551,55 +602,65 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
         </div>
       </header>
 
-        <div className="messaging-inbox__filters">
-          <div className="messaging-inbox__search">
-            <input
-              type="search"
-              value={effectiveSearchTerm}
-              onChange={handleSearchChange}
-              placeholder={searchPlaceholder}
-              aria-label="Search threads"
-            />
-          </div>
-          <div className="messaging-inbox__filter-chips">
-            <button type="button" className={chipClass(effectiveFilters.onlyUnread)} onClick={toggleUnread}>
-              Unread
-            </button>
-            <button
-              type="button"
-              className={chipClass(effectiveFilters.includeProjects)}
-              onClick={() => toggleKind('PROJECT')}
-            >
-              Projects
-            </button>
-            <button
-              type="button"
-              className={chipClass(effectiveFilters.includeInquiries)}
-              onClick={() => toggleKind('INQUIRY')}
-            >
-              Inquiries
-            </button>
-            <button
-              type="button"
-              className={chipClass(effectiveFilters.safeModeOnly)}
-              onClick={toggleSafeMode}
-            >
-              Safe mode
-            </button>
-            <button
-              type="button"
-              className="messaging-inbox__filter-chip messaging-inbox__filter-chip--cycle"
-              onClick={cycleMutedMode}
-            >
-              {mutedModeLabel}
-            </button>
-          </div>
-          <div className="messaging-inbox__results">
-            {totalVisibleThreads === 0
-              ? 'No threads match filters'
-              : `Showing ${totalVisibleThreads} ${totalVisibleThreads === 1 ? 'thread' : 'threads'}`}
-          </div>
+      <div className="messaging-inbox__filters">
+        <div className="messaging-inbox__search">
+          <input
+            type="search"
+            value={effectiveSearchTerm}
+            onChange={handleSearchChange}
+            placeholder={searchPlaceholder}
+            aria-label="Search threads"
+          />
         </div>
+        <div className="messaging-inbox__filter-chips" role="group" aria-label="Inbox filters">
+          <button
+            type="button"
+            className={chipClass(effectiveFilters.onlyUnread)}
+            onClick={toggleUnread}
+            aria-pressed={effectiveFilters.onlyUnread}
+          >
+            Unread
+          </button>
+          <button
+            type="button"
+            className={chipClass(effectiveFilters.includeProjects)}
+            onClick={() => toggleKind('PROJECT')}
+            aria-pressed={effectiveFilters.includeProjects}
+          >
+            Projects
+          </button>
+          <button
+            type="button"
+            className={chipClass(effectiveFilters.includeInquiries)}
+            onClick={() => toggleKind('INQUIRY')}
+            aria-pressed={effectiveFilters.includeInquiries}
+          >
+            Inquiries
+          </button>
+          <button
+            type="button"
+            className={chipClass(effectiveFilters.safeModeOnly)}
+            onClick={toggleSafeMode}
+            aria-pressed={effectiveFilters.safeModeOnly}
+          >
+            Safe mode
+          </button>
+          <button
+            type="button"
+            className="messaging-inbox__filter-chip messaging-inbox__filter-chip--cycle"
+            onClick={cycleMutedMode}
+            aria-label="Cycle muted-mode filter"
+            title="Cycle muted-mode filter"
+          >
+            {mutedModeLabel}
+          </button>
+        </div>
+        <div className="messaging-inbox__results" role="status" aria-live="polite">
+          {totalVisibleThreads === 0
+            ? 'No threads match filters'
+            : `Showing ${totalVisibleThreads} ${totalVisibleThreads === 1 ? 'thread' : 'threads'}`}
+        </div>
+      </div>
 
       {Array.isArray(requests) && requests.length > 0 ? (
         <section className="messaging-inbox__section messaging-inbox__section--requests">
@@ -621,17 +682,17 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
                   </div>
                 </div>
                 <div className="messaging-inbox__request-actions">
-                  <button type="button" onClick={() => handleAcceptRequest(request.requestId)}>
+                  <button type="button" onClick={() => void handleAcceptRequest(request.requestId)}>
                     {requestLabels.acceptLabel}
                   </button>
-                  <button type="button" onClick={() => handleDeclineRequest(request.requestId, false)}>
+                  <button type="button" onClick={() => void handleDeclineRequest(request.requestId, false)}>
                     {requestLabels.declineLabel}
                   </button>
-                  <button type="button" onClick={() => handleDeclineRequest(request.requestId, true)}>
+                  <button type="button" onClick={() => void handleDeclineRequest(request.requestId, true)}>
                     {requestLabels.blockLabel}
                   </button>
-                  </div>
-                </li>
+                </div>
+              </li>
             ))}
           </ul>
         </section>
@@ -655,6 +716,7 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
                         type="button"
                         className={`messaging-inbox__thread${active ? ' messaging-inbox__thread--active' : ''}`}
                         onClick={() => handleSelectThread(thread.threadId)}
+                        aria-current={active ? 'true' : undefined}
                       >
                         <div className="messaging-inbox__thread-header">
                           <span className="messaging-inbox__thread-title">{label.title}</span>
