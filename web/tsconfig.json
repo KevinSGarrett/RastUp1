@@ -12,14 +12,10 @@
     "noEmit": true,
     "isolatedModules": true,
     "resolveJsonModule": true,
-
-    // Key additions for your setup:
-    "allowJs": true,                    // allow importing JS files
-    "allowArbitraryExtensions": true,   // allow .mjs, .css, etc. in imports (TS >= 5.2)
-    "allowImportingTsExtensions": true, // allow importing with explicit .ts/.tsx extension when needed
-    "verbatimModuleSyntax": true,       // recommended with bundler resolution
+    "allowJs": true,
+    "allowArbitraryExtensions": true,
+    "verbatimModuleSyntax": true,
     "checkJs": false,
-
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "baseUrl": ".",

@@ -1,9 +1,7 @@
 // @ts-nocheck
-'use client';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
-
-import { MessagingProvider, useThread, useMessagingActions, useMessagingController } from '../MessagingProvider';
+import { MessagingProvider, useThread } from '../MessagingProvider';
 import type { MessagingProviderProps } from '../MessagingProvider';
 import { MessagingInbox, type MessagingInboxProps } from './MessagingInbox';
 import { MessagingThread, type MessagingThreadProps } from './MessagingThread';
@@ -82,64 +80,6 @@ const ThreadRegion: React.FC<ThreadRegionProps> = ({ threadId, viewerUserId, thr
   );
 };
 
-const OrchestratorGuard: React.FC<{ keepaliveMs?: number }> = ({ keepaliveMs = 30000 }) => {
-  const actions = useMessagingActions();
-  const controller = useMessagingController?.();
-  const bootedRef = useRef(false);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  useEffect(() => {
-    if (bootedRef.current) return;
-    bootedRef.current = true;
-
-    const start = async (reason: string) => {
-      try {
-        if (actions.startOrchestrator) {
-          await actions.startOrchestrator({ reason });
-        } else if (actions.restartOrchestrator) {
-          await actions.restartOrchestrator({ reason });
-        } else if (controller?.startOrchestrator) {
-          await controller.startOrchestrator({ reason });
-        } else if (controller?.start) {
-          await controller.start({ reason });
-        } else if (actions.ensureAutopilot) {
-          await actions.ensureAutopilot({ reason });
-        } else if (actions.getOrchestratorStatus) {
-          await actions.getOrchestratorStatus();
-        }
-        if (typeof actions.startInboxSubscription === 'function') {
-          actions.startInboxSubscription();
-        }
-      } catch (err) {
-        // eslint-disable-next-line no-console
-        console.warn('MessagingWorkspace: orchestrator start failed', err);
-      }
-    };
-
-    void start('workspace_mount');
-
-    const onFocus = () => void start('window_focus');
-    const onOnline = () => void start('network_online');
-    window.addEventListener('focus', onFocus);
-    window.addEventListener('online', onOnline);
-
-    if (keepaliveMs > 0) {
-      timerRef.current = setInterval(() => {
-        void (actions.ensureAutopilot?.({ reason: 'keepalive' }) ??
-          controller?.ensureAutopilot?.({ reason: 'keepalive' }));
-      }, keepaliveMs);
-    }
-
-    return () => {
-      window.removeEventListener('focus', onFocus);
-      window.removeEventListener('online', onOnline);
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [actions, controller, keepaliveMs]);
-
-  return null;
-};
-
 export const MessagingWorkspace: React.FC<MessagingWorkspaceProps> = ({
   className,
   layout = 'split',
@@ -192,17 +132,12 @@ export const MessagingWorkspace: React.FC<MessagingWorkspaceProps> = ({
 
   const workspaceClass = useMemo(() => {
     const base = ['messaging-workspace', `messaging-workspace--${layout}`];
-    if (className) {
-      base.push(className);
-    }
+    if (className) base.push(className);
     return base.join(' ');
   }, [className, layout]);
 
   return (
     <MessagingProvider viewerUserId={viewerUserId ?? resolvedViewerId} {...providerProps}>
-      {/* Orchestrator bootstrap + keepalive inside the provider */}
-      <OrchestratorGuard keepaliveMs={30000} />
-
       <div className={workspaceClass}>
         {header ? <div className="messaging-workspace__header">{header}</div> : null}
         <div className="messaging-workspace__body">
@@ -213,22 +148,22 @@ export const MessagingWorkspace: React.FC<MessagingWorkspaceProps> = ({
               activeThreadId={activeThreadId}
               onSelectThread={handleSelectThread}
             />
-              {showNotificationCenter ? (
-                <MessagingNotificationCenter
-                  {...notificationCenterProps}
-                  className={`messaging-workspace__notification-center${
-                    notificationCenterProps?.className ? ` ${notificationCenterProps.className}` : ''
-                  }`}
-                />
-              ) : null}
-              {showModerationQueue ? (
-                <MessagingModerationQueue
-                  {...moderationQueueProps}
-                  className={`messaging-workspace__moderation-queue${
-                    moderationQueueProps?.className ? ` ${moderationQueueProps.className}` : ''
-                  }`}
-                />
-              ) : null}
+            {showNotificationCenter ? (
+              <MessagingNotificationCenter
+                {...notificationCenterProps}
+                className={`messaging-workspace__notification-center${
+                  notificationCenterProps?.className ? ` ${notificationCenterProps.className}` : ''
+                }`}
+              />
+            ) : null}
+            {showModerationQueue ? (
+              <MessagingModerationQueue
+                {...(moderationQueueProps as any)}
+                className={`messaging-workspace__moderation-queue${
+                  (moderationQueueProps as any)?.className ? ` ${(moderationQueueProps as any).className}` : ''
+                }`}
+              />
+            ) : null}
           </aside>
           <section className="messaging-workspace__content">
             <ThreadRegion

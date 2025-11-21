@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useInboxSummary, useInboxThreads, useMessagingActions } from '../MessagingProvider';
 import { formatRelativeTimestamp } from '../../../tools/frontend/messaging/ui_helpers.mjs';
@@ -69,11 +69,6 @@ export interface MessagingInboxProps {
   searchTerm?: string;
   onSearchChange?: (value: string) => void;
   searchPlaceholder?: string;
-
-  /** Auto hydrate the inbox on mount (default true). */
-  autoHydrateOnMount?: boolean;
-  /** Ensure orchestrator/autopilot is on when the inbox renders (default true). */
-  autoStartAutopilot?: boolean;
 }
 
 const DEFAULT_REQUEST_ACTION_LABELS = {
@@ -91,23 +86,17 @@ const MUTED_MODE_LABELS: Record<MessagingInboxMutedMode, string> = {
 function normalizeFilters(input: Partial<MessagingInboxFilterState> | undefined): MessagingInboxFilterState {
   const filters = {
     onlyUnread: Boolean(input?.onlyUnread),
-    includeInquiries:
-      input?.includeInquiries !== undefined ? Boolean(input.includeInquiries) : true,
-    includeProjects:
-      input?.includeProjects !== undefined ? Boolean(input.includeProjects) : true,
-    mutedMode:
-      input?.mutedMode === 'muted' || input?.mutedMode === 'hidden'
-        ? input.mutedMode
-        : 'all',
+    includeInquiries: input?.includeInquiries !== undefined ? Boolean(input.includeInquiries) : true,
+    includeProjects: input?.includeProjects !== undefined ? Boolean(input.includeProjects) : true,
+    mutedMode: input?.mutedMode === 'muted' || input?.mutedMode === 'hidden' ? input.mutedMode : 'all',
     safeModeOnly: Boolean(input?.safeModeOnly)
-  };
+  } as MessagingInboxFilterState;
 
   if (!filters.includeInquiries && !filters.includeProjects) {
     filters.includeInquiries = true;
     filters.includeProjects = true;
   }
-
-  return filters as MessagingInboxFilterState;
+  return filters;
 }
 
 function defaultFormatThreadLabel(thread: ThreadItem, timezone?: string): ThreadLabel {
@@ -116,25 +105,16 @@ function defaultFormatThreadLabel(thread: ThreadItem, timezone?: string): Thread
     typeof (thread as any)?.metadata?.displayName === 'string' ? (thread as any).metadata.displayName.trim() : null,
     thread.threadId
   ].filter((value) => value && value.length > 0);
-  const title = titleCandidates[0] ?? 'Unknown thread';
+  const title = (titleCandidates[0] as string) ?? 'Unknown thread';
 
   const subtitleParts: string[] = [];
-  if (thread.kind === 'PROJECT') {
-    subtitleParts.push('Project thread');
-  } else if (thread.kind === 'INQUIRY') {
-    subtitleParts.push('Inquiry thread');
-  }
-  if (thread.safeModeRequired) {
-    subtitleParts.push('Safe-Mode required');
-  }
-  if (thread.muted) {
-    subtitleParts.push('Muted');
-  }
+  if (thread.kind === 'PROJECT') subtitleParts.push('Project thread');
+  else if (thread.kind === 'INQUIRY') subtitleParts.push('Inquiry thread');
+  if (thread.safeModeRequired) subtitleParts.push('Safe-Mode required');
+  if (thread.muted) subtitleParts.push('Muted');
 
   const metaParts: string[] = [];
-  if (thread.lastMessageAt) {
-    metaParts.push(formatRelativeTimestamp(thread.lastMessageAt, { timezone }));
-  }
+  if (thread.lastMessageAt) metaParts.push(formatRelativeTimestamp(thread.lastMessageAt, { timezone }));
   if (typeof thread.unreadCount === 'number' && thread.unreadCount > 0) {
     metaParts.push(`${thread.unreadCount} unread`);
   }
@@ -151,8 +131,8 @@ function sortByUnreadPriority(threads: ThreadItem[]): ThreadItem[] {
     const unreadA = a.unreadCount ?? 0;
     const unreadB = b.unreadCount ?? 0;
     if (unreadA === unreadB) {
-      const timeA = a.lastMessageAt ? Date.parse(a.lastMessageAt) : 0 || 0;
-      const timeB = b.lastMessageAt ? Date.parse(b.lastMessageAt) : 0 || 0;
+      const timeA = a.lastMessageAt ? Date.parse(a.lastMessageAt) : 0;
+      const timeB = b.lastMessageAt ? Date.parse(b.lastMessageAt) : 0;
       return timeB - timeA;
     }
     return unreadB - unreadA;
@@ -163,7 +143,7 @@ function chipClass(active: boolean) {
   return `messaging-inbox__filter-chip${active ? ' messaging-inbox__filter-chip--active' : ''}`;
 }
 
-export const MessagingInbox: React.FC<MessagingInboxProps> = ({
+export function MessagingInbox({
   activeThreadId = null,
   onSelectThread,
   onAcceptRequest,
@@ -185,54 +165,10 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
   initialSearch = '',
   searchTerm: controlledSearchTerm,
   onSearchChange,
-  searchPlaceholder = 'Search threads...',
-  autoHydrateOnMount = true,
-  autoStartAutopilot = true
-}) => {
+  searchPlaceholder = 'Search threads...'
+}: MessagingInboxProps) {
   const summary = useInboxSummary();
   const messagingActions = useMessagingActions();
-  const bootedRef = useRef(false);
-
-  useEffect(() => {
-    if (bootedRef.current) return;
-    bootedRef.current = true;
-
-    // make sure inbox bootstraps
-    const bootstrap = async () => {
-      try {
-        if (autoStartAutopilot) {
-          if (messagingActions.startOrchestrator) {
-            await messagingActions.startOrchestrator({ reason: 'inbox_mount' });
-          } else if (messagingActions.ensureAutopilot) {
-            await messagingActions.ensureAutopilot({ reason: 'inbox_mount' });
-          }
-          if (typeof messagingActions.startInboxSubscription === 'function') {
-            messagingActions.startInboxSubscription();
-          }
-        }
-        if (autoHydrateOnMount && messagingActions.hydrateInbox) {
-          await messagingActions.hydrateInbox({ sync: true });
-        }
-      } catch {
-        // ignore soft failures
-      }
-    };
-
-    void bootstrap();
-
-    const onFocus = () => {
-      if (messagingActions.ensureAutopilot) void messagingActions.ensureAutopilot({ reason: 'inbox_focus' });
-    };
-    const onOnline = () => {
-      if (messagingActions.ensureAutopilot) void messagingActions.ensureAutopilot({ reason: 'inbox_online' });
-    };
-    window.addEventListener('focus', onFocus);
-    window.addEventListener('online', onOnline);
-    return () => {
-      window.removeEventListener('focus', onFocus);
-      window.removeEventListener('online', onOnline);
-    };
-  }, [autoHydrateOnMount, autoStartAutopilot, messagingActions]);
 
   const [uncontrolledFilters, setUncontrolledFilters] = useState<MessagingInboxFilterState>(() =>
     normalizeFilters(defaultFilters)
@@ -262,11 +198,7 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
   const effectiveSearchTerm = searchControlled ? controlledSearchTerm ?? '' : uncontrolledSearch;
 
   const updateFilters = useCallback(
-    (
-      updater:
-        | MessagingInboxFilterState
-        | ((prev: MessagingInboxFilterState) => MessagingInboxFilterState)
-    ) => {
+    (updater: MessagingInboxFilterState | ((prev: MessagingInboxFilterState) => MessagingInboxFilterState)) => {
       const base = filtersControlled
         ? (normalizedControlledFilters as MessagingInboxFilterState)
         : uncontrolledFilters;
@@ -275,9 +207,7 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
           ? (updater as (prev: MessagingInboxFilterState) => MessagingInboxFilterState)(base)
           : updater
       );
-      if (!filtersControlled) {
-        setUncontrolledFilters(next);
-      }
+      if (!filtersControlled) setUncontrolledFilters(next);
       onFiltersChange?.(next);
     },
     [filtersControlled, normalizedControlledFilters, uncontrolledFilters, onFiltersChange]
@@ -286,19 +216,14 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
   const updateSearch = useCallback(
     (value: string) => {
       const next = typeof value === 'string' ? value : '';
-      if (!searchControlled) {
-        setUncontrolledSearch(next);
-      }
+      if (!searchControlled) setUncontrolledSearch(next);
       onSearchChange?.(next);
     },
     [searchControlled, onSearchChange]
   );
 
   const toggleUnread = useCallback(() => {
-    updateFilters((previous) => ({
-      ...previous,
-      onlyUnread: !previous.onlyUnread
-    }));
+    updateFilters((previous) => ({ ...previous, onlyUnread: !previous.onlyUnread }));
   }, [updateFilters]);
 
   const toggleKind = useCallback(
@@ -306,14 +231,9 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
       updateFilters((previous) => {
         const key = kind === 'INQUIRY' ? 'includeInquiries' : 'includeProjects';
         const otherKey = kind === 'INQUIRY' ? 'includeProjects' : 'includeInquiries';
-        const nextValue = !previous[key];
-        if (!nextValue && !previous[otherKey]) {
-          return previous;
-        }
-        return {
-          ...previous,
-          [key]: nextValue
-        };
+        const nextValue = !previous[key as 'includeInquiries' | 'includeProjects'];
+        if (!nextValue && !previous[otherKey as 'includeInquiries' | 'includeProjects']) return previous;
+        return { ...previous, [key]: nextValue } as MessagingInboxFilterState;
       });
     },
     [updateFilters]
@@ -324,21 +244,13 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
       const order: MessagingInboxMutedMode[] = ['all', 'muted', 'hidden'];
       const currentIndex = order.indexOf(previous.mutedMode);
       const nextMode = order[(currentIndex + 1) % order.length];
-      if (nextMode === previous.mutedMode) {
-        return previous;
-      }
-      return {
-        ...previous,
-        mutedMode: nextMode
-      };
+      if (nextMode === previous.mutedMode) return previous;
+      return { ...previous, mutedMode: nextMode } as MessagingInboxFilterState;
     });
   }, [updateFilters]);
 
   const toggleSafeMode = useCallback(() => {
-    updateFilters((previous) => ({
-      ...previous,
-      safeModeOnly: !previous.safeModeOnly
-    }));
+    updateFilters((previous) => ({ ...previous, safeModeOnly: !previous.safeModeOnly }));
   }, [updateFilters]);
 
   const handleSearchChange = useCallback(
@@ -352,32 +264,22 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
 
   const normalizedKinds = useMemo(() => {
     const values: string[] = [];
-    if (effectiveFilters.includeInquiries) {
-      values.push('INQUIRY');
-    }
-    if (effectiveFilters.includeProjects) {
-      values.push('PROJECT');
-    }
+    if (effectiveFilters.includeInquiries) values.push('INQUIRY');
+    if (effectiveFilters.includeProjects) values.push('PROJECT');
     return values;
   }, [effectiveFilters.includeInquiries, effectiveFilters.includeProjects]);
 
   const mutedFilter = useMemo(() => {
-    if (effectiveFilters.mutedMode === 'all') {
-      return undefined;
-    }
+    if (effectiveFilters.mutedMode === 'all') return undefined;
     return effectiveFilters.mutedMode === 'muted';
   }, [effectiveFilters.mutedMode]);
 
   const queryMatcher = useCallback(
     (thread: ThreadItem, normalized: string) => {
-      if (!normalized) {
-        return true;
-      }
+      if (!normalized) return true;
       const label = formatThreadLabel(thread, timezone);
       const values = [label.title, label.subtitle, label.meta];
-      return values.some(
-        (value) => typeof value === 'string' && value.toLowerCase().includes(normalized)
-      );
+      return values.some((value) => typeof value === 'string' && value.toLowerCase().includes(normalized));
     },
     [formatThreadLabel, timezone]
   );
@@ -391,38 +293,15 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
       safeModeRequired: effectiveFilters.safeModeOnly ? true : undefined,
       queryMatcher
     }),
-    [
-      searchQuery,
-      normalizedKinds,
-      effectiveFilters.onlyUnread,
-      mutedFilter,
-      effectiveFilters.safeModeOnly,
-      queryMatcher
-    ]
+    [searchQuery, normalizedKinds, effectiveFilters.onlyUnread, mutedFilter, effectiveFilters.safeModeOnly, queryMatcher]
   );
 
-  const pinnedOptions = useMemo(
-    () => ({
-      ...baseOptions,
-      folder: 'pinned' as const
-    }),
-    [baseOptions]
-  );
+  const pinnedOptions = useMemo(() => ({ ...baseOptions, folder: 'pinned' as const }), [baseOptions]);
   const archivedOptions = useMemo(
-    () => ({
-      ...baseOptions,
-      folder: 'archived' as const,
-      includeArchived: true
-    }),
+    () => ({ ...baseOptions, folder: 'archived' as const, includeArchived: true }),
     [baseOptions]
   );
-  const requestsOptions = useMemo(
-    () => ({
-      folder: 'requests' as const,
-      query: searchQuery
-    }),
-    [searchQuery]
-  );
+  const requestsOptions = useMemo(() => ({ folder: 'requests' as const, query: searchQuery }), [searchQuery]);
 
   const defaultThreads = useInboxThreads(baseOptions);
   const pinnedThreads = useInboxThreads(pinnedOptions);
@@ -438,11 +317,7 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
       sections.push({ id: 'inbox', title: 'Inbox', threads: sortByUnreadPriority(defaultThreads) });
     }
     if (Array.isArray(archivedThreads) && archivedThreads.length > 0) {
-      sections.push({
-        id: 'archived',
-        title: 'Archived',
-        threads: sortByUnreadPriority(archivedThreads as ThreadItem[])
-      });
+      sections.push({ id: 'archived', title: 'Archived', threads: sortByUnreadPriority(archivedThreads as ThreadItem[]) });
     }
     return sections;
   }, [pinnedThreads, defaultThreads, archivedThreads]);
@@ -463,107 +338,80 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
 
   const handleAcceptRequest = useCallback(
     async (requestId: string) => {
-      if (onAcceptRequest) {
-        await onAcceptRequest(requestId);
-        return;
-      }
-      await (messagingActions.acceptMessageRequest?.(requestId) ?? Promise.resolve());
+      if (onAcceptRequest) return void onAcceptRequest(requestId);
+      await (useMessagingActions() as any).acceptMessageRequest?.(requestId);
     },
-    [messagingActions, onAcceptRequest]
+    [onAcceptRequest]
   );
 
   const handleDeclineRequest = useCallback(
     async (requestId: string, block: boolean) => {
-      if (onDeclineRequest) {
-        await onDeclineRequest(requestId, { block });
-        return;
-      }
-      await (messagingActions.declineMessageRequest?.(requestId, { block }) ?? Promise.resolve());
+      if (onDeclineRequest) return void onDeclineRequest(requestId, { block });
+      await (useMessagingActions() as any).declineMessageRequest?.(requestId, { block });
     },
-    [messagingActions, onDeclineRequest]
+    [onDeclineRequest]
   );
 
   const handleStartConversation = useCallback(async () => {
-    if (onStartConversation) {
-      await onStartConversation();
-      return;
-    }
-    await (messagingActions.recordConversationStart?.() ?? Promise.resolve());
-  }, [messagingActions, onStartConversation]);
+    if (onStartConversation) return void onStartConversation();
+    await (useMessagingActions() as any).recordConversationStart?.();
+  }, [onStartConversation]);
 
   const handlePinThread = useCallback(
     async (threadId: string) => {
       if (!threadId) return;
-      if (onPinThread) {
-        await onPinThread(threadId);
-        return;
-      }
-      await (messagingActions.pinThread?.(threadId) ?? Promise.resolve());
+      if (onPinThread) return void onPinThread(threadId);
+      await (useMessagingActions() as any).pinThread?.(threadId);
     },
-    [messagingActions, onPinThread]
+    [onPinThread]
   );
 
   const handleUnpinThread = useCallback(
     async (threadId: string) => {
       if (!threadId) return;
-      if (onUnpinThread) {
-        await onUnpinThread(threadId);
-        return;
-      }
-      await (messagingActions.unpinThread?.(threadId) ?? Promise.resolve());
+      if (onUnpinThread) return void onUnpinThread(threadId);
+      await (useMessagingActions() as any).unpinThread?.(threadId);
     },
-    [messagingActions, onUnpinThread]
+    [onUnpinThread]
   );
 
   const handleArchiveThread = useCallback(
     async (threadId: string) => {
       if (!threadId) return;
-      if (onArchiveThread) {
-        await onArchiveThread(threadId);
-        return;
-      }
-      await (messagingActions.archiveThread?.(threadId) ?? Promise.resolve());
+      if (onArchiveThread) return void onArchiveThread(threadId);
+      await (useMessagingActions() as any).archiveThread?.(threadId);
     },
-    [messagingActions, onArchiveThread]
+    [onArchiveThread]
   );
 
   const handleUnarchiveThread = useCallback(
     async (threadId: string) => {
       if (!threadId) return;
-      if (onUnarchiveThread) {
-        await onUnarchiveThread(threadId);
-        return;
-      }
-      await (messagingActions.unarchiveThread?.(threadId) ?? Promise.resolve());
+      if (onUnarchiveThread) return void onUnarchiveThread(threadId);
+      await (useMessagingActions() as any).unarchiveThread?.(threadId);
     },
-    [messagingActions, onUnarchiveThread]
+    [onUnarchiveThread]
   );
 
   const handleMuteThread = useCallback(
     async (threadId: string) => {
       if (!threadId) return;
-      if (onMuteThread) {
-        await onMuteThread(threadId);
-        return;
-      }
-      await (messagingActions.muteThread?.(threadId) ?? Promise.resolve());
+      if (onMuteThread) return void onMuteThread(threadId);
+      await (useMessagingActions() as any).muteThread?.(threadId);
     },
-    [messagingActions, onMuteThread]
+    [onMuteThread]
   );
 
   const handleUnmuteThread = useCallback(
     async (threadId: string) => {
       if (!threadId) return;
-      if (onUnmuteThread) {
-        await onUnmuteThread(threadId);
-        return;
-      }
-      await (messagingActions.unmuteThread?.(threadId) ?? Promise.resolve());
+      if (onUnmuteThread) return void onUnmuteThread(threadId);
+      await (useMessagingActions() as any).unmuteThread?.(threadId);
     },
-    [messagingActions, onUnmuteThread]
+    [onUnmuteThread]
   );
 
-  const canStartConversation = summary.canStartConversation ?? { allowed: true };
+  const canStartConversation = (summary as any).canStartConversation ?? { allowed: true };
   const mutedModeLabel = MUTED_MODE_LABELS[effectiveFilters.mutedMode];
 
   return (
@@ -572,7 +420,7 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
         <div>
           <h2 className="messaging-inbox__title">Messages</h2>
           <p className="messaging-inbox__subtitle">
-            {summary.totalUnread > 0 ? `${summary.totalUnread} unread` : 'All caught up'}
+            {(summary as any).totalUnread > 0 ? `${(summary as any).totalUnread} unread` : 'All caught up'}
           </p>
         </div>
         <div className="messaging-inbox__actions">
@@ -715,7 +563,7 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
                       <button
                         type="button"
                         className={`messaging-inbox__thread${active ? ' messaging-inbox__thread--active' : ''}`}
-                        onClick={() => handleSelectThread(thread.threadId)}
+                        onClick={() => onSelectThread?.(thread.threadId)}
                         aria-current={active ? 'true' : undefined}
                       >
                         <div className="messaging-inbox__thread-header">
@@ -724,21 +572,15 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
                             <span className="messaging-inbox__thread-unread">{thread.unreadCount}</span>
                           ) : null}
                         </div>
-                        {label.subtitle ? (
-                          <p className="messaging-inbox__thread-subtitle">{label.subtitle}</p>
-                        ) : null}
+                        {label.subtitle ? <p className="messaging-inbox__thread-subtitle">{label.subtitle}</p> : null}
                         {label.meta ? <p className="messaging-inbox__thread-meta">{label.meta}</p> : null}
                         {showTags ? (
                           <div className="messaging-inbox__thread-tags">
                             {thread.safeModeRequired ? (
-                              <span className="messaging-inbox__thread-tag messaging-inbox__thread-tag--safe">
-                                Safe mode
-                              </span>
+                              <span className="messaging-inbox__thread-tag messaging-inbox__thread-tag--safe">Safe mode</span>
                             ) : null}
                             {thread.muted ? (
-                              <span className="messaging-inbox__thread-tag messaging-inbox__thread-tag--muted">
-                                Muted
-                              </span>
+                              <span className="messaging-inbox__thread-tag messaging-inbox__thread-tag--muted">Muted</span>
                             ) : null}
                           </div>
                         ) : null}
@@ -750,8 +592,8 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
                             event.preventDefault();
                             event.stopPropagation();
                             void (thread.pinned
-                              ? handleUnpinThread(thread.threadId)
-                              : handlePinThread(thread.threadId));
+                              ? (onUnpinThread ? onUnpinThread(thread.threadId) : (useMessagingActions() as any).unpinThread?.(thread.threadId))
+                              : (onPinThread ? onPinThread(thread.threadId) : (useMessagingActions() as any).pinThread?.(thread.threadId)));
                           }}
                         >
                           {thread.pinned ? 'Unpin' : 'Pin'}
@@ -762,8 +604,8 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
                             event.preventDefault();
                             event.stopPropagation();
                             void (thread.archived
-                              ? handleUnarchiveThread(thread.threadId)
-                              : handleArchiveThread(thread.threadId));
+                              ? (onUnarchiveThread ? onUnarchiveThread(thread.threadId) : (useMessagingActions() as any).unarchiveThread?.(thread.threadId))
+                              : (onArchiveThread ? onArchiveThread(thread.threadId) : (useMessagingActions() as any).archiveThread?.(thread.threadId)));
                           }}
                         >
                           {thread.archived ? 'Unarchive' : 'Archive'}
@@ -774,8 +616,8 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
                             event.preventDefault();
                             event.stopPropagation();
                             void (thread.muted
-                              ? handleUnmuteThread(thread.threadId)
-                              : handleMuteThread(thread.threadId));
+                              ? (onUnmuteThread ? onUnmuteThread(thread.threadId) : (useMessagingActions() as any).unmuteThread?.(thread.threadId))
+                              : (onMuteThread ? onMuteThread(thread.threadId) : (useMessagingActions() as any).muteThread?.(thread.threadId)));
                           }}
                         >
                           {thread.muted ? 'Unmute' : 'Mute'}
@@ -791,4 +633,4 @@ export const MessagingInbox: React.FC<MessagingInboxProps> = ({
       )}
     </div>
   );
-};
+}
