@@ -1,12 +1,12 @@
-# orchestrator/review_latest.py
 from __future__ import annotations
 """
-Compile a dual review (assistant‑manager + primary‑decider) for the latest run report.
+Orchestrator: compile a dual review (assistant‑manager + primary‑decider) for the latest run report.
 
-Fixes in this version:
-- Accepts --am-provider/--am-model and --pd-provider/--pd-model (or env overrides).
-- Robust OpenAI calling: supports gpt‑5 by sending max_completion_tokens or using Responses API.
-- Keeps internal router fallback, truncation and ANSI stripping.
+This version:
+- Accepts --am-provider/--am-model/--pd-provider/--pd-model overrides.
+- Works with OpenAI v1 SDK (chat.completions for classic models; Responses API for models like gpt‑5/gpt‑4.1).
+- Handles max_tokens vs max_(completion|output)_tokens automatically.
+- Never needs --root (paths come from env or defaults).
 """
 
 import argparse
@@ -19,7 +19,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, Any, Tuple, List, Iterable
 
-# --- optional imports of your internal plumbing -------------------------------
+# Optional internal router
 _HAVE_ROUTER = False
 try:
     from .model_router import ModelRouter as _InternalModelRouter  # type: ignore
@@ -34,10 +34,6 @@ except Exception:
     _internal_stub_reply = None
     _InternalLLMResponse = None  # type: ignore
 
-
-# ------------------------------------------------------------------------------
-# Local shims (used if internal ones are unavailable)
-# ------------------------------------------------------------------------------
 
 def _local_stub_reply(provider_name: str, prompt: str) -> str:
     return f"[stub:{provider_name}] No provider available; reviewed {min(len(prompt), 2000)} chars."
@@ -56,10 +52,9 @@ else:
     _stub_reply = _local_stub_reply
 
 
-# ------------------------------------------------------------------------------
+# ----------------------------
 # Config / Paths
-# ------------------------------------------------------------------------------
-
+# ----------------------------
 RUN_DIR = Path(os.getenv("ORCHESTRATOR_RUN_DIR", "docs/runs"))
 OUT_DIR = Path(os.getenv("ORCHESTRATOR_REVIEW_OUT_DIR", "docs/orchestrator/reviews"))
 OUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -71,20 +66,14 @@ ASSISTANT_MANAGER_SYSTEM = os.getenv(
     (
         "You are the assistant‑manager reviewer. Critically review the agent run report, "
         "identify concrete risks, missing deliverables, and propose specific follow‑up tasks "
-        "the orchestrator should queue. Output in markdown with the following sections:\n\n"
-        "### Risk Log\n- [Severity] Risk statement …\n\n"
-        "### Missing Deliverables\n- Deliverable name — why missing / evidence\n\n"
-        "### Recommended Follow‑Ups\n- Task: …\n  - Rationale: …\n  - Owner: role or team\n  - Prereqs: …\n  - Est: S/M/L\n"
+        "the orchestrator should queue. Output in markdown with sections: Risk Log, Missing Deliverables, Recommended Follow‑Ups."
     ))
 
 PRIMARY_DECIDER_SYSTEM = os.getenv(
     "ORCHESTRATOR_PRIMARY_DECIDER_SYSTEM",
     (
         "You are the orchestrator's primary reviewer/decider. Consider the assistant‑manager review, "
-        "produce the final review with accept/reject decisions and a prioritized set of next actions "
-        "for the orchestrator. Output in markdown with:\n\n"
-        "### Decision\n- ACCEPT | REJECT and short justification\n\n"
-        "### Prioritized Next Actions\n1) Action …\n   - Owner: …\n   - Due: YYYY‑MM‑DD (or 'ASAP')\n   - Acceptance Criteria: …\n   - Notes/Dependencies: …\n"
+        "produce the final review with accept/reject decisions and a prioritized set of next actions."
     ))
 
 # Tunables
@@ -115,41 +104,23 @@ LATEST_BASENAME = os.getenv("ORCHESTRATOR_LATEST_BASENAME", "latest.md")
 WRITE_WBS_LATEST = os.getenv("ORCHESTRATOR_WRITE_WBS_LATEST", "1") == "1"
 DEFAULT_OUT_FILE = os.getenv("ORCHESTRATOR_REVIEW_OUT_FILE", None)  # exact output path if set
 
-def _parse_csv_env(name: str, default: str) -> List[str]:
-    raw = os.getenv(name, default)
-    parts = [p.strip() for p in raw.split(",") if p.strip()]
-    seen = set()
-    out: List[str] = []
-    for p in parts:
-        if p not in seen:
-            out.append(p)
-            seen.add(p)
-    return out
-
-OPENAI_FALLBACK_MODELS = _parse_csv_env(
-    "ORCHESTRATOR_OPENAI_FALLBACK_MODELS",
-    "gpt-4o-mini,gpt-4o,gpt-3.5-turbo",
-)
-ANTHROPIC_FALLBACK_MODELS = _parse_csv_env(
-    "ORCHESTRATOR_ANTHROPIC_FALLBACK_MODELS",
-    "claude-3-5-haiku-20241022,claude-3-haiku-20240307",
-)
+OPENAI_FALLBACK_MODELS = [
+    m for m in (os.getenv("ORCHESTRATOR_OPENAI_FALLBACK_MODELS", "gpt-5,gpt-4.1,gpt-4o,gpt-4o-mini").split(","))
+    if m.strip()
+]
+ANTHROPIC_FALLBACK_MODELS = [
+    m for m in (os.getenv("ORCHESTRATOR_ANTHROPIC_FALLBACK_MODELS", "claude-3-5-sonnet-20241022,claude-3-5-haiku-20241022").split(","))
+    if m.strip()
+]
 
 LOG_LEVEL = os.getenv("ORCHESTRATOR_LOG_LEVEL", "INFO").upper()
 logging.basicConfig(level=LOG_LEVEL, format="[%(levelname)s] %(message)s")
 log = logging.getLogger(__name__)
 
-# CLI provider/model overrides
-AM_PROVIDER_OVERRIDE = os.getenv("ORCHESTRATOR_AM_PROVIDER", "").strip() or None
-AM_MODEL_OVERRIDE = os.getenv("ORCHESTRATOR_AM_MODEL", "").strip() or None
-PD_PROVIDER_OVERRIDE = os.getenv("ORCHESTRATOR_PD_PROVIDER", "").strip() or None
-PD_MODEL_OVERRIDE = os.getenv("ORCHESTRATOR_PD_MODEL", "").strip() or None
 
-
-# ------------------------------------------------------------------------------
+# ----------------------------
 # Helpers
-# ------------------------------------------------------------------------------
-
+# ----------------------------
 _ANSI_RX = re.compile(r"\x1B\[[0-?]*[ -/]*[@-~]")
 
 def _strip_ansi(text: str) -> str:
@@ -194,71 +165,33 @@ def _atomic_write(path: Path, data: str) -> None:
     tmp.write_text(data, encoding="utf-8")
     tmp.replace(path)
 
-def _normalize_model_name(provider: str, model: str) -> str:
-    p = provider.lower()
-    m = (model or "").strip()
-    if p == "openai":
-        if m.lower() in {"gpt-5", "gpt5", "gpt-4.5", "gpt-4o-latest"}:
-            return m  # keep exact; we'll adjust params below
-        return m or "gpt-4o-mini"
-    if p == "anthropic":
-        if m.lower() in {"claude-3-5-sonnet", "claude-3-sonnet", "sonnet"}:
-            return "claude-3-5-haiku-20241022"
-        return m or "claude-3-5-haiku-20241022"
-    return m
-
-def _provider_model_candidates(provider_name: str, initial_model: str) -> List[str]:
-    base = _normalize_model_name(provider_name, initial_model)
-    if provider_name == "openai":
-        cands = [base] + [m for m in OPENAI_FALLBACK_MODELS if m != base]
-    elif provider_name == "anthropic":
-        cands = [base] + [m for m in ANTHROPIC_FALLBACK_MODELS if m != base]
-    else:
-        cands = [base]
-    out: List[str] = []
-    seen = set()
-    for m in cands:
-        if m and m not in seen:
-            out.append(m)
-            seen.add(m)
-    return out
-
 def _to_text(x):
     if x is None:
         return ""
     if isinstance(x, str):
         return x
     for attr in ("text", "content", "message", "output", "response"):
-        v = getattr(x, attr, None)
+        try:
+            v = getattr(x, attr)
+        except Exception:
+            v = None
         if isinstance(v, str):
             return v
-    for attr in ("text", "content"):
-        v = getattr(x, attr, None)
-        if v is not None:
-            try:
-                return str(v)
-            except Exception:
-                pass
     try:
         return str(x)
     except Exception:
         return ""
 
 
-# ------------------------------------------------------------------------------
-# Provider calling with SDK detection + per-model fallbacks
-# ------------------------------------------------------------------------------
+# ----------------------------
+# Provider calling
+# ----------------------------
+def _model_needs_responses_api(model: str) -> bool:
+    m = (model or "").lower()
+    return m.startswith("gpt-5") or m.startswith("gpt-4.1")
 
-def _have_openai_new_sdk(mod) -> bool:
-    return hasattr(mod, "OpenAI")
-
-def _call_openai_chat_or_responses(model: str, system: str, prompt: str) -> tuple[str, dict]:
-    """
-    Handles OpenAI 2.x SDK:
-      - Uses Responses API for gpt-5 if available (max_output_tokens)
-      - Otherwise uses Chat Completions, and for gpt-5 sends extra_body={"max_completion_tokens": ...}
-    """
-    import openai  # >= 1.x
+def _call_openai(model: str, system: str, prompt: str) -> tuple[str, dict]:
+    import openai
     client_kwargs: dict[str, Any] = {"api_key": os.getenv("OPENAI_API_KEY")}
     if not client_kwargs["api_key"]:
         raise RuntimeError("Missing OPENAI_API_KEY")
@@ -268,28 +201,46 @@ def _call_openai_chat_or_responses(model: str, system: str, prompt: str) -> tupl
         client_kwargs["organization"] = OPENAI_ORG
     client = openai.OpenAI(**client_kwargs)
 
-    m = (model or "").lower()
-    try_responses = "gpt-5" in m or os.getenv("ORCHESTRATOR_USE_RESPONSES", "0") == "1"
-
-    if try_responses and hasattr(client, "responses"):
-        # Responses API
-        resp = client.responses.create(
-            model=model,
-            input=[
-                {"role": "system", "content": system},
-                {"role": "user", "content": prompt},
-            ],
-            temperature=TEMPERATURE,
-            max_output_tokens=MAX_TOKENS,
-            timeout=REQUEST_TIMEOUT,
-            **({"metadata": {"orchestrator": "review_latest"}}),
-        )
-        text = (getattr(resp, "output_text", None) or
-                _to_text(resp))
+    if _model_needs_responses_api(model):
+        # Responses API (for gpt‑5/gpt‑4.1 style models)
+        messages = [
+            {"role": "system", "content": system},
+            {"role": "user", "content": prompt},
+        ]
+        try:
+            resp = client.responses.create(
+                model=model,
+                input=messages,
+                temperature=TEMPERATURE,
+                max_output_tokens=MAX_TOKENS,
+                timeout=REQUEST_TIMEOUT,
+            )
+        except Exception as e1:
+            # Some deployments expect max_completion_tokens
+            resp = client.responses.create(
+                model=model,
+                input=messages,
+                temperature=TEMPERATURE,
+                max_completion_tokens=MAX_TOKENS,
+                timeout=REQUEST_TIMEOUT,
+            )
+        text = getattr(resp, "output_text", None)
+        if not text:
+            # Older SDK shapes:
+            try:
+                parts = []
+                for block in getattr(resp, "output", []):
+                    for c in getattr(block, "content", []):
+                        t = getattr(c, "text", None)
+                        if t:
+                            parts.append(t)
+                text = "\n".join(parts)
+            except Exception:
+                text = str(resp)
         vendor_raw = resp.model_dump() if hasattr(resp, "model_dump") else resp
         return text, {"provider": "openai", "model": model, "vendor_raw": vendor_raw}
 
-    # Chat Completions API fallback
+    # Chat Completions (classic)
     create_kwargs: dict[str, Any] = {
         "model": model,
         "messages": [
@@ -297,20 +248,18 @@ def _call_openai_chat_or_responses(model: str, system: str, prompt: str) -> tupl
             {"role": "user", "content": prompt},
         ],
         "temperature": TEMPERATURE,
+        "max_tokens": MAX_TOKENS,
         "timeout": REQUEST_TIMEOUT,
     }
-    # gpt-5 rejects max_tokens; it wants max_completion_tokens (server-side quirk you hit)
-    # For other models keep using max_tokens.
-    if "gpt-5" in m:
-        create_kwargs["extra_body"] = {"max_completion_tokens": MAX_TOKENS}
-    else:
-        create_kwargs["max_tokens"] = MAX_TOKENS
+    if OPENAI_SEED is not None:
+        create_kwargs["seed"] = OPENAI_SEED
 
     resp = client.chat.completions.create(**create_kwargs)
     choice = resp.choices[0]
     text = getattr(choice.message, "content", None) or getattr(choice, "text", None) or ""
     usage = getattr(resp, "usage", None)
     tokens = getattr(usage, "total_tokens", None) if usage else None
+
     vendor_raw = resp.model_dump() if hasattr(resp, "model_dump") else resp
     meta = {"provider": "openai", "model": model, "tokens": tokens, "vendor_raw": vendor_raw}
     return text, meta
@@ -333,33 +282,75 @@ def _call_anthropic(model: str, system: str, prompt: str) -> tuple[str, dict]:
         text = "".join(getattr(blk, "text", "") for blk in msg.content)
     except Exception:
         text = str(msg.content)
-    tokens = None
-    if hasattr(msg, "usage"):
-        try:
-            tokens = msg.usage.input_tokens + msg.usage.output_tokens  # type: ignore[attr-defined]
-        except Exception:
-            tokens = None
 
-    meta = {"provider": "anthropic", "model": model, "tokens": tokens,
-            "vendor_raw": msg.to_dict() if hasattr(msg, "to_dict") else msg}
+    meta = {
+        "provider": "anthropic",
+        "model": model,
+        "vendor_raw": msg.to_dict() if hasattr(msg, "to_dict") else msg,
+    }
     return text, meta
 
 
-def _call_provider_with_fallbacks(
-    provider,
+class _SimpleProvider:
+    def __init__(self, name: str):
+        self.name = name
+
+class _FallbackRouter:
+    def __init__(self, override_plan: Optional[List[tuple]] = None):
+        self._override_plan = override_plan
+
+    def providers_for_kind(self, kind: str):
+        if self._override_plan:
+            return self._override_plan
+        return [
+            (_SimpleProvider("openai"), "gpt-4o-mini"),
+            (_SimpleProvider("anthropic"), "claude-3-5-haiku-20241022"),
+        ]
+
+
+def _get_router(override_plan: Optional[List[tuple]] = None):
+    if override_plan:
+        return _FallbackRouter(override_plan)
+    if _HAVE_ROUTER and _InternalLLMRouter is not None:
+        try:
+            return _InternalLLMRouter()
+        except Exception as e:
+            log.warning(f"[review_latest] Internal ModelRouter failed to init ({e}); using fallback router.")
+    return _FallbackRouter()
+
+
+def _provider_model_candidates(provider_name: str, initial_model: str) -> List[str]:
+    if provider_name == "openai":
+        base = initial_model or "gpt-4o-mini"
+        cands = [base] + [m for m in OPENAI_FALLBACK_MODELS if m != base]
+    elif provider_name == "anthropic":
+        base = initial_model or "claude-3-5-haiku-20241022"
+        cands = [base] + [m for m in ANTHROPIC_FALLBACK_MODELS if m != base]
+    else:
+        cands = [initial_model]
+    out: List[str] = []
+    seen = set()
+    for m in cands:
+        if m and m not in seen:
+            out.append(m)
+            seen.add(m)
+    return out
+
+
+def _call_with_fallbacks(
+    provider_name: str,
     requested_model: str,
     system: str,
     prompt: str,
     fallbacks: Optional[Iterable[str]] = None,
 ) -> LLMResponse:
-    name = getattr(provider, "name", str(provider))
+    name = provider_name
     candidates = [requested_model] + list(fallbacks or [])
     last_exc: Optional[Exception] = None
 
     if USE_STUB:
         text = _stub_reply(name, prompt)
-        return LLMResponse(content=text, model=requested_model,
-                           raw={"provider": name, "model": requested_model, "note": "stubbed"})
+        return LLMResponse(content=text, model=requested_model, raw={"provider": name, "model": requested_model, "note": "stubbed"})
 
     for model in candidates:
         attempt = 0
@@ -367,14 +358,13 @@ def _call_provider_with_fallbacks(
             start = time.time()
             try:
                 if name == "openai":
-                    text, meta = _call_openai_chat_or_responses(model, system, prompt)
+                    text, meta = _call_openai(model, system, prompt)
                 elif name == "anthropic":
                     text, meta = _call_anthropic(model, system, prompt)
                 else:
                     text = _stub_reply(name, prompt)
                     latency_ms = int((time.time() - start) * 1000)
-                    raw = {"provider": name, "model": model, "latency_ms": latency_ms,
-                           "note": "unknown provider; using stub"}
+                    raw = {"provider": name, "model": model, "latency_ms": latency_ms, "note": "unknown provider; stub"}
                     return LLMResponse(content=text, model=model, raw=raw)
 
                 latency_ms = int((time.time() - start) * 1000)
@@ -395,60 +385,14 @@ def _call_provider_with_fallbacks(
                     break
 
     text = f"{_stub_reply(name, prompt)} (fallback: {type(last_exc).__name__ if last_exc else 'UnknownError'})"
-    return LLMResponse(content=text, model=candidates[0] if candidates else requested_model,
-                       raw={"provider": name, "model": requested_model, "note": "all candidates failed; stubbed"})
+    return LLMResponse(content=text, model=candidates[0] if candidates else requested_model, raw={"provider": name, "model": requested_model, "note": "all candidates failed; stubbed"})
 
 
-# ------------------------------------------------------------------------------
-# Router (internal or fallback) + CLI overrides
-# ------------------------------------------------------------------------------
-
-class _SimpleProvider:
-    def __init__(self, name: str):
-        self.name = name
-
-class _FallbackRouter:
-    def providers_for_kind(self, kind: str):
-        return [
-            (_SimpleProvider("openai"), "gpt-4o-mini"),
-            (_SimpleProvider("anthropic"), "claude-3-5-haiku-20241022"),
-        ]
-
-def _get_router():
-    if _HAVE_ROUTER and _InternalModelRouter is not None:
-        try:
-            return _InternalModelRouter()
-        except Exception as e:
-            log.warning(f"[review_latest] Internal ModelRouter failed to init ({e}); using fallback router.")
-    return _FallbackRouter()
-
-
-def _plan_providers_with_overrides() -> List[tuple]:
-    """
-    Build [(provider, model), (provider, model)] using router or CLI/env overrides.
-    """
-    router = _get_router()
-    plan = router.providers_for_kind("review")
-    # apply AM override to first leg
-    am_provider, am_model = plan[0]
-    if AM_PROVIDER_OVERRIDE:
-        am_provider = _SimpleProvider(AM_PROVIDER_OVERRIDE)
-    if AM_MODEL_OVERRIDE:
-        am_model = AM_MODEL_OVERRIDE
-    # PD is second leg or fallback to first
-    pd_provider, pd_model = (plan[1] if len(plan) > 1 else plan[0])
-    if PD_PROVIDER_OVERRIDE:
-        pd_provider = _SimpleProvider(PD_PROVIDER_OVERRIDE)
-    if PD_MODEL_OVERRIDE:
-        pd_model = PD_MODEL_OVERRIDE
-    return [(am_provider, am_model), (pd_provider, pd_model)]
-
-
-# ------------------------------------------------------------------------------
-# Core review compilation
-# ------------------------------------------------------------------------------
-
-def compile_dual_review(report_md: str, source: Optional[Path] = None) -> str:
+def compile_dual_review(
+    report_md: str,
+    source: Optional[Path] = None,
+    plan_override: Optional[List[tuple]] = None
+) -> str:
     normalized = _strip_ansi(report_md).replace("\r\n", "\n")
     truncated_chars = max(0, len(normalized) - MAX_PROMPT_CHARS)
     safe_report = _truncate_middle(normalized, MAX_PROMPT_CHARS)
@@ -461,7 +405,8 @@ def compile_dual_review(report_md: str, source: Optional[Path] = None) -> str:
         "----- END REPORT -----"
     )
 
-    plan = _plan_providers_with_overrides()
+    router = _get_router(plan_override)
+    plan = router.providers_for_kind("review")
     if not plan:
         raise RuntimeError("providers_for_kind('review') returned no providers")
 
@@ -473,11 +418,9 @@ def compile_dual_review(report_md: str, source: Optional[Path] = None) -> str:
     else:
         log.info(f"[orchestrator.review_latest] Assistant‑manager model: {am_candidates[0]}")
 
-    am = _call_provider_with_fallbacks(
-        am_provider, am_candidates[0], ASSISTANT_MANAGER_SYSTEM, am_prompt, fallbacks=am_candidates[1:]
-    )
+    am = _call_with_fallbacks(am_provider_name, am_candidates[0], ASSISTANT_MANAGER_SYSTEM, am_prompt, fallbacks=am_candidates[1:])
 
-    pd_provider, pd_model = plan[1]
+    pd_provider, pd_model = plan[1] if len(plan) > 1 else plan[0]
     pd_provider_name = getattr(pd_provider, "name", str(pd_provider))
     pd_candidates = _provider_model_candidates(pd_provider_name, pd_model)
     if len(pd_candidates) > 1:
@@ -490,10 +433,7 @@ def compile_dual_review(report_md: str, source: Optional[Path] = None) -> str:
         "Now decide: accept or reject the work, and output a prioritized list of next actions "
         "for the orchestrator with owners and due dates when possible."
     )
-
-    pd = _call_provider_with_fallbacks(
-        pd_provider, pd_candidates[0], PRIMARY_DECIDER_SYSTEM, pd_prompt, fallbacks=pd_candidates[1:]
-    )
+    pd = _call_with_fallbacks(pd_provider_name, pd_candidates[0], PRIMARY_DECIDER_SYSTEM, pd_prompt, fallbacks=pd_candidates[1:])
 
     src_label = str(source) if source is not None else "STDIN/override"
 
@@ -586,7 +526,9 @@ def run(
     report_text: Optional[str] = None,
     out_file: Optional[str] = DEFAULT_OUT_FILE,
     latest_mode: str = LATEST_ALIAS_MODE,
-    write_latest: bool = True) -> Path:
+    write_latest: bool = True,
+    plan_override: Optional[List[tuple]] = None,
+) -> Path:
 
     if report_text is not None:
         latest = Path(review_run_file) if review_run_file else Path("stdin.md")
@@ -597,7 +539,7 @@ def run(
         log.info(f"[orchestrator.review_latest] Found run report: {latest}")
         report_md = latest.read_text(encoding="utf-8")
 
-    merged = compile_dual_review(report_md, source=latest)
+    merged = compile_dual_review(report_md, source=latest, plan_override=plan_override)
 
     target_dir = Path(out_dir) if out_dir else OUT_DIR
     target_dir.mkdir(parents=True, exist_ok=True)
@@ -628,11 +570,10 @@ def run(
 
 
 def _apply_cli_overrides(args: argparse.Namespace) -> None:
-    global MAX_PROMPT_CHARS, MAX_TOKENS, TEMPERATURE, REQUEST_TIMEOUT, OPENAI_BASE_URL, OPENAI_ORG
-    global OPENAI_SEED, RUN_GLOB, RUN_RECURSIVE, RUN_EXCLUDE_RE, _RUN_EXCLUDE_RX
-    global LATEST_BASENAME, WRITE_WBS_LATEST, USE_STUB, log
-    global OPENAI_FALLBACK_MODELS, ANTHROPIC_FALLBACK_MODELS
-    global AM_PROVIDER_OVERRIDE, AM_MODEL_OVERRIDE, PD_PROVIDER_OVERRIDE, PD_MODEL_OVERRIDE
+    global MAX_PROMPT_CHARS, MAX_TOKENS, TEMPERATURE, REQUEST_TIMEOUT
+    global RUN_GLOB, RUN_RECURSIVE, RUN_EXCLUDE_RE, _RUN_EXCLUDE_RX
+    global LATEST_BASENAME, WRITE_WBS_LATEST, USE_STUB
+    global OPENAI_FALLBACK_MODELS, ANTHROPIC_FALLBACK_MODELS, LOG_LEVEL
 
     if args.max_prompt_chars is not None:
         MAX_PROMPT_CHARS = args.max_prompt_chars
@@ -642,12 +583,6 @@ def _apply_cli_overrides(args: argparse.Namespace) -> None:
         TEMPERATURE = args.temperature
     if args.timeout is not None:
         REQUEST_TIMEOUT = args.timeout
-    if args.base_url is not None:
-        OPENAI_BASE_URL = args.base_url
-    if args.org is not None:
-        OPENAI_ORG = args.org
-    if args.seed is not None:
-        OPENAI_SEED = args.seed
 
     if args.run_glob is not None:
         RUN_GLOB = args.run_glob
@@ -674,16 +609,6 @@ def _apply_cli_overrides(args: argparse.Namespace) -> None:
         logging.getLogger().setLevel(args.log_level)
         log.setLevel(args.log_level)
 
-    # Provider/model overrides
-    if args.am_provider:
-        AM_PROVIDER_OVERRIDE = args.am_provider
-    if args.am_model:
-        AM_MODEL_OVERRIDE = args.am_model
-    if args.pd_provider:
-        PD_PROVIDER_OVERRIDE = args.pd_provider
-    if args.pd_model:
-        PD_MODEL_OVERRIDE = args.pd_model
-
 
 def main():
     parser = argparse.ArgumentParser(
@@ -697,60 +622,58 @@ def main():
 
     # Output / aliasing
     parser.add_argument("--out-dir", dest="out_dir", default=None,
-                        help="Override output directory (defaults to ORCHESTRATOR_REVIEW_OUT_DIR or docs/orchestrator/reviews).")
+                        help="Override output directory (defaults to ORCHESTRATOR_REVIEW_OUT_DIR).")
     parser.add_argument("--out-file", dest="out_file", default=DEFAULT_OUT_FILE,
-                        help="Write to this exact path (disables automatic latest-alias updates).")
-    parser.add_argument("--print-only", action="store_true",
-                        help="Print the merged review to stdout instead of writing a file.")
-    parser.add_argument("--no-latest", action="store_true",
-                        help="Do not update stable latest aliases (latest.md, latest-<WBS>.md).")
-    parser.add_argument("--latest-mode", choices=["copy", "symlink", "none"], default=LATEST_ALIAS_MODE,
-                        help="How to maintain the stable latest aliases (default: %(default)s).")
-    parser.add_argument("--latest-basename", dest="latest_basename", default=None,
-                        help=f"Basename for the stable alias (default env ORCHESTRATOR_LATEST_BASENAME='{LATEST_BASENAME}').")
-    parser.add_argument("--wbs-latest", dest="wbs_latest", action="store_true",
-                        help="Also write latest-<WBS>.md alias.")
-    parser.add_argument("--no-wbs-latest", dest="wbs_latest", action="store_false",
-                        help="Do not write latest-<WBS>.md alias.")
+                        help="Write to this exact path (disables latest-alias updates).")
+    parser.add_argument("--print-only", action="store_true", help="Print merged review to stdout.")
+    parser.add_argument("--no-latest", action="store_true", help="Do not update latest aliases.")
+    parser.add_argument("--latest-mode", choices=["copy", "symlink", "none"], default="copy", help="How to maintain latest aliases.")
+    parser.add_argument("--latest-basename", dest="latest_basename", default=None, help="Basename for the stable alias.")
+    parser.add_argument("--wbs-latest", dest="wbs_latest", action="store_true", help="Also write latest-<WBS>.md alias.")
+    parser.add_argument("--no-wbs-latest", dest="wbs_latest", action="store_false", help="Do not write latest-<WBS>.md alias.")
     parser.set_defaults(wbs_latest=None)
 
     # LLM/provider behavior
-    parser.add_argument("--temperature", type=float, default=None, help="Sampling temperature.")
-    parser.add_argument("--timeout", type=float, dest="timeout", default=None, help="LLM request timeout in seconds.")
-    parser.add_argument("--max-tokens", type=int, dest="max_tokens", default=None, help="Max tokens/output tokens.")
-    parser.add_argument("--max-prompt-chars", type=int, dest="max_prompt_chars", default=None, help="Max input chars.")
-    parser.add_argument("--seed", type=int, dest="seed", default=None, help="Optional deterministic seed.")
-    parser.add_argument("--base-url", dest="base_url", default=None, help="OpenAI base URL override.")
-    parser.add_argument("--org", dest="org", default=None, help="OpenAI organization override.")
-    parser.add_argument("--use-stub", action="store_true", help="Force stubbed LLM responses.")
+    parser.add_argument("--temperature", type=float, default=None)
+    parser.add_argument("--timeout", type=float, dest="timeout", default=None)
+    parser.add_argument("--max-tokens", type=int, dest="max_tokens", default=None)
+    parser.add_argument("--max-prompt-chars", type=int, dest="max_prompt_chars", default=None)
+    parser.add_argument("--seed", type=int, dest="seed", default=None)
+    parser.add_argument("--use-stub", action="store_true")
 
     # Run discovery behavior
-    parser.add_argument("--run-glob", dest="run_glob", default=None, help="Glob to locate run files.")
-    parser.add_argument("--recursive", dest="recursive", action="store_true", help="Search recursively for run files.")
-    parser.add_argument("--no-recursive", dest="recursive", action="store_false", help="Do not search recursively for run files.")
+    parser.add_argument("--run-glob", dest="run_glob", default=None)
+    parser.add_argument("--recursive", dest="recursive", action="store_true")
+    parser.add_argument("--no-recursive", dest="recursive", action="store_false")
     parser.set_defaults(recursive=None)
-    parser.add_argument("--exclude-re", dest="exclude_re", default=None, help="Regex to exclude run files.")
+    parser.add_argument("--exclude-re", dest="exclude_re", default=None)
 
     # Model fallbacks
     parser.add_argument("--openai-fallbacks", dest="openai_fallbacks", default=None,
-                        help="Comma-separated OpenAI fallback models.")
+                        help="Comma-separated OpenAI fallbacks.")
     parser.add_argument("--anthropic-fallbacks", dest="anthropic_fallbacks", default=None,
-                        help="Comma-separated Anthropic fallback models.")
+                        help="Comma-separated Anthropic fallbacks.")
 
     # Logging
-    parser.add_argument("--log-level", dest="log_level", default=None,
-                        choices=["DEBUG", "INFO", "WARNING", "ERROR"], help="Log level.")
+    parser.add_argument("--log-level", dest="log_level", default=None, choices=["DEBUG", "INFO", "WARNING", "ERROR"])
 
-    # NEW: direct provider/model overrides (match your usage)
-    parser.add_argument("--am-provider", dest="am_provider", default=None, help="Assistant‑manager provider (openai|anthropic).")
-    parser.add_argument("--am-model", dest="am_model", default=None, help="Assistant‑manager model name.")
-    parser.add_argument("--pd-provider", dest="pd_provider", default=None, help="Primary‑decider provider (openai|anthropic).")
-    parser.add_argument("--pd-model", dest="pd_model", default=None, help="Primary‑decider model name.")
+    # Provider overrides
+    parser.add_argument("--am-provider", dest="am_provider", default=os.getenv("ORCHESTRATOR_AM_PROVIDER"))
+    parser.add_argument("--am-model", dest="am_model", default=os.getenv("ORCHESTRATOR_AM_MODEL"))
+    parser.add_argument("--pd-provider", dest="pd_provider", default=os.getenv("ORCHESTRATOR_PD_PROVIDER"))
+    parser.add_argument("--pd-model", dest="pd_model", default=os.getenv("ORCHESTRATOR_PD_MODEL"))
 
     args = parser.parse_args()
 
     try:
         _apply_cli_overrides(args)
+
+        plan_override: Optional[List[tuple]] = None
+        if args.am_provider and args.am_model and args.pd_provider and args.pd_model:
+            plan_override = [
+                (_SimpleProvider(args.am_provider), args.am_model),
+                (_SimpleProvider(args.pd_provider), args.pd_model),
+            ]
 
         report_text = None
         if args.stdin:
@@ -767,7 +690,9 @@ def main():
             report_text=report_text,
             out_file=args.out_file,
             latest_mode=args.latest_mode,
-            write_latest=not args.no_latest)
+            write_latest=not args.no_latest,
+            plan_override=plan_override,
+        )
     except Exception as e:
         log.error(f"[orchestrator.review_latest] Failed: {e}")
         raise
