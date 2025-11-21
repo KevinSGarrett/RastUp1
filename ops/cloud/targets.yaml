@@ -1,0 +1,31 @@
+# ops/cloud/targets.yaml
+version: 1
+org: rastup
+regions: [us-east-1]
+accounts:
+  - name: rastup-dev
+    account_id: "111111111111"
+    role_arn: "arn:aws:iam::111111111111:role/RastUpOrchestrator"
+    region: us-east-1
+  - name: rastup-stage
+    account_id: "222222222222"
+    role_arn: "arn:aws:iam::222222222222:role/RastUpOrchestrator"
+    region: us-east-1
+  - name: rastup-prod
+    account_id: "333333333333"
+    role_arn: "arn:aws:iam::333333333333:role/RastUpOrchestrator"
+    region: us-east-1
+
+stacks:
+  - id: core-network
+    path: infra/cdk/core
+  - id: app-backend
+    path: infra/cdk/app
+  - id: app-frontend
+    path: infra/cdk/web
+
+contracts:
+  - type: appsync-schema
+    id: calendar
+    api_id_file: infra/appsync/calendar/api_id.txt
+    schema_file: api/schema/calendar.graphql

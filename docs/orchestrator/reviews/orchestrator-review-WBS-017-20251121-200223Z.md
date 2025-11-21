@@ -2,8 +2,8 @@
 
 - Source: **docs/runs/2025-11-19-WBS-017-AGENT-3-Part3.md**
 - Input size: **4399 chars**
-- Assistant‑manager: **openai/gpt-5** (? ms)
-- Primary‑decider: **anthropic/claude-3-5-sonnet** (? ms)
+- Assistant‑manager: **anthropic/claude-3-5-sonnet-20241022** (? ms)
+- Primary‑decider: **openai/gpt-5** (? ms)
 
 ## Assistant‑Manager Review
 
@@ -79,7 +79,7 @@ Review the following agent run report. Identify concrete risks, missing delivera
 - [x] Add unit test coverage and update progress artefacts; run calendar suite + `make ci`.
 - [ ] Integrate live backend mutations/telemetry and add design-system polish (tracked for follow-up).
 
------ END REPORT -----
+----- END REPORT ----- (fallback: ModuleNotFoundError)
 
 ## Final Orchestrator Decision
 
@@ -155,6 +155,6 @@ Review the following agent run report. Identify concrete risks, missing delivera
 - [x] Add unit test coverage and update progress artefacts; run calendar suite + `make ci`.
 - [ ] Integrate live backend mutations/telemetry and add design-system polish (tracked for follow-up).
 
------ END REPORT -----
+----- END REPORT ----- (fallback: ModuleNotFoundError)
 
-Now decide: accept or reject the work, and output a prioritized list of next actions for the orchestrator with owners and due dates when possible.
+Now decide: accept or reject the work, and output a prioritized list of next actions for the orchestrator with owners and due dates when possible. (fallback: RuntimeError)

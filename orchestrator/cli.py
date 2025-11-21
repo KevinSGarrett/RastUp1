@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import shutil
 from datetime import datetime, UTC
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -11,26 +13,65 @@ import yaml
 from .llm_client import LLMClient, LLMConfig
 from . import blueprints
 
+# ------------------------------------------------------------------------------
+# Root resolution
+# ------------------------------------------------------------------------------
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+_REPO_ROOT_DEFAULT = Path(__file__).resolve().parent.parent
+
+def resolve_repo_root(cli_root: Optional[str]) -> Path:
+    """
+    Resolve a repository root with clear precedence:
+      1) --root CLI flag
+      2) RASTUP_REPO_ROOT environment variable
+      3) current working directory (if it looks like a repo)
+      4) package default (two levels up from this file)
+    """
+    candidates: List[Optional[Path]] = []
+    if cli_root:
+        candidates.append(Path(cli_root))
+    env_root = os.getenv("RASTUP_REPO_ROOT")
+    if env_root:
+        candidates.append(Path(env_root))
+    candidates.append(Path.cwd())
+    candidates.append(_REPO_ROOT_DEFAULT)
+
+    for p in candidates:
+        if not p:
+            continue
+        # Prefer a path that clearly looks like the project root
+        if (p / "orchestrator").exists():
+            return p
+        if (p / ".git").exists():
+            return p
+        # Still valid as last resort if user gave a path without markers
+        if p.exists():
+            return p
+    return _REPO_ROOT_DEFAULT
 
 
-def _default_config() -> Dict[str, Any]:
+# ------------------------------------------------------------------------------
+# Defaults
+# ------------------------------------------------------------------------------
+
+def _default_config(repo_root: Path) -> Dict[str, Any]:
     return {
-        "local_root_path": str(REPO_ROOT),
+        "local_root_path": str(repo_root),
         "blueprints": {
             "non_tech": "ProjectPlans/Combined_Master_PLAIN_Non_Tech_001.docx",
             "tech": "ProjectPlans/TechnicalDevelopmentPlan.odt",
         },
         "models": {
+            # Orchestrator’s own LLMs (OpenAI primary; Anthropic optional)
             "openai_model": "gpt-4.1-mini",
             "embedding_model": "text-embedding-3-large",
             "anthropic_model": None,
         },
         "cursor": {
-            # ✅ use the CLI agent, not the desktop launcher
+            # Always the CLI, never the desktop launcher
             "cli_command": "cursor-agent",
-            "project_root": str(REPO_ROOT),
+            "project_root": str(repo_root),
+            # The orchestrator will override per task and log the decision
             "default_model": "gpt-5",
             "agents": {
                 "AGENT-1": {"role": "Bootstrap & DevOps", "model": "gpt-5-codex"},
@@ -42,6 +83,10 @@ def _default_config() -> Dict[str, Any]:
     }
 
 
+# ------------------------------------------------------------------------------
+# Filesystem layout + config
+# ------------------------------------------------------------------------------
+
 def ensure_basic_layout(repo_root: Path) -> None:
     (repo_root / "ops" / "locks").mkdir(parents=True, exist_ok=True)
     (repo_root / "ops" / "tasks").mkdir(parents=True, exist_ok=True)
@@ -51,7 +96,7 @@ def ensure_basic_layout(repo_root: Path) -> None:
 
     config_path = repo_root / "ops" / "config.yaml"
     if not config_path.exists():
-        cfg = _default_config()
+        cfg = _default_config(repo_root)
         config_path.write_text(yaml.safe_dump(cfg, sort_keys=False), encoding="utf-8")
         print(f"[init] Wrote default config to {config_path}")
     else:
@@ -61,8 +106,8 @@ def ensure_basic_layout(repo_root: Path) -> None:
     if not progress_path.exists():
         progress_path.write_text(
             "# Project Progress\n\n"
-            f"- Status: initialised\n"
-            f"- Created: {datetime.utcnow().isoformat()}Z\n\n"
+            "- Status: initialised\n"
+            f"- Created: {datetime.now(UTC).isoformat()}\n\n"
             "## Notes\n\n"
             "- Orchestrator initialised. Blueprints not yet ingested.\n",
             encoding="utf-8",
@@ -82,7 +127,7 @@ def ensure_basic_layout(repo_root: Path) -> None:
 def load_config(repo_root: Path) -> Dict[str, Any]:
     config_path = repo_root / "ops" / "config.yaml"
     if not config_path.exists():
-        raise SystemExit("ops/config.yaml not found. Run `python -m orchestrator.cli init` first.")
+        raise SystemExit("ops/config.yaml not found. Run `python -m orchestrator.cli init --root <path>` first.")
     cfg = yaml.safe_load(config_path.read_text(encoding="utf-8"))
 
     # 🔧 Auto-patch old configs that still use the GUI 'cursor' launcher
@@ -107,17 +152,25 @@ def make_llm(config: Dict[str, Any]) -> LLMClient:
     return LLMClient(cfg)
 
 
+# ------------------------------------------------------------------------------
+# Commands
+# ------------------------------------------------------------------------------
+
 def cmd_init(args: argparse.Namespace) -> None:
-    ensure_basic_layout(REPO_ROOT)
+    repo_root = resolve_repo_root(args.root)
+    print(f"[root] Using repository root: {repo_root}")
+    ensure_basic_layout(repo_root)
 
 
 def cmd_ingest_blueprints(args: argparse.Namespace) -> None:
-    cfg = load_config(REPO_ROOT)
+    repo_root = resolve_repo_root(args.root)
+    print(f"[root] Using repository root: {repo_root}")
+    cfg = load_config(repo_root)
     llm = make_llm(cfg)
     bp_cfg = cfg["blueprints"]
 
-    non_tech_src = REPO_ROOT / bp_cfg["non_tech"]
-    tech_src = REPO_ROOT / bp_cfg["tech"]
+    non_tech_src = repo_root / bp_cfg["non_tech"]
+    tech_src = repo_root / bp_cfg["tech"]
 
     if not non_tech_src.exists():
         raise SystemExit(f"Non-technical blueprint not found: {non_tech_src}")
@@ -125,7 +178,7 @@ def cmd_ingest_blueprints(args: argparse.Namespace) -> None:
         raise SystemExit(f"Technical blueprint not found: {tech_src}")
 
     index_path = blueprints.build_blueprint_index(
-        repo_root=REPO_ROOT,
+        repo_root=repo_root,
         non_tech_src=non_tech_src,
         tech_src=tech_src,
         llm=llm,
@@ -134,9 +187,11 @@ def cmd_ingest_blueprints(args: argparse.Namespace) -> None:
 
 
 def cmd_plan(args: argparse.Namespace) -> None:
-    cfg = load_config(REPO_ROOT)
+    repo_root = resolve_repo_root(args.root)
+    print(f"[root] Using repository root: {repo_root}")
+    cfg = load_config(repo_root)
     llm = make_llm(cfg)
-    meta, _ = blueprints.load_blueprint_index(REPO_ROOT)
+    meta, _ = blueprints.load_blueprint_index(repo_root)
 
     lines: List[str] = []
     for row in meta:
@@ -193,8 +248,7 @@ def cmd_plan(args: argparse.Namespace) -> None:
         "- Assign the most appropriate agent.\n"
         "- Attach the relevant blueprint_ids from the list.\n"
         "- Provide clear acceptance_criteria so Cursor agents can know when they are done.\n"
-        "- Ensure dependencies respect reality: infra before backend; backend before frontend;\n"
-        "  backend+frontend before E2E QA; docs & runbooks as the work matures.\n\n"
+        "- Ensure dependencies respect reality.\n\n"
         "Now here are the blueprint chunk summaries:\n\n"
         f"{summaries_block}"
     )
@@ -218,18 +272,18 @@ def cmd_plan(args: argparse.Namespace) -> None:
     if not tasks:
         raise SystemExit("[plan] Model returned no tasks.")
 
-    wbs_path = REPO_ROOT / "ops" / "wbs.json"
+    wbs_path = repo_root / "ops" / "wbs.json"
     wbs_path.write_text(json.dumps(tasks, indent=2, ensure_ascii=False), encoding="utf-8")
     print(f"[plan] Wrote WBS with {len(tasks)} tasks to {wbs_path}")
 
-    queue_path = REPO_ROOT / "ops" / "queue.jsonl"
+    queue_path = repo_root / "ops" / "queue.jsonl"
     with queue_path.open("w", encoding="utf-8") as f:
         for i, t in enumerate(tasks):
             queue_item = {
                 "task_id": t["id"],
                 "agent": t["agent"],
                 "status": "todo",
-                "created_at": datetime.utcnow().isoformat() + "Z",
+                "created_at": datetime.now(UTC).isoformat(),
                 "blueprint_ids": t.get("blueprint_ids", []),
                 "title": t.get("title", ""),
                 "phase": t.get("phase", ""),
@@ -240,10 +294,13 @@ def cmd_plan(args: argparse.Namespace) -> None:
             f.write(json.dumps(queue_item, ensure_ascii=False) + "\n")
     print(f"[plan] Wrote queue items to {queue_path}")
 
-    todo_path = REPO_ROOT / "docs" / "TODO_MASTER.md"
+    # Human-readable TODO
+    todo_path = repo_root / "docs" / "TODO_MASTER.md"
     queue_items: List[Dict[str, Any]] = []
     with queue_path.open("r", encoding="utf-8") as f:
         for line in f:
+            if not line.strip():
+                continue
             queue_items.append(json.loads(line))
 
     queue_items.sort(key=lambda q: (q.get("phase", ""), q["agent"], q["priority"]))
@@ -295,7 +352,7 @@ def build_task_file(
 
     content = (
         f"# Task for {agent_name}: {wbs_task['id']} — {wbs_task.get('title','')}\n\n"
-        "You are a Cursor CLI agent working under a central Orchestrator.\n\n"
+        "You are a **Cursor CLI** agent running under a central Orchestrator.\n\n"
         "## WBS Task\n\n"
         f"- ID: {wbs_task['id']}\n"
         f"- Title: {wbs_task.get('title','')}\n"
@@ -353,16 +410,47 @@ def build_task_file(
 
     task_root = repo_root / "ops" / "tasks" / agent_name
     task_root.mkdir(parents=True, exist_ok=True)
-    ts = datetime.now(datetime.UTC).strftime("%Y%m%d-%H%M%SZ")
+    ts = datetime.now(UTC).strftime("%Y%m%d-%H%M%SZ")
     task_path = task_root / f"{wbs_task['id']}-{ts}.md"
     task_path.write_text(content, encoding="utf-8")
     return task_path
 
 
+def _cursor_cli_exists(cmd: str) -> bool:
+    exe = shutil.which(cmd)
+    return exe is not None
+
+
+def _select_agent_model(agent_name: str, cursor_cfg: Dict[str, Any], wbs_task: Dict[str, Any]) -> str:
+    """
+    Orchestrator-owned model policy with simple heuristics:
+      - Use per-agent override if configured.
+      - Else fallback to cursor.default_model.
+      - Else pick a sensible default by agent role.
+    """
+    agent_cfg = (cursor_cfg.get("agents") or {}).get(agent_name, {})
+    default_agent_models = {
+        "AGENT-1": "gpt-5-codex",
+        "AGENT-2": "gpt-5-codex",
+        "AGENT-3": "gpt-5-codex",
+        "AGENT-4": "claude-4.5-sonnet",
+    }
+    return (
+        agent_cfg.get("model")
+        or cursor_cfg.get("default_model")
+        or default_agent_models.get(agent_name)
+        or "gpt-5"
+    )
+
+
 def cmd_run_next(args: argparse.Namespace) -> None:
-    cfg = load_config(REPO_ROOT)
+    repo_root = resolve_repo_root(args.root)
+    print(f"[root] Using repository root: {repo_root}")
+
+    cfg = load_config(repo_root)
     llm = make_llm(cfg)
-    queue_path = REPO_ROOT / "ops" / "queue.jsonl"
+
+    queue_path = repo_root / "ops" / "queue.jsonl"
     lines = [l for l in queue_path.read_text(encoding="utf-8").splitlines() if l.strip()]
     if not lines:
         print("[run-next] Queue is empty.")
@@ -392,68 +480,73 @@ def cmd_run_next(args: argparse.Namespace) -> None:
         for it in remaining:
             f.write(json.dumps(it, ensure_ascii=False) + "\n")
 
-    wbs_path = REPO_ROOT / "ops" / "wbs.json"
+    wbs_path = repo_root / "ops" / "wbs.json"
     wbs = json.loads(wbs_path.read_text(encoding="utf-8"))
     wbs_by_id = {t["id"]: t for t in wbs}
     wbs_task = wbs_by_id[next_item["task_id"]]
 
     agent_name = next_item["agent"]
-    task_file = build_task_file(REPO_ROOT, wbs_task, agent_name, llm)
+    task_file = build_task_file(repo_root, wbs_task, agent_name, llm)
     print(f"[run-next] Created task file for {agent_name}: {task_file}")
 
     cursor_cfg = cfg.get("cursor", {})
     cli_cmd = cursor_cfg.get("cli_command") or "cursor-agent"
     if cli_cmd == "cursor":
-        # Hard override to make sure we don't accidentally open the GUI app
-        cli_cmd = "cursor-agent"
+        cli_cmd = "cursor-agent"  # never the desktop app
 
-    # Resolve model for this agent
-    agent_cfg = cursor_cfg.get("agents", {}).get(agent_name, {})
-    default_agent_models = {
-        "AGENT-1": "gpt-5-codex",
-        "AGENT-2": "gpt-5-codex",
-        "AGENT-3": "gpt-5-codex",
-        "AGENT-4": "claude-4.5-sonnet",
+    if not _cursor_cli_exists(cli_cmd):
+        print(
+            "[run-next] ERROR: `cursor-agent` CLI not found on PATH.\n"
+            "Install it: https://cursor.com/docs/cli/overview and ensure `cursor-agent --version` works."
+        )
+        return
+
+    # Orchestrator chooses model and records the decision
+    model = _select_agent_model(agent_name, cursor_cfg, wbs_task)
+    model_log = {
+        "timestamp": datetime.now(UTC).isoformat(),
+        "task_id": wbs_task["id"],
+        "agent": agent_name,
+        "model": model,
+        "reason": "orchestrator policy (agent mapping + defaults)",
     }
-    model = (
-        agent_cfg.get("model")
-        or default_agent_models.get(agent_name)
-        or cursor_cfg.get("default_model")
-        or "gpt-5"
-    )
+    (repo_root / "ops").mkdir(parents=True, exist_ok=True)
+    with (repo_root / "ops" / "model-decisions.jsonl").open("a", encoding="utf-8") as f:
+        f.write(json.dumps(model_log, ensure_ascii=False) + "\n")
 
-    # Non-interactive CLI prompt that tells the agent to read the task file
+    # Compose a single non-interactive prompt that points the agent at the task file
     prompt = (
-        f"You are {agent_name}, a Cursor CLI agent with role: {agent_cfg.get('role','(unspecified role)')}.\n"
-        f"Repository root on disk: {REPO_ROOT}\n"
+        f"You are {agent_name}, a **Cursor CLI** agent with role: "
+        f"{(cursor_cfg.get('agents') or {}).get(agent_name, {}).get('role','(unspecified role)')}.\n\n"
+        f"Repository root on disk: {repo_root}\n"
         f"Task file path: {task_file}\n\n"
         "Instructions:\n"
-        "1. Start by reading the task file at the given path and follow the instructions inside it.\n"
-        "2. Treat the task file as the source of truth for this assignment, including run-report and attach-pack requirements.\n"
-        "3. Work directly in the repository at the given root path.\n"
-        "4. When finished, ensure all required tests and checks in the task file are run and documented.\n"
+        "1. Read the task file (it is the source of truth for scope, run-report, and attach-pack requirements).\n"
+        "2. Work directly in the repository under the given root path.\n"
+        "3. Before coding, perform the Pre-Run Ritual. Respect lock protocol and scope_paths.\n"
+        "4. When finished, ensure all required tests/checks are executed and documented in the run report.\n"
+        "5. Package the Orchestrator Attach Pack under docs/orchestrator/from-agents/<agent>/.\n"
     )
 
-    cmd = [cli_cmd, "-p", prompt, "--model", model, "--force"]
+    cmd = [cli_cmd, "-p", prompt, "--model", model]
     print(
         "[run-next] About to run Cursor Agent CLI (non-interactive): "
-        f"{cli_cmd} -p \"[task instructions]\" --model {model} --force"
+        f"{cli_cmd} -p \"[task instructions]\" --model {model}"
     )
 
     import subprocess
-
     try:
-        subprocess.run(cmd, cwd=str(REPO_ROOT), check=False)
+        subprocess.run(cmd, cwd=str(repo_root), check=False, env=os.environ.copy())
     except FileNotFoundError:
         print(
             "[run-next] ERROR: `cursor-agent` CLI not found on PATH.\n"
-            "Install it from https://cursor.com/docs/cli/overview and ensure `cursor-agent` works "
-            "from this terminal (e.g. `cursor-agent --version`)."
+            "Install it from https://cursor.com/docs/cli/overview and ensure `cursor-agent --version` works."
         )
 
 
 def cmd_status(args: argparse.Namespace) -> None:
-    queue_path = REPO_ROOT / "ops" / "queue.jsonl"
+    repo_root = resolve_repo_root(args.root)
+    queue_path = repo_root / "ops" / "queue.jsonl"
     if not queue_path.exists():
         print("Queue not found; run init and plan.")
         return
@@ -471,10 +564,12 @@ def cmd_status(args: argparse.Namespace) -> None:
 
 
 def cmd_index_files(args: argparse.Namespace) -> None:
-    cfg = load_config(REPO_ROOT)
+    repo_root = resolve_repo_root(args.root)
+    print(f"[root] Using repository root: {repo_root}")
+    cfg = load_config(repo_root)
     llm = make_llm(cfg)
 
-    root = REPO_ROOT
+    root = repo_root
     ignore_dirs = {".git", ".venv", "node_modules", ".cursor", "__pycache__"}
     entries: List[Dict[str, Any]] = []
 
@@ -526,7 +621,7 @@ def cmd_index_files(args: argparse.Namespace) -> None:
         if max_files is not None and seen >= max_files:
             break
 
-    docs_root = REPO_ROOT / "docs"
+    docs_root = repo_root / "docs"
     docs_root.mkdir(parents=True, exist_ok=True)
 
     json_path = docs_root / "FILE_INDEX.json"
@@ -541,8 +636,19 @@ def cmd_index_files(args: argparse.Namespace) -> None:
     print(f"[index-files] Wrote {len(entries)} entries to {json_path} and {md_path}")
 
 
+# ------------------------------------------------------------------------------
+# CLI
+# ------------------------------------------------------------------------------
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="RastUp Orchestrator CLI")
+    parser.add_argument(
+        "--root",
+        dest="root",
+        default=None,
+        help="Repository root override (defaults to $RASTUP_REPO_ROOT or project root).",
+    )
+
     sub = parser.add_subparsers(dest="command", required=True)
 
     sub.add_parser("init", help="Initialise ops/ and docs/ structure.")

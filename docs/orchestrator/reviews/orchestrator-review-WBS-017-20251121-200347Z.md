@@ -79,7 +79,7 @@ Review the following agent run report. Identify concrete risks, missing delivera
 - [x] Add unit test coverage and update progress artefacts; run calendar suite + `make ci`.
 - [ ] Integrate live backend mutations/telemetry and add design-system polish (tracked for follow-up).
 
------ END REPORT -----
+----- END REPORT ----- (fallback: RuntimeError)
 
 ## Final Orchestrator Decision
 
@@ -155,6 +155,6 @@ Review the following agent run report. Identify concrete risks, missing delivera
 - [x] Add unit test coverage and update progress artefacts; run calendar suite + `make ci`.
 - [ ] Integrate live backend mutations/telemetry and add design-system polish (tracked for follow-up).
 
------ END REPORT -----
+----- END REPORT ----- (fallback: RuntimeError)
 
-Now decide: accept or reject the work, and output a prioritized list of next actions for the orchestrator with owners and due dates when possible.
+Now decide: accept or reject the work, and output a prioritized list of next actions for the orchestrator with owners and due dates when possible. (fallback: ModuleNotFoundError)

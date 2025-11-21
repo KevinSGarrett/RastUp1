@@ -1,0 +1,29 @@
+# ops/index.yaml
+version: 1
+sections:
+  - id: infra-bootstrap
+    required:
+      - docs/infra/bootstrap-plan.md
+      - tests/python/test_infra_docs.py
+  - id: calendar
+    required:
+      - api/schema/calendar.graphql
+      - db/migrations/020_calendar.sql
+      - services/calendar/feasibility.ts
+      - services/calendar/ics-poller.ts
+      - tools/frontend/calendar/index.mjs
+      - tests/frontend/calendar/*.test.mjs
+  - id: messaging
+    required:
+      - tools/frontend/messaging/controller.mjs
+      - tools/frontend/messaging/client.mjs
+      - tools/frontend/messaging/react_bindings.mjs
+      - tests/frontend/messaging/*.test.mjs
+  - id: communications
+    required:
+      - docs/ops/communications/communications_system.md
+      - tests/python/test_comms_docs.py
+invariants:
+  - path: docs/PROGRESS.md
+    contains:
+      - "WBS-"   # must list WBS items

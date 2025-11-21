@@ -1,0 +1,10 @@
+review:
+  primary_decider:         # Manager
+    provider: openai
+    models: [gpt-4o]
+    fallbacks: [gpt-4o-mini, gpt-3.5-turbo]
+
+  assistant_manager:       # Assistant manager
+    provider: anthropic
+    models: [claude-3-5-haiku-20241022]
+    fallbacks: [claude-3-haiku-20240307]

@@ -1,0 +1,169 @@
+Stale lock sweeper (orchestrator/locks.py) and progress writer (orchestrator/update_progress.py) — both visible in your commit.
+
+Autopilot loop refactor that sweeps locks, invokes run-next, and calls the reviewer afterwards (you added the skeleton with retry placeholder).
+
+Makefile + make ci — confirmed working (Python + Node suites passed and “CI suite completed” printed).
+
+Gate “done” properly in apply_latest_review (require: run report present + make ci passed + acceptance checklist satisfied).
+
+Retry/back‑off around cursor-agent invocation (your call_cursor_with_retry() is a stub).
+
+IaC bootstrap (Terraform SAFE‑MODE plan) for queues / Step Functions / Secrets / migration pipeline.
+
+Anthropic hook (fallback or second opinion reviewer) to strengthen reviews.
+
+TypeScript hygiene: stop committing *.js and *.ts siblings in services/*; compile TS → dist/ and ignore the build output.
+
+Add Anthropic as a second reviewer (what it does + where it’s used)
+
+The LLM wrapper (2.2) already enables Anthropic when ANTHROPIC_API_KEY is present.
+
+When OpenAI returns weak/short output or errors about endpoint compatibility, the wrapper now falls back to Anthropic automatically.
+
+Enable hosted CI (GitHub Actions or similar) that runs make ci on PRs + pushes, archives test artifacts, and blocks merge if failing.
+
+Stand up a minimal IaC “plan‑only” CI job (Terraform init/validate/plan) to catch drift/issues early.
+
+Pick one first end‑to‑end vertical (e.g., Auth → Booking → Payment (Stripe test mode)) and wire it to a local Postgres shim or a dev Aurora, then add Playwright E2E smoke.
+
+Tighten the reviewer signal — add an explicit acceptance checklist template required in all run‑reports; the gate in apply_latest_review.py will enforce it.
+
+TS hygiene — introduce tsconfig.json, compile services/* to dist/, and stop committing dual JS/TS sources.
+
+Idle sweeps & re‑queues. The reviewer repeatedly reset WBS to todo when no run report existed so agents could re‑run that lane (you can see many “[Setting WBS‑XXX → todo]” lines). The loop now persists through idle periods instead of stopping on the first “no unblocked items.” 
+
+Comms & Infra lanes were documentation‑first runs with guardrail tests (i.e., unit tests that enforce the docs exist and follow the structure). Implementation is still to come. 
+
+Cursor transport errors occurred and now have backoff in the loop.
+
+How the continuous Anthropic “assistant manager” works here
+
+OpenAI produces the primary answer or review.
+
+Anthropic is invoked immediately afterwards to:
+
+Critique and return a structured JSON decision (accept/revise) and a proposed improved answer.
+
+For run‑report reviews, tighten the review, ensure there is exactly one ACCEPTANCE: and one Decision: line, and bias to safety (in_progress) unless acceptance is explicit.
+
+The orchestrator then uses Anthropic’s suggestion if it recommends revise. Otherwise it keeps OpenAI’s output.
+
+This runs every iteration, not as a fallback
+
+Extra suggestions now that you’re adding an Assistant Manager (Anthropic) to the orchestrator
+
+You already have an orchestrator that dispatches tasks, rotates locks, and calls models for reviews (OpenAI models are used in the logs). Adding an assistant‑manager powered by Anthropic is a great time to harden the provider layer and routing logic. Here’s a pragmatic checklist that slots into your codebase and practices:
+
+1) Provider abstraction & secrets
+
+Add an Anthropic provider implementation alongside your OpenAI calls (e.g., orchestrator/providers/anthropic.py) and select via config:
+
+Env vars: ANTHROPIC_API_KEY, ORCH_PRIMARY_LLM=openai:gpt-5, ORCH_MANAGER_LLM=anthropic:claude-3-opus
+
+Allow AWS_BEDROCK_* if you prefer Bedrock‑hosted Anthropic models.
+
+Log all model choices to your existing ops/model-decisions.jsonl so audits stay consistent. 
+
+log_001
+
+2) Routing policy (who solves what)
+
+Add a simple model router so:
+
+“Planning/review/critique” → Anthropic (assistant‑manager)
+
+“Code generation/refactors” → your code‑centric model (e.g., gpt-5-codex) already used by cursor-agent. 
+
+log_001
+
+“Summaries/run‑reports” → whichever is cheaper + good enough (toggle via ORCH_SUMMARY_LLM).
+
+A tiny sketch (Python) for your orchestrator:
+
+def pick_model(task_kind: str) -> str:
+    if task_kind in {"review_latest", "apply_latest_review", "planning"}:
+        return os.getenv("ORCH_MANAGER_LLM", "anthropic:claude-3-opus")
+    if task_kind in {"codegen", "cursor_agent"}:
+        return os.getenv("ORCH_CODER_LLM", "openai:gpt-5-codex")
+    return os.getenv("ORCH_PRIMARY_LLM", "openai:gpt-5")
+
+3) Guardrails, retries, and cost controls
+
+Retry policy: exponential backoff + jitter + provider‑specific error parsing (rate limits, timeouts).
+
+Budget caps per run using envs like ORCH_MAX_TOKENS_PER_RUN / ORCH_MAX_COST_PER_DAY, with a hard stop that’s written to the run report (you already publish run reports/attach packs). 
+
+log_001
+
+Deterministic prompts: keep manager prompts in versioned text files (e.g., orchestrator/prompts/manager/*.md) so changes show up in diffs and attach packs. 
+
+log_001
+
+4) Decision logging & provenance
+
+When the assistant‑manager requeues or resets WBS items (you do this today when run reports are missing), also record why and which provider agreed. That small addition makes triaging stuck items easier later. 
+
+log_001
+
+5) Safety & “safe writes”
+
+You’ve flagged “Safe Writes policy clashing with mandatory lock updates.” Add a manager‑level policy override that:
+
+restricts file mutations to declared scopes per task,
+
+allows lockfiles and progress docs (ops/locks/**, docs/PROGRESS.md) explicitly,
+
+requires a run report to justify any write outside the scope (fail the run otherwise). 
+
+log_001
+
+6) CI hooks
+
+Add a tiny test (e.g., tests/python/test_orchestrator_providers.py) that fails CI if:
+
+ORCH_MANAGER_LLM is set but the Anthropic key is missing,
+
+or if both primary and manager point to the same vendor unintentionally.
+
+7) DX toggles
+
+New envs your team can flip without code changes:
+
+ORCH_MANAGER_ENABLED=1
+
+ORCH_MANAGER_REVIEW_EACH_ITER=1 (force manager review after each run-next)
+
+ORCH_MANAGER_AUTO_REQUEUE=1 (allow manager to reset in‑progress tasks after N mins idle)
+
+Suggestions now that you’re adding an Anthropic assistant manager to the orchestrator
+
+All of these are terminal-oriented (no partial code), and you can adopt them incrementally:
+
+Environment keys
+
+Add ANTHROPIC_API_KEY to your secrets (local/CI).
+
+Optionally add a small .env.example documenting OPENAI_API_KEY + ANTHROPIC_API_KEY + any routing flags like ASSISTANT_MANAGER=anthropic.
+
+Routing & fallbacks
+
+Keep OpenAI as default for long-form review and use Anthropic as assistant manager for planning/triage by setting ASSISTANT_MANAGER=anthropic when invoking make run-next (or use make assistant-manager-anthropic). This mirrors how your orchestrator already rotates models per WBS step via env/config, so it slips into the same workflow. 
+
+log_001
+
+Makefile convenience
+
+You already have make ci in agent runs; the updated Makefile formalizes that and adds typecheck + optional test-e2e. Agents (and you) can now standardize on:
+
+make ci – unit tests + TS checks
+
+make install-playwright && make test-e2e – browser E2E (when needed)
+This matches how test commands are already being executed across the repo. 
+
+log_001
+
+Runbooks / docs (optional)
+
+Consider a one-page ops/runbooks/assistant-manager.md that states: how to switch managers (env var), known capabilities, and when to escalate to a different model/tier. Your repo already keeps similar runbooks for ICS errors and communications—this slots into that pattern.
+
+
