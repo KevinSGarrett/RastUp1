@@ -827,3 +827,733 @@ Cursor agents = workers driven by Cursor CLI + your Cursor token; they use model
 AWS/GitHub/etc. tokens are future access‑readiness work, not required for the indexing + basic build loop we’ve already wired.
 
 If there’s a specific part of the blueprint workflow or agent workflow you’d like me to walk through step‑by‑step (e.g., “how does a single WBS task turn into a Cursor run + run report?”), I can spell that out next.
+
+
+this is the list of updates that we were implementing before the window went off track and started to forget everything so that you can understand what happened and why the window started to forget so many things we had worked on. i need to give the window that im working on a detailed understanding of the project files and everything we did to set up these project files for the orchestrator so that it understands everything we did and how these files work for the orchestrator and how the orchestrator and cursor agents are using these project files we indexed and all the work we did on the project files. im attaching the updates we attempted to implement that took the window off course and started to make it forget things and the entire chat log once again. i need to give it a detailed understanding of everything we did with the project files so that it understands all the work we did before it started to mess up
+
+Got it — the core thing you need right now is: a clean, accurate “brain transplant” summary of everything we already did with the project files + orchestrator + Cursor agents, so this window (and any future one) understands the system again without you having to drag the entire log around.
+
+Below is exactly that: first a clear explanation in my own words, then a copy‑pasteable “Project Context” block you can drop into any new chat / prompt to re-align it.
+
+1. What the two massive project files are and why they matter
+
+You have two huge master project docs:
+
+Non‑technical blueprint:
+C:\RastUp1\ProjectPlans\Combined_Master_PLAIN_Non_Tech_001.docx
+
+Technical development plan:
+C:\RastUp1\ProjectPlans\TechnicalDevelopmentPlan.odt
+
+chat_window_log_001
+
+Together they’re ~500k words. They:
+
+Are not written in build order. Sections/subsections are not the execution order.
+
+Must be captured 100% in a way that the orchestrator + Cursor agents can reliably reference forever, without token limit issues.
+
+Are the single source of truth for “what we’re building” (non‑tech = what/why; tech = how).
+
+You also set Hard unbreakable rules for how helpers (and the orchestrator) are allowed to work: everything via terminal, no “edit this snippet manually”, large work via OpenAI API, and the orchestrator/agents should essentially be in “god mode” within sensible guardrails.
+
+2. How the orchestrator ingests and indexes the project files
+
+We did successfully build an ingestion pipeline inside the Python orchestrator package and run it end‑to‑end.
+
+2.1. Where it lives
+
+Project root: C:\RastUp1
+
+Key orchestrator paths:
+
+C:\RastUp1\orchestrator\ – Python package (cli, blueprints, llm_client, etc.)
+
+C:\RastUp1\ops\ – config, WBS, queue, internal state
+
+C:\RastUp1\docs\ – blueprint artifacts, TODO, file index, progress, run reports
+
+C:\RastUp1\ProjectPlans\ – the two original big documents
+
+You re‑initialized the orchestrator layout with:
+
+python -m orchestrator.cli init
+
+
+which wrote:
+
+C:\RastUp1\ops\config.yaml
+
+C:\RastUp1\docs\PROGRESS.md
+
+C:\RastUp1\ops\queue.jsonl (empty)
+
+chat_window_log_001
+
+2.2. The blueprint ingestion pipeline (ingest-blueprints)
+
+Command:
+
+python -m orchestrator.cli ingest-blueprints
+
+
+What it does:
+
+Convert original docs → markdown via pandoc
+
+C:\RastUp1\ProjectPlans\Combined_Master_PLAIN_Non_Tech_001.docx
+  → C:\RastUp1\docs\blueprints\non_tech_source.md
+
+C:\RastUp1\ProjectPlans\TechnicalDevelopmentPlan.odt
+  → C:\RastUp1\docs\blueprints\tech_source.md
+
+
+chat_window_log_001
+
+So the full text of both blueprints now exists in markdown form under docs/blueprints. Nothing is thrown away at this stage.
+
+Chunk both markdown sources
+
+Total chunks: 932
+
+582 from non‑tech (NT‑0000 … NT‑0581)
+
+350 from tech (TD‑0000 … TD‑0349)
+
+Each chunk is a contiguous slice of the original text, with a stable ID like NT-0000/TD-0349.
+
+Summarise each chunk with OpenAI (once)
+
+For each chunk, the orchestrator calls llm_client.chat_openai to produce a concise, information‑dense summary of that chunk.
+
+chat_window_log_001
+
+This is the “semantic handle” used later for planning and retrieval.
+
+Create embeddings for all chunks
+
+After summarisation finishes, it creates embeddings in batches for all 932 chunks.
+
+The embedding vectors are stored alongside metadata in the index.
+
+Write chunk markdown files + blueprint index
+
+Individual chunk markdown files are written (e.g. in a docs/blueprints/chunks style structure) so each chunk can be read in isolation.
+
+A single master index file is written:
+
+C:\RastUp1\docs\blueprints\blueprint_index.json
+
+
+Log line:
+
+[blueprints] Writing chunk markdown files.
+[blueprints] Wrote index to C:\RastUp1\docs\blueprints\blueprint_index.json
+[ingest-blueprints] Blueprint index ready at C:\RastUp1\docs\blueprints\blueprint_index.json
+
+
+chat_window_log_001
+
+Conceptually, each entry in blueprint_index.json contains at least:
+
+id – stable ID like NT-0000 or TD-0349
+
+kind – non_tech or tech
+
+the source file it came from
+
+a pointer/path to the chunk markdown file
+
+the summary text
+
+the embedding vector
+
+That means:
+
+The full raw text is preserved in the markdown sources + chunk files.
+
+The index gives the orchestrator a cheap, token‑friendly way to find the right chunk(s) via similarity search and summaries instead of reloading 500k words every time.
+
+This is exactly the mechanism you wanted to solve the token‑limit problem without losing detail: the orchestrator can always fall back from summary → chunk text → underlying markdown if needed.
+
+3. How the orchestrator uses the blueprint index
+
+Once ingest-blueprints has run successfully, the orchestrator can plan the build.
+
+3.1. Generating WBS + queue + TODO (plan)
+
+Command:
+
+python -m orchestrator.cli plan
+
+
+What it did in your run:
+
+Loaded blueprint_index.json from C:\RastUp1\docs\blueprints\blueprint_index.json.
+
+Called OpenAI via llm_client to design a Work Breakdown Structure (WBS).
+
+Wrote:
+
+C:\RastUp1\ops\wbs.json – WBS with 23 tasks (each with ID like WBS-<phase>.<task>)
+
+chat_window_log_001
+
+C:\RastUp1\ops\queue.jsonl – line‑delimited queue entries, one per WBS task, with status fields (todo, in_progress, review, done, etc.)
+
+chat_window_log_001
+
+C:\RastUp1\docs\TODO_MASTER.md – a human‑readable master TODO list summarising the queue.
+
+High‑level behaviour of plan:
+
+It reads the blueprint index (summaries + embeddings) and asks the LLM to propose:
+
+phases and tasks,
+
+task ordering/dependencies,
+
+which parts of NT/TD each task implements.
+
+It then serialises this as:
+
+WBS JSON (canonical structure),
+
+queue items for the orchestrator to feed to Cursor agents,
+
+a human TODO doc.
+
+3.2. Building the live repo “directory map” (index-files)
+
+Command:
+
+python -m orchestrator.cli index-files --max-files 300
+
+
+What it does:
+
+Walks the repo under C:\RastUp1\ up to a max file count.
+
+chat_window_log_001
+
+For each file (excluding things like .venv, some generated dirs, etc.), it calls llm.chat_openai with a prompt like “describe what this file does and how it fits”.
+
+chat_window_log_001
+
+Writes the result to:
+
+C:\RastUp1\docs\FILE_INDEX.json
+C:\RastUp1\docs\FILE_INDEX.md
+
+
+In your last successful run it wrote 300 entries into those indexes.
+
+chat_window_log_001
+
+Conceptually, each file index entry contains:
+
+Relative path
+
+File kind (code, config, docs, script…)
+
+A short description of what it does / how it’s used
+
+This is your requested “directory that shows where everything is and what every file does” so agents don’t have to blindly scan hundreds of files to orient themselves.
+
+chat_window_log_001
+
+3.3. Dispatching work to Cursor agents (run-next)
+
+Command:
+
+python -m orchestrator.cli run-next
+
+
+Intended behaviour (from the outline + patches):
+
+Look at ops/queue.jsonl and pick the next status: "todo" item whose dependencies are satisfied.
+
+Decide which Cursor agent (1–4) should handle it, based on task type (bootstrap/devops, backend, frontend, QA/docs).
+
+Write a task file, e.g.:
+
+/ops/tasks/AGENT-2/WBS-4.1-task.md
+
+
+containing:
+
+Context snapshot:
+
+relevant NT/TD IDs (NT-..., TD-...) from blueprint_index.json
+
+WBS ID (WBS-x.y)
+
+any important notes from TODO / PROGRESS
+
+Scope paths the agent is allowed to touch.
+
+Tests that must be run.
+
+Requirements for the run report + attach pack.
+
+Invoke Cursor via CLI (pseudocode in your spec):
+
+cursor --project <your-project> \
+       --agent AGENT-2 \
+       --task-file /ops/tasks/AGENT-2/WBS-4.1-task.md
+
+
+(In practice we’ve tried to move toward using the cursor-agent CLI so it doesn’t pop open the full desktop app.)
+
+When the Cursor agent finishes and writes its run report + attach pack, the orchestrator:
+
+Parses those artifacts,
+
+Updates:
+
+state.json (current state),
+
+docs/PROGRESS.md,
+
+ops/queue.jsonl (status of this WBS item → done/review/partial).
+
+So the orchestrator is the boss that:
+
+Uses the blueprint index + file index to understand what exists.
+
+Uses WBS/queue to drive execution.
+
+Uses Cursor CLI to actually run the 4 Cursor agents.
+
+4. How the Cursor agents are defined and controlled
+
+You have four real Cursor agents, not just “roles in a prompt”:
+
+AGENT‑1 — Bootstrap & DevOps
+
+AGENT‑2 — Backend & Services
+
+AGENT‑3 — Frontend & Developer Experience
+
+AGENT‑4 — QA, Security, Docs, Release
+
+They run inside Cursor using Cursor’s own models and plugins, not your OpenAI key. Your OpenAI/Anthropic keys are used only by the orchestrator itself.
+
+chat_window_log_001
+
+Key policies from the patches you added (these are part of the spec for how agents must behave; not all are fully coded yet, but they’re the rules):
+
+4.1. Access envelope / “god mode with guardrails” (PATCH A)
+
+Within your configured root ([LOCAL_ROOT_PATH], effectively C:\RastUp1), agents should have full read/write/exec access to do their work: code edits, running tests, Docker, CI, etc.
+
+chat_window_log_001
+
+They can:
+
+Work with Git (branch, commit, PR),
+
+Run CI workflows (lint/test/build/smoke/security),
+
+Build and run containers/devcontainers,
+
+Run read‑only or dry‑run cloud commands.
+
+They may not:
+
+Perform destructive production changes or expensive operations without “Two‑Key” approval files and SAFE‑MODE checks.
+
+The orchestrator must:
+
+Maintain an Access Readiness Matrix,
+
+Provide access scripts under /scripts/access/ and smoke tests under /scripts/smoke/agent-<N>.ps1|sh,
+
+Treat “agent blocked by access” as a bug in the access envelope, not a reason to dump work back on you manually.
+
+4.2. Run reports + attach packs (PATCH B)
+
+For every non‑trivial assignment, each agent must output:
+
+Run report markdown, per agent:
+
+/docs/runs/YYYY-MM-DD/AGENT-<N>/run-<timestamp>.md
+
+
+Orchestrator attach pack:
+
+/docs/orchestrator/from-agents/AGENT-<N>/run-<timestamp>-attach.zip
+
+
+Run report must cover, at least:
+
+Context snapshot (NT/TD IDs, WBS IDs, assumptions).
+
+What was done (clear checklist).
+
+How it was done (design choices, blueprint references, tools/plugins used).
+
+Full testing section (unit, integration, E2E, performance, security), with:
+
+Commands run,
+
+Where logs are stored,
+
+Coverage/evidence.
+
+Issues/problems, how they were resolved, remaining TODOs and risks.
+
+Locations touched (paths of new/modified/removed files).
+
+Suggestions for next agents.
+
+Attach pack (run-...-attach.zip) must contain:
+
+The run report itself,
+
+Diff summary / PR links / CI logs,
+
+Test reports, screenshots, performance reports,
+
+A small manifest.json summarising which agent, which WBS items, which NT/TD anchors, etc.
+
+chat_window_log_001
+
+Run reports are canonical: the orchestrator and agents treat them as the single source of truth for what actually happened.
+
+chat_window_log_001
+
+4.3. Exhaustive testing & “zero‑doubt done” (PATCH C)
+
+A Cursor agent cannot mark a WBS item “done” unless there’s zero reasonable doubt that:
+
+The implementation matches the blueprint intent,
+
+It works across relevant scenarios,
+
+It likely doesn’t break other parts (within reason).
+
+Per assignment, agents must:
+
+Define a test plan before coding (in run report): which test types, key scenarios, edge cases.
+
+Implement tests alongside code (positive/negative, regression tests).
+
+Run tests and record evidence (commands, logs, coverage).
+
+Treat flaky tests as problems to fix, not as “meh, it passed once”.
+
+Mark tasks as partial if some tests can’t yet be implemented and create follow‑up WBS items.
+
+The orchestrator then uses:
+
+run reports,
+
+CI status,
+
+coverage/test reports under /docs/reports/...
+
+to decide if a WBS item really meets the “zero‑doubt” bar before moving it to done.
+
+4.4. Plugins & per‑agent model mapping (PATCH D)
+
+You captured a concrete plugin list for Cursor (Docker, AWS Toolkit, Python, ESLint, GitHub Actions, etc.), and set rules:
+
+Enable only the plugins needed for a task,
+
+Log active plugins for each run into /ops/tools-manifest.json.
+
+You also defined default model mapping inside Cursor (this is Cursor’s internal AI, not your OpenAI key):
+
+AGENT‑1: default gpt-5-codex, MAX on for big IaC/CI scaffolding.
+
+AGENT‑2: default gpt-5-codex, MAX on for schema/API generation and large backend edits.
+
+AGENT‑3: default gpt-5-codex, MAX on for complex UI / typed client work.
+
+AGENT‑4: default claude-4.5-sonnet, MAX on for heavy docs / report aggregation.
+
+The orchestrator logs per‑task model decisions to /ops/model-decisions.jsonl.
+
+chat_window_log_001
+
+4.5. Non‑interference / lock protocol (PATCH E)
+
+To stop agents stepping on each other, every Cursor agent prompt must enforce:
+
+Before modifying files:
+
+Acquire an agent lock: /ops/locks/agent-<N>.lock,
+
+Declare its scope_paths[] (paths it will touch),
+
+Verify no other active lock overlaps its scope.
+
+chat_window_log_001
+
+If overlapping changes or foreign modifications appear while the lock is held:
+
+STOP,
+
+Document in run report,
+
+Open/update a queue item,
+
+Hand back to orchestrator for rescheduling.
+
+CI is supposed to fail PRs that touch paths outside an agent’s declared scope or collide with another active lock.
+
+chat_window_log_001
+
+5. Blueprint‑first / traceability policies (the “outline” side)
+
+On top of the raw ingestion, you also defined blueprint‑first policies so code and tests remain traceable to NT/TD items:
+
+Orchestrator+CI must maintain:
+
+/docs/blueprints/nt-index.json, td-index.json
+
+/docs/blueprints/toc-cache.json (anchors + checksums)
+
+/docs/blueprints/crosswalk.json (NT ↔ TD ↔ code & tests mapping)
+
+/docs/blueprints/acceptance/NT-*.md (acceptance criteria per NT).
+
+CI pipeline concordance-check.yml + scripts under /scripts/concordance/ enforce:
+
+every changed code path has NT/TD/WBS trailers,
+
+no uncovered NT items in a phase,
+
+no TD additions without NT justification (unless Two‑Key override).
+
+chat_window_log_001
+
+Agents must start with a Context Snapshot referencing the relevant NT/TD IDs and use the blueprint index (and TOC cache) to load only relevant parts of the massive docs.
+
+chat_window_log_001
+
+This is all about making sure we never lose the mapping from code back to the original two massive project documents.
+
+6. Why the previous window “forgot” and what actually still exists
+
+From the log, we can see two phases:
+
+Early on, there were path/config issues:
+
+Orchestrator looked for C:\docs\blueprints\blueprint_index.json instead of C:\RastUp1\docs\blueprints\....
+
+plan failed until init was re-run inside C:\RastUp1.
+These got corrected.
+
+Later, after adding the big PATCH A–E sections and doing more iterations, the conversation went long enough that your previous chat started losing track of earlier details and mis‑explaining how the project files and Cursor agents worked. That’s a chat memory issue, not a problem with your actual Python code or file artifacts.
+
+From the repo’s perspective, you now have:
+
+Blueprint ingestion fully wired and run to completion.
+
+blueprint_index.json with 932 chunks and embeddings.
+
+ops/wbs.json with 23 tasks.
+
+ops/queue.jsonl and docs/TODO_MASTER.md as your task plan.
+
+docs/FILE_INDEX.json / docs/FILE_INDEX.md with 300 file entries.
+
+chat_window_log_001
+
+So we’re not starting over. We’re resyncing the mental model in this window.
+
+7. Copy‑pasteable “Project Context” for future chats
+
+Here’s a block you can paste into any new window / assistant to get them properly aligned without re‑feeding the whole log:
+
+BEGIN PROJECT CONTEXT (RASTUP ORCHESTRATOR + CURSOR AGENTS)
+
+We are working on a project under C:\RastUp1 that builds:
+
+One Python “Orchestrator” service (uses my OpenAI API key, and Anthropic optionally).
+
+Four real Cursor agents (AGENT‑1..4) running via Cursor CLI / cursor‑agent, using Cursor’s own models and plugins — not my OpenAI key.
+
+1) The two massive project blueprints
+
+Non‑technical plan: C:\RastUp1\ProjectPlans\Combined_Master_PLAIN_Non_Tech_001.docx
+
+Technical plan: C:\RastUp1\ProjectPlans\TechnicalDevelopmentPlan.odt
+
+Together ~500k words. Sections/subsections are not build order.
+
+We must preserve and be able to reference 100% of the detail from both docs.
+
+2) How we solved the token limit for those blueprints
+
+We already have a blueprint ingestion pipeline in the orchestrator package:
+
+python -m orchestrator.cli init (run inside C:\RastUp1) creates:
+
+ops/config.yaml, ops/queue.jsonl, docs/PROGRESS.md.
+
+python -m orchestrator.cli ingest-blueprints:
+
+Uses pandoc to convert:
+
+Non‑tech docx → docs/blueprints/non_tech_source.md
+
+Tech odt → docs/blueprints/tech_source.md
+
+Chunks both into 932 total chunks (582 non‑tech, 350 tech).
+
+For each chunk:
+
+Calls OpenAI once to produce a dense summary.
+
+Creates embeddings for all 932 chunks.
+
+Writes chunk markdown files and a master index:
+
+docs/blueprints/blueprint_index.json
+
+Important: the full text is preserved in the markdown sources + chunk files; the index holds IDs (NT-/TD-), type (non‑tech/tech), paths to chunk files, summaries and embeddings. This gives the orchestrator a token‑cheap way to look up any part of the blueprints while still preserving detail.
+
+3) How the orchestrator uses the index
+
+python -m orchestrator.cli plan:
+
+Loads docs/blueprints/blueprint_index.json.
+
+Asks OpenAI to generate a Work Breakdown Structure (WBS) over the whole project.
+
+Writes:
+
+ops/wbs.json — WBS (23 tasks in the last run).
+
+ops/queue.jsonl — WBS tasks as queue items.
+
+docs/TODO_MASTER.md — human‑readable TODO list.
+
+python -m orchestrator.cli index-files --max-files 300:
+
+Scans the repo and, using OpenAI, writes:
+
+docs/FILE_INDEX.json
+
+docs/FILE_INDEX.md
+
+Each entry describes what a file does and how it fits, so agents don’t have to search blindly.
+
+python -m orchestrator.cli run-next:
+
+Picks the next todo queue item from ops/queue.jsonl.
+
+Chooses the right Cursor agent (AGENT‑1..4).
+
+Writes a task file like /ops/tasks/AGENT-2/WBS-4.1-task.md with:
+
+NT/TD anchors,
+
+WBS ID,
+
+allowed scope paths,
+
+required tests,
+
+what the run report + attach pack must contain.
+
+Calls Cursor CLI / cursor‑agent with that task file.
+
+After the agent finishes, reads the run report + attach pack and updates:
+
+state.json,
+
+docs/PROGRESS.md,
+
+ops/queue.jsonl (status of that WBS item).
+
+4) Cursor agents (real agents, not just roles)
+
+AGENT‑1 — Bootstrap & DevOps
+
+AGENT‑2 — Backend & Services
+
+AGENT‑3 — Frontend & Developer Experience
+
+AGENT‑4 — QA, Security, Docs, Release
+
+The orchestrator decides which agent gets each WBS task and which Cursor model/mode they should use. Cursor agents use Cursor’s internal AI models and plugins. My OpenAI/Anthropic keys are only for the orchestrator itself.
+
+5) Patches / policies already agreed (spec level)
+
+Access envelope (“god mode with guardrails”)
+
+Agents must have strong, default access inside the repo for read/write/exec, Git, Docker, CI, etc.
+
+Destructive prod changes / high‑cost actions require Two‑Key approvals and SAFE‑MODE.
+
+The orchestrator maintains an Access Readiness Matrix and access smoke tests; “blocked by access” is treated as an orchestrator bug, not a human’s job.
+
+Run reports & attach packs
+
+Every non‑trivial agent assignment produces:
+
+Run report: /docs/runs/YYYY-MM-DD/AGENT-<N>/run-<timestamp>.md
+
+Attach pack: /docs/orchestrator/from-agents/AGENT-<N>/run-<timestamp>-attach.zip
+
+Run reports must include: context snapshot (NT/TD/WBS), what was done, how it was done, full testing evidence, issues, paths touched, suggestions for next agents.
+
+Attach pack contains the run report, diffs/PR links, CI logs, test reports, artifacts, and a small manifest.
+
+Exhaustive testing / “zero‑doubt done”
+
+A task cannot be marked done unless:
+
+Implementation matches blueprint intent,
+
+It’s tested across relevant scenarios,
+
+It likely doesn’t break other parts.
+
+Agents define a test plan before coding, implement tests with code, and record concrete evidence. Partial testing → task marked partial and follow‑up WBS item created.
+
+Plugins & model mapping
+
+Agents enable only necessary Cursor plugins per task and log them to /ops/tools-manifest.json.
+
+Default models:
+
+AGENT‑1/2/3: gpt-5-codex (MAX on for large/heavy work),
+
+AGENT‑4: claude-4.5-sonnet (MAX on for big docs/reports).
+
+The orchestrator logs per‑task model choices to /ops/model-decisions.jsonl.
+
+Non‑interference / lock protocol
+
+Before modifying files, each agent acquires /ops/locks/agent-<N>.lock, declares scope_paths[], and ensures no overlapping lock.
+
+If overlap is detected or foreign changes show up in scope, the agent stops, documents the conflict, and lets the orchestrator reschedule.
+
+CI prevents PRs that modify files outside declared scope or collide with other active locks.
+
+Blueprint‑first traceability
+
+We maintain NT/TD indexes, TOC cache, crosswalk, and acceptance docs in /docs/blueprints/.
+
+CI’s concordance checks ensure code ↔ NT/TD mapping is always up to date.
+
+Agents must always cite NT/TD IDs in their context snapshot and use the blueprint index to load only relevant parts of the giant docs.
+
+6) Hard unbreakable rules (for any assistant)
+
+Everything must be done via terminal commands / code blocks, not “click around and edit manually.”
+
+Do not ask me to hand‑edit partial file snippets. If a file must change, you provide the entire updated file and I’ll overwrite it.
+
+Use my OpenAI API key (and Anthropic if wired) to do the heavy lifting — chunking, summarising, planning, indexing, code generation, etc. Don’t push manual work back to me that the APIs can do.
+
+The orchestrator + Cursor agents are intended to run this project on near‑autopilot; design everything (scripts, prompts, configs) with that in mind.
+
+END PROJECT CONTEXT
+
+
