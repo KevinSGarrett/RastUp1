@@ -2,159 +2,89 @@
 
 - Source: **docs/runs/2025-11-19-WBS-017-AGENT-3-Part3.md**
 - Input size: **4399 chars**
-- Assistant‑manager: **unknown/gpt-5** (? ms)
-- Primary‑decider: **unknown/claude-3-5-sonnet** (? ms)
+- Assistant‑manager: **openai/gpt-4o-mini** (11996 ms), tokens=1683
+- Primary‑decider: **anthropic/claude-3-5-haiku-20241022** (12223 ms), tokens=1081
 
 ## Assistant‑Manager Review
 
-Review the following agent run report. Identify concrete risks, missing deliverables, and propose actionable follow‑ups the orchestrator should queue.
+# Review of Agent Run Report
 
------ BEGIN REPORT -----
-# Run Report — 2025-11-19 — WBS-017 Part 3 — AGENT-3
+## Risk Log
+- [High] **Dependency on Backend Availability**: The UI is currently operating against stub data due to the unavailability of the GraphQL endpoint/API key. This poses a significant risk as the functionality cannot be fully validated until the backend is operational.
+- [Medium] **Incomplete User Experience**: The dashboard lacks dedicated styling and layout polish, relying on component-level classes. This could lead to a subpar user experience and may require rework once the design system is integrated.
+- [Medium] **Testing Coverage Gaps**: The report indicates that end-to-end and regression tests are pending until backend mutations are available. This could delay the identification of integration issues.
 
-## Context Snapshot
+## Missing Deliverables
+- **Integration with Live GraphQL Endpoints** — The integration with real AppSync endpoints is still pending, which is critical for validating the complete functionality of the dashboard. Evidence: The report states that the dashboard currently operates against stub data and requires backend configuration.
+- **Design System Integration** — The dashboard lacks design system styling and accessibility polish, which is essential for a consistent user experience. Evidence: The report notes that the dashboard relies on component-level classes and mentions this as future work.
 
-- WBS IDs: `WBS-017` (frontend calendar availability & DX)
-- Blueprint refs: `TD-0206`, `TD-0207`, `TD-0208`, `TD-0209`, `TD-0210`
-- Role: Frontend & Developer Experience
-- scope_paths: `ops/locks/AGENT-3.lock`, `web/lib/calendar/**`, `web/app/calendar/**`, `tests/frontend/calendar/data_source.test.mjs`, `docs/PROGRESS.md`, `docs/runs/2025-11-19-WBS-017-AGENT-3-Part3.md`, `docs/orchestrator/from-agents/AGENT-3/**`
-- Assumptions: Backend GraphQL endpoints may be unavailable in local env—stub fallback must keep UI functional; existing calendar stores/components remain source of truth.
+## Recommended Follow‑Ups
+- **Task: Integrate Live GraphQL Endpoints**
+  - Rationale: To ensure the dashboard operates with real data and to validate the complete functionality of the application.
+  - Owner: Backend Development Team
+  - Prereqs: Availability of backend GraphQL endpoints and API keys.
+  - Est: M
 
-## Plan vs Done vs Pending
+- **Task: Implement Design System Styling and Accessibility Enhancements**
+  - Rationale: To improve the user experience and ensure compliance with accessibility standards.
+  - Owner: Frontend Development Team
+  - Prereqs: Completion of the dashboard integration with live data.
+  - Est: L
 
-- **Planned**
-  - Deliver a shared calendar data source that works with AppSync GraphQL and offline stub flows.
-  - Build a Next.js calendar dashboard page that composes availability editor, calendar connect, and reschedule picker with mutation handlers.
-  - Add test coverage plus progress artefacts documenting the new workflows.
-- **Done**
-  - Implemented `createCalendarDataSource` with GraphQL executor + stub client (`web/lib/calendar`), enabling unified DX for availability, holds, external sync, and ICS feed actions.
-  - Shipped `web/app/calendar/page.tsx` and `CalendarDashboardClient.tsx` wiring controller stores to React UI, telemetry, hold creation, and ICS feed management.
-  - Added stub data source unit test, reran calendar suite, updated progress log, and executed `make ci`.
-- **Pending**
-  - Wire the dashboard to real GraphQL endpoints (AppSync/App Server) and persist telemetry events once backend routes are online.
-  - Layer design system styling/accessibility polish around the new dashboard.
-  - Add end-to-end/regression coverage once backend calendar mutations are fully available.
+- **Task: Develop End-to-End and Regression Tests**
+  - Rationale: To ensure comprehensive testing of the dashboard functionality once backend mutations are available.
+  - Owner: QA Team
+  - Prereqs: Integration with live GraphQL endpoints.
+  - Est: M
 
-## How It Was Done
+- **Task: Monitor Backend Configuration and API Key Availability**
+  - Rationale: To proactively address any delays in backend readiness that could impact the project timeline.
+  - Owner: Project Manager
+  - Prereqs: None
+  - Est: S
 
-- Created `web/lib/calendar/dataSource.mjs` to wrap `createCalendarClient` with fetch-based GraphQL execution and an in-memory stub client; exported via `web/lib/calendar/index.mjs`.
-- Built a Next.js route at `web/app/calendar/page.tsx` that resolves environment configuration, fetches the initial dashboard snapshot, and boots the client container.
-- Implemented `CalendarDashboardClient.tsx` to instantiate the calendar controller, manage status/telemetry, and handle availability saves, external calendar sync, ICS feed lifecycle, and reschedule hold creation.
-- Added `tests/frontend/calendar/data_source.test.mjs` to validate stub persistence (rules, exceptions, holds, ICS feed) and confirm API parity with the stub client.
-- Updated `docs/PROGRESS.md` with the new workstream summary and recorded test/CI runs.
-
-## Testing
-
-- `node --test tests/frontend/calendar/*.test.mjs` → ✅ pass (22 tests including new data source coverage).
-- `make ci` → ✅ pass (`python -m unittest tests.python.test_booking_schema`, `node --test tests/booking/*.test.mjs`).
-
-**Testing Proof:** Commands executed from repo root; TAP/pytest outputs captured above and stored in shell history for the run.
-
-## Issues & Problems
-
-- UI currently operates against stub data when GraphQL endpoint/API key are absent; live mutation paths still require backend configuration.
-- Dashboard lacks dedicated styling/layout polish—relies on component-level classes; design system integration remains future work.
-
-## Locations / Touch Map
-
-- `ops/locks/AGENT-3.lock`
-- `web/lib/calendar/dataSource.mjs`
-- `web/lib/calendar/index.mjs`
-- `web/app/calendar/page.tsx`
-- `web/app/calendar/CalendarDashboardClient.tsx`
-- `tests/frontend/calendar/data_source.test.mjs`
-- `docs/PROGRESS.md`
-- `docs/runs/2025-11-19-WBS-017-AGENT-3-Part3.md`
-
-## Suggestions for Next Agents
-
-- Connect the dashboard to real AppSync endpoints, add authenticated fetch helpers, and persist telemetry via analytics SDK.
-- Introduce Calendar-specific styling (design tokens, responsive layout) and accessibility sweeps (keyboard/a11y audits).
-- Extend automated coverage with integration/E2E tests once backend mutations/resolvers are available.
-
-## Progress & Checklist
-
-- [x] Implement shared calendar data source with GraphQL + stub fallbacks.
-- [x] Ship Next.js calendar dashboard page and client container wiring existing components.
-- [x] Add unit test coverage and update progress artefacts; run calendar suite + `make ci`.
-- [ ] Integrate live backend mutations/telemetry and add design-system polish (tracked for follow-up).
-
------ END REPORT ----- (fallback: APIRemovedInV1)
+By addressing these risks and missing deliverables through the recommended follow-ups, the project can move forward more effectively and mitigate potential issues.
 
 ## Final Orchestrator Decision
 
-Review the following agent run report. Identify concrete risks, missing deliverables, and propose actionable follow‑ups the orchestrator should queue.
+### Decision
+- ACCEPT (Conditionally)
+  - The work shows significant progress but has critical dependencies that must be addressed to move forward
+  - Acceptance is contingent on rapid resolution of backend integration and design system implementation
 
------ BEGIN REPORT -----
-# Run Report — 2025-11-19 — WBS-017 Part 3 — AGENT-3
+### Prioritized Next Actions
+1) Integrate Live GraphQL Endpoints
+   - Owner: Backend Development Team
+   - Due: 2024-02-15
+   - Acceptance Criteria: 
+     * Fully functional AppSync endpoint
+     * Secure API key configuration
+     * Successful data retrieval in dashboard
+   - Notes/Dependencies: Unblock frontend testing and validation
 
-## Context Snapshot
+2) Implement Design System Styling
+   - Owner: Frontend Development Team
+   - Due: 2024-02-22
+   - Acceptance Criteria:
+     * Consistent UI components
+     * Accessibility compliance
+     * Responsive design across devices
+   - Notes/Dependencies: Depends on backend endpoint integration
 
-- WBS IDs: `WBS-017` (frontend calendar availability & DX)
-- Blueprint refs: `TD-0206`, `TD-0207`, `TD-0208`, `TD-0209`, `TD-0210`
-- Role: Frontend & Developer Experience
-- scope_paths: `ops/locks/AGENT-3.lock`, `web/lib/calendar/**`, `web/app/calendar/**`, `tests/frontend/calendar/data_source.test.mjs`, `docs/PROGRESS.md`, `docs/runs/2025-11-19-WBS-017-AGENT-3-Part3.md`, `docs/orchestrator/from-agents/AGENT-3/**`
-- Assumptions: Backend GraphQL endpoints may be unavailable in local env—stub fallback must keep UI functional; existing calendar stores/components remain source of truth.
+3) Develop Comprehensive Test Suite
+   - Owner: QA Team
+   - Due: 2024-03-01
+   - Acceptance Criteria:
+     * End-to-end test coverage
+     * Regression test scenarios
+     * Automated test scripts
+   - Notes/Dependencies: Requires live backend endpoints
 
-## Plan vs Done vs Pending
-
-- **Planned**
-  - Deliver a shared calendar data source that works with AppSync GraphQL and offline stub flows.
-  - Build a Next.js calendar dashboard page that composes availability editor, calendar connect, and reschedule picker with mutation handlers.
-  - Add test coverage plus progress artefacts documenting the new workflows.
-- **Done**
-  - Implemented `createCalendarDataSource` with GraphQL executor + stub client (`web/lib/calendar`), enabling unified DX for availability, holds, external sync, and ICS feed actions.
-  - Shipped `web/app/calendar/page.tsx` and `CalendarDashboardClient.tsx` wiring controller stores to React UI, telemetry, hold creation, and ICS feed management.
-  - Added stub data source unit test, reran calendar suite, updated progress log, and executed `make ci`.
-- **Pending**
-  - Wire the dashboard to real GraphQL endpoints (AppSync/App Server) and persist telemetry events once backend routes are online.
-  - Layer design system styling/accessibility polish around the new dashboard.
-  - Add end-to-end/regression coverage once backend calendar mutations are fully available.
-
-## How It Was Done
-
-- Created `web/lib/calendar/dataSource.mjs` to wrap `createCalendarClient` with fetch-based GraphQL execution and an in-memory stub client; exported via `web/lib/calendar/index.mjs`.
-- Built a Next.js route at `web/app/calendar/page.tsx` that resolves environment configuration, fetches the initial dashboard snapshot, and boots the client container.
-- Implemented `CalendarDashboardClient.tsx` to instantiate the calendar controller, manage status/telemetry, and handle availability saves, external calendar sync, ICS feed lifecycle, and reschedule hold creation.
-- Added `tests/frontend/calendar/data_source.test.mjs` to validate stub persistence (rules, exceptions, holds, ICS feed) and confirm API parity with the stub client.
-- Updated `docs/PROGRESS.md` with the new workstream summary and recorded test/CI runs.
-
-## Testing
-
-- `node --test tests/frontend/calendar/*.test.mjs` → ✅ pass (22 tests including new data source coverage).
-- `make ci` → ✅ pass (`python -m unittest tests.python.test_booking_schema`, `node --test tests/booking/*.test.mjs`).
-
-**Testing Proof:** Commands executed from repo root; TAP/pytest outputs captured above and stored in shell history for the run.
-
-## Issues & Problems
-
-- UI currently operates against stub data when GraphQL endpoint/API key are absent; live mutation paths still require backend configuration.
-- Dashboard lacks dedicated styling/layout polish—relies on component-level classes; design system integration remains future work.
-
-## Locations / Touch Map
-
-- `ops/locks/AGENT-3.lock`
-- `web/lib/calendar/dataSource.mjs`
-- `web/lib/calendar/index.mjs`
-- `web/app/calendar/page.tsx`
-- `web/app/calendar/CalendarDashboardClient.tsx`
-- `tests/frontend/calendar/data_source.test.mjs`
-- `docs/PROGRESS.md`
-- `docs/runs/2025-11-19-WBS-017-AGENT-3-Part3.md`
-
-## Suggestions for Next Agents
-
-- Connect the dashboard to real AppSync endpoints, add authenticated fetch helpers, and persist telemetry via analytics SDK.
-- Introduce Calendar-specific styling (design tokens, responsive layout) and accessibility sweeps (keyboard/a11y audits).
-- Extend automated coverage with integration/E2E tests once backend mutations/resolvers are available.
-
-## Progress & Checklist
-
-- [x] Implement shared calendar data source with GraphQL + stub fallbacks.
-- [x] Ship Next.js calendar dashboard page and client container wiring existing components.
-- [x] Add unit test coverage and update progress artefacts; run calendar suite + `make ci`.
-- [ ] Integrate live backend mutations/telemetry and add design-system polish (tracked for follow-up).
-
------ END REPORT ----- (fallback: APIRemovedInV1)
-
-Now decide: accept or reject the work, and output a prioritized list of next actions for the orchestrator with owners and due dates when possible. (fallback: NotFoundError)
+4) Backend Configuration Monitoring
+   - Owner: Project Manager
+   - Due: 2024-02-10 (ASAP)
+   - Acceptance Criteria:
+     * Weekly status updates
+     * Proactive risk mitigation
+     * Clear communication of any delays
+   - Notes/Dependencies: Ongoing tracking of critical path items

@@ -1768,3 +1768,10 @@ web/app/messaging/MessagingWorkspaceClient.tsx(12,13): error TS2300: Duplicate i
 web/app/messaging/MessagingWorkspaceClient.tsx(157,23): error TS7006: Parameter 'error' implicitly has an 'any' type.
 web/app/messaging/MessagingWorkspaceClient.tsx(157,30): error TS7006: Parameter 'context' implicitly has an 'any' type.
 [apply_latest_review] WBS-017 -> in_progress (report=True, ci=False, acceptance=False, decision=in_progress)
+[autopilot] Starting orchestrator autopilot loop.
+
+[autopilot] === Iteration 1 ===
+[autopilot] Dispatching next task with `run-next` ...
+[run-next] No unblocked todo items found.
+[autopilot] Sleeping 0s ...
+[autopilot] Autopilot loop finished.

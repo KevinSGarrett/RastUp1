@@ -3,19 +3,19 @@ from __future__ import annotations
 """
 Orchestrator: compile a dual review (assistant‑manager + primary‑decider) for the latest run report.
 
-Updates in this version:
-- Restores loop compatibility: always maintains stable "latest" aliases (latest.md and latest-<WBS>.md)
-  alongside timestamped outputs (configurable via env/CLI).
-- Optional --out-file / ORCHESTRATOR_REVIEW_OUT_FILE for an exact output path, if your loop expects a fixed file.
-- Safer prompt preprocessing (ANSI strip) and truncation that balances ``` fences.
-- OpenAI client hardening (base_url, organization, max_tokens, seed).
-- Expanded metadata block (source path, input size, truncation info).
-- Clearer logs; no behavior hidden behind breaking defaults.
-- **New CLI overrides** for temperature, timeout, max tokens, max prompt size, run glob/recursion/exclude regex,
-  latest basename, WBS-latest toggle, log level, base URL, org, and seed (in addition to env vars).
-- **Symlink robustness:** latest aliases use a relative symlink target (falls back to copy) to avoid path issues.
-
-This remains a drop‑in replacement for prior versions.
+Key updates in this version:
+- **Model normalization + fallbacks**:
+  - Transparently map unavailable/legacy names (e.g., "gpt-5", "claude-3-5-sonnet") to working defaults
+    and try an ordered list of **configurable** fallbacks before stubbing.
+  - Env overrides: ORCHESTRATOR_OPENAI_FALLBACK_MODELS, ORCHESTRATOR_ANTHROPIC_FALLBACK_MODELS
+    (comma-separated), and CLI flags --openai-fallbacks / --anthropic-fallbacks.
+- **OpenAI SDK detection**: cleanly separate new (>=1.x) and legacy (<1.0) codepaths.
+  We only use the legacy ChatCompletion API **iff** a genuine legacy SDK is detected.
+  API errors (e.g., invalid model) no longer trigger a mistaken fallback to the legacy path.
+- **Standardized response metadata**: latency_ms, tokens, provider, model, and vendor_raw in LLMResponse.raw.
+- **Safer retries**: retry per-(provider, model) with backoff; then advance to next fallback model.
+- **Logs**: clearer, with explicit model fallback attempts and outcomes.
+- Everything else remains compatible: latest aliases, copy/symlink behavior, CLI/env overrides, prompt truncation fence‑balancing, etc.
 """
 
 import argparse
@@ -25,7 +25,7 @@ import re
 import sys
 import time
 from pathlib import Path
-from typing import Optional, Any, Tuple, List
+from typing import Optional, Any, Tuple, List, Iterable
 
 from .model_router import ModelRouter
 from .providers.base import _stub_reply, LLMResponse
@@ -91,6 +91,28 @@ LATEST_ALIAS_MODE = os.getenv("ORCHESTRATOR_LATEST_ALIAS_MODE", "copy")  # copy 
 LATEST_BASENAME = os.getenv("ORCHESTRATOR_LATEST_BASENAME", "latest.md")
 WRITE_WBS_LATEST = os.getenv("ORCHESTRATOR_WRITE_WBS_LATEST", "1") == "1"
 DEFAULT_OUT_FILE = os.getenv("ORCHESTRATOR_REVIEW_OUT_FILE", None)  # exact output path if set
+
+# Model fallbacks (configurable)
+def _parse_csv_env(name: str, default: str) -> List[str]:
+    raw = os.getenv(name, default)
+    parts = [p.strip() for p in raw.split(",") if p.strip()]
+    # dedupe while preserving order
+    seen = set()
+    out: List[str] = []
+    for p in parts:
+        if p not in seen:
+            out.append(p)
+            seen.add(p)
+    return out
+
+OPENAI_FALLBACK_MODELS = _parse_csv_env(
+    "ORCHESTRATOR_OPENAI_FALLBACK_MODELS",
+    "gpt-4o-mini,gpt-4o,gpt-3.5-turbo",
+)
+ANTHROPIC_FALLBACK_MODELS = _parse_csv_env(
+    "ORCHESTRATOR_ANTHROPIC_FALLBACK_MODELS",
+    "claude-3-5-haiku-20241022,claude-3-haiku-20240307",
+)
 
 LOG_LEVEL = os.getenv("ORCHESTRATOR_LOG_LEVEL", "INFO").upper()
 logging.basicConfig(level=LOG_LEVEL, format="[%(levelname)s] %(message)s")
@@ -170,136 +192,40 @@ def _atomic_write(path: Path, data: str) -> None:
     tmp.replace(path)
 
 
-def _call_provider(provider, model: str, system: str, prompt: str) -> LLMResponse:
-    """
-    Best‑effort call; optional retries; falls back to stub if keys/libs not present or call fails.
+def _normalize_model_name(provider: str, model: str) -> str:
+    """Map known deprecated/placeholder names to working ones."""
+    p = provider.lower()
+    m = (model or "").strip()
+    if p == "openai":
+        # Map gpt-5 placeholder or obvious typos to gpt-4o(-mini)
+        if m.lower() in {"gpt-5", "gpt5", "gpt-4.5", "gpt-4o-latest"}:
+            return "gpt-4o-mini"
+        return m or "gpt-4o-mini"
+    if p == "anthropic":
+        # Map generic/dated "sonnet" label to haiku variant that is widely available
+        if m.lower() in {"claude-3-5-sonnet", "claude-3-sonnet", "sonnet"}:
+            return "claude-3-5-haiku-20241022"
+        return m or "claude-3-5-haiku-20241022"
+    return m
 
-    Supports:
-    - OpenAI (new SDK; transparently falls back to legacy SDK)
-    - Anthropic
-    - Unknown provider -> stub
-    """
-    name = getattr(provider, "name", str(provider))
-    start = time.time()
-    attempt = 0
-    last_exc: Optional[Exception] = None
 
-    if USE_STUB:
-        text = _stub_reply(name, prompt)
-        latency_ms = int((time.time() - start) * 1000)
-        return LLMResponse(content=text, model=model, raw=None)
-
-    while attempt <= RETRIES:
-        try:
-            if name == "openai":
-                api_key = os.getenv("OPENAI_API_KEY")
-                if not api_key:
-                    raise RuntimeError("Missing OPENAI_API_KEY")
-
-                # Support both new and legacy OpenAI SDK shapes transparently
-                try:
-                    import openai  # New SDK (>= 1.x)
-                    client_kwargs: dict[str, Any] = {"api_key": api_key}
-                    if OPENAI_BASE_URL:
-                        client_kwargs["base_url"] = OPENAI_BASE_URL
-                    if OPENAI_ORG:
-                        client_kwargs["organization"] = OPENAI_ORG
-                    client = openai.OpenAI(**client_kwargs)
-
-                    # Explicit max_tokens + timeout + temperature + optional seed
-                    create_kwargs: dict[str, Any] = {
-                        "model": model,
-                        "messages": [
-                            {"role": "system", "content": system},
-                            {"role": "user", "content": prompt},
-                        ],
-                        "temperature": TEMPERATURE,
-                        "max_tokens": MAX_TOKENS,
-                        "timeout": REQUEST_TIMEOUT,  # request option in new SDK
-                    }
-                    if OPENAI_SEED is not None:
-                        create_kwargs["seed"] = OPENAI_SEED
-
-                    resp = client.chat.completions.create(**create_kwargs)
-                    choice = resp.choices[0]
-                    text = getattr(choice.message, "content", None) or getattr(choice, "text", None) or ""
-                    raw = resp.model_dump() if hasattr(resp, "model_dump") else resp
-                    usage = getattr(resp, "usage", None)
-                    tokens = getattr(usage, "total_tokens", None) if usage else None
-
-                except Exception:
-                    # Old SDK fallback
-                    import openai as openai_legacy  # type: ignore
-                    openai_legacy.api_key = api_key
-                    if OPENAI_BASE_URL:
-                        openai_legacy.api_base = OPENAI_BASE_URL  # type: ignore[attr-defined]
-                    if OPENAI_ORG:
-                        openai_legacy.organization = OPENAI_ORG  # type: ignore[attr-defined]
-                    resp = openai_legacy.ChatCompletion.create(
-                        model=model,
-                        messages=[
-                            {"role": "system", "content": system},
-                            {"role": "user", "content": prompt},
-                        ],
-                        temperature=TEMPERATURE,
-                        max_tokens=MAX_TOKENS,
-                        request_timeout=REQUEST_TIMEOUT)
-                    text = resp["choices"][0]["message"]["content"]
-                    raw = resp
-                    tokens = resp.get("usage", {}).get("total_tokens")
-
-            elif name == "anthropic":
-                api_key = os.getenv("ANTHROPIC_API_KEY")
-                if not api_key:
-                    raise RuntimeError("Missing ANTHROPIC_API_KEY")
-                import anthropic
-
-                client = anthropic.Anthropic(api_key=api_key)
-                msg = client.messages.create(
-                    model=model,
-                    system=system,
-                    messages=[{"role": "user", "content": prompt}],
-                    max_tokens=MAX_TOKENS,
-                    temperature=TEMPERATURE)
-                # msg.content is a list of blocks; extract text
-                try:
-                    text = "".join(getattr(blk, "text", "") for blk in msg.content)
-                except Exception:
-                    text = str(msg.content)
-                raw = msg.to_dict() if hasattr(msg, "to_dict") else msg
-                tokens = None
-                if hasattr(msg, "usage"):
-                    try:
-                        tokens = msg.usage.input_tokens + msg.usage.output_tokens  # type: ignore[attr-defined]
-                    except Exception:
-                        tokens = None
-
-            else:
-                # Unknown provider -> stub
-                text = _stub_reply(name, prompt)
-                raw = {"provider": name, "model": model, "note": "unknown provider; using stub"}
-                tokens = None
-
-            latency_ms = int((time.time() - start) * 1000)
-            return LLMResponse(content=text, model=model, raw=raw)
-
-        except Exception as e:
-            last_exc = e
-            attempt += 1
-            if attempt > RETRIES:
-                break
-            backoff = min(2 ** attempt, 8) + (0.05 * attempt)
-            log.warning(
-                f"[review_latest] Provider call failed (attempt {attempt}/{RETRIES}) via {name}/{model}: {e}. "
-                f"Retrying in {backoff:.2f}s …"
-            )
-            time.sleep(backoff)
-
-    # Final fallback
-    text = f"{_stub_reply(name, prompt)} (fallback: {type(last_exc).__name__ if last_exc else 'UnknownError'})"
-    latency_ms = int((time.time() - start) * 1000)
-    return LLMResponse(content=text, model=model, raw=None)
-
+def _provider_model_candidates(provider_name: str, initial_model: str) -> List[str]:
+    """Return an ordered list: normalized initial model + provider-specific fallbacks."""
+    base = _normalize_model_name(provider_name, initial_model)
+    if provider_name == "openai":
+        cands = [base] + [m for m in OPENAI_FALLBACK_MODELS if m != base]
+    elif provider_name == "anthropic":
+        cands = [base] + [m for m in ANTHROPIC_FALLBACK_MODELS if m != base]
+    else:
+        cands = [base]
+    # de-duplicate while preserving order
+    out: List[str] = []
+    seen = set()
+    for m in cands:
+        if m and m not in seen:
+            out.append(m)
+            seen.add(m)
+    return out
 
 
 # --- helper: convert any LLM-like response to plain text -----------------------
@@ -332,7 +258,204 @@ def _to_text(x):
         return str(x)
     except Exception:
         return ""
-# -------------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------------
+# Provider calling with SDK detection + per-model fallbacks
+# ------------------------------------------------------------------------------
+
+def _have_openai_new_sdk(mod) -> bool:
+    """Return True if openai>=1.x (new SDK) appears to be installed."""
+    return hasattr(mod, "OpenAI")
+
+
+def _call_openai_new(model: str, system: str, prompt: str) -> tuple[str, dict]:
+    import openai  # >= 1.x
+    client_kwargs: dict[str, Any] = {"api_key": os.getenv("OPENAI_API_KEY")}
+    if not client_kwargs["api_key"]:
+        raise RuntimeError("Missing OPENAI_API_KEY")
+    if OPENAI_BASE_URL:
+        client_kwargs["base_url"] = OPENAI_BASE_URL
+    if OPENAI_ORG:
+        client_kwargs["organization"] = OPENAI_ORG
+    client = openai.OpenAI(**client_kwargs)
+
+    create_kwargs: dict[str, Any] = {
+        "model": model,
+        "messages": [
+            {"role": "system", "content": system},
+            {"role": "user", "content": prompt},
+        ],
+        "temperature": TEMPERATURE,
+        "max_tokens": MAX_TOKENS,
+        "timeout": REQUEST_TIMEOUT,  # request option in new SDK
+    }
+    if OPENAI_SEED is not None:
+        create_kwargs["seed"] = OPENAI_SEED
+
+    resp = client.chat.completions.create(**create_kwargs)
+    # Extract text (chat.completions)
+    choice = resp.choices[0]
+    text = getattr(choice.message, "content", None) or getattr(choice, "text", None) or ""
+    usage = getattr(resp, "usage", None)
+    tokens = getattr(usage, "total_tokens", None) if usage else None
+
+    vendor_raw = resp.model_dump() if hasattr(resp, "model_dump") else resp
+    meta = {
+        "provider": "openai",
+        "model": model,
+        "tokens": tokens,
+        "vendor_raw": vendor_raw,
+    }
+    return text, meta
+
+
+def _call_openai_legacy(model: str, system: str, prompt: str) -> tuple[str, dict]:
+    # Only invoked if truly on legacy openai<1.0
+    import openai as openai_legacy  # type: ignore
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError("Missing OPENAI_API_KEY")
+    openai_legacy.api_key = api_key
+    if OPENAI_BASE_URL:
+        openai_legacy.api_base = OPENAI_BASE_URL  # type: ignore[attr-defined]
+    if OPENAI_ORG:
+        openai_legacy.organization = OPENAI_ORG  # type: ignore[attr-defined]
+
+    resp = openai_legacy.ChatCompletion.create(
+        model=model,
+        messages=[
+            {"role": "system", "content": system},
+            {"role": "user", "content": prompt},
+        ],
+        temperature=TEMPERATURE,
+        max_tokens=MAX_TOKENS,
+        request_timeout=REQUEST_TIMEOUT,
+    )
+    text = resp["choices"][0]["message"]["content"]
+    tokens = resp.get("usage", {}).get("total_tokens")
+    meta = {
+        "provider": "openai",
+        "model": model,
+        "tokens": tokens,
+        "vendor_raw": resp,
+    }
+    return text, meta
+
+
+def _call_anthropic(model: str, system: str, prompt: str) -> tuple[str, dict]:
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    if not api_key:
+        raise RuntimeError("Missing ANTHROPIC_API_KEY")
+    import anthropic
+
+    client = anthropic.Anthropic(api_key=api_key)
+    # Anthropic API (messages.create)
+    msg = client.messages.create(
+        model=model,
+        system=system,
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=MAX_TOKENS,
+        temperature=TEMPERATURE,
+        # NOTE: anthropic SDK timeout control is at httpx client level; not passing here to keep compat.
+    )
+    # msg.content is a list of blocks; extract text
+    try:
+        text = "".join(getattr(blk, "text", "") for blk in msg.content)
+    except Exception:
+        text = str(msg.content)
+    tokens = None
+    if hasattr(msg, "usage"):
+        try:
+            tokens = msg.usage.input_tokens + msg.usage.output_tokens  # type: ignore[attr-defined]
+        except Exception:
+            tokens = None
+
+    meta = {
+        "provider": "anthropic",
+        "model": model,
+        "tokens": tokens,
+        "vendor_raw": msg.to_dict() if hasattr(msg, "to_dict") else msg,
+    }
+    return text, meta
+
+
+def _call_provider_with_fallbacks(
+    provider,
+    requested_model: str,
+    system: str,
+    prompt: str,
+    fallbacks: Optional[Iterable[str]] = None,
+) -> LLMResponse:
+    """
+    Attempt provider call with requested_model, then any provided fallbacks.
+    Retries per model up to RETRIES.
+    Returns a best-effort LLMResponse; uses stub if all attempts fail or USE_STUB is set.
+    """
+    name = getattr(provider, "name", str(provider))
+    candidates = [requested_model] + list(fallbacks or [])
+    last_exc: Optional[Exception] = None
+
+    if USE_STUB:
+        text = _stub_reply(name, prompt)
+        return LLMResponse(content=text, model=requested_model, raw={"provider": name, "model": requested_model, "note": "stubbed"})
+
+    for model in candidates:
+        attempt = 0
+        while attempt <= RETRIES:
+            start = time.time()
+            try:
+                if name == "openai":
+                    try:
+                        import openai as openai_pkg  # do not alias; we inspect it
+                    except Exception as e:
+                        raise RuntimeError(f"OpenAI SDK import failed: {e}") from e
+
+                    if _have_openai_new_sdk(openai_pkg):
+                        text, meta = _call_openai_new(model, system, prompt)
+                    else:
+                        text, meta = _call_openai_legacy(model, system, prompt)
+
+                elif name == "anthropic":
+                    text, meta = _call_anthropic(model, system, prompt)
+
+                else:
+                    # Unknown provider -> stub
+                    text = _stub_reply(name, prompt)
+                    latency_ms = int((time.time() - start) * 1000)
+                    raw = {"provider": name, "model": model, "latency_ms": latency_ms, "note": "unknown provider; using stub"}
+                    return LLMResponse(content=text, model=model, raw=raw)
+
+                latency_ms = int((time.time() - start) * 1000)
+                meta["latency_ms"] = latency_ms
+                return LLMResponse(content=text, model=model, raw=meta)
+
+            except Exception as e:
+                last_exc = e
+                attempt += 1
+                # Decide whether to retry same model or move to next candidate
+                if attempt <= RETRIES:
+                    backoff = min(2 ** attempt, 8) + (0.05 * attempt)
+                    log.warning(
+                        f"[review_latest] {name}/{model} failed (attempt {attempt}/{RETRIES}): {e}. Retrying in {backoff:.2f}s …"
+                    )
+                    time.sleep(backoff)
+                else:
+                    # Out of retries for this model; move to next model candidate (if any)
+                    log.warning(f"[review_latest] {name}/{model} exhausted retries: {e}. Trying next fallback (if any).")
+                    break
+
+        # next model candidate (continue loop)
+
+    # All candidates failed -> stub
+    text = f"{_stub_reply(name, prompt)} (fallback: {type(last_exc).__name__ if last_exc else 'UnknownError'})"
+    return LLMResponse(content=text, model=candidates[0] if candidates else requested_model, raw={"provider": name, "model": requested_model, "note": "all candidates failed; stubbed"})
+
+
+# ------------------------------------------------------------------------------
+# Core review compilation
+# ------------------------------------------------------------------------------
+
 def compile_dual_review(report_md: str, router: ModelRouter, source: Optional[Path] = None) -> str:
     """Run assistant‑manager then primary‑decider and merge into one markdown document."""
     # Normalize + strip ANSI for safer prompts
@@ -352,36 +475,63 @@ def compile_dual_review(report_md: str, router: ModelRouter, source: Optional[Pa
     if not plan:
         raise RuntimeError("ModelRouter.providers_for_kind('review') returned no providers")
 
-    # Assistant‑manager
+    # Assistant‑manager: normalize model + add fallbacks
     am_provider, am_model = plan[0]
-    am = _call_provider(am_provider, am_model, ASSISTANT_MANAGER_SYSTEM, am_prompt)
+    am_provider_name = getattr(am_provider, "name", str(am_provider))
+    am_candidates = _provider_model_candidates(am_provider_name, am_model)
+    if len(am_candidates) > 1:
+        log.info(f"[orchestrator.review_latest] Assistant‑manager models: {am_candidates[0]} (fallbacks: {am_candidates[1:]})")
+    else:
+        log.info(f"[orchestrator.review_latest] Assistant‑manager model: {am_candidates[0]}")
 
-    # Primary decider
+    am = _call_provider_with_fallbacks(
+        am_provider,
+        am_candidates[0],
+        ASSISTANT_MANAGER_SYSTEM,
+        am_prompt,
+        fallbacks=am_candidates[1:],
+    )
+
+    # Primary decider: may use second provider/model or same as AM
     pd_provider, pd_model = plan[1] if len(plan) > 1 else plan[0]
+    pd_provider_name = getattr(pd_provider, "name", str(pd_provider))
+    pd_candidates = _provider_model_candidates(pd_provider_name, pd_model)
+    if len(pd_candidates) > 1:
+        log.info(f"[orchestrator.review_latest] Primary‑decider models: {pd_candidates[0]} (fallbacks: {pd_candidates[1:]})")
+    else:
+        log.info(f"[orchestrator.review_latest] Primary‑decider model: {pd_candidates[0]}")
+
     pd_prompt = (
-        f"{getattr(am, 'text', getattr(am, 'content', ''))}\n\n"
+        f"{_to_text(am)}\n\n"
         "Now decide: accept or reject the work, and output a prioritized list of next actions "
         "for the orchestrator with owners and due dates when possible."
     )
-    pd = _call_provider(pd_provider, pd_model, PRIMARY_DECIDER_SYSTEM, pd_prompt)
+
+    pd = _call_provider_with_fallbacks(
+        pd_provider,
+        pd_candidates[0],
+        PRIMARY_DECIDER_SYSTEM,
+        pd_prompt,
+        fallbacks=pd_candidates[1:],
+    )
 
     # Expanded metadata block
     src_label = str(source) if source is not None else "STDIN/override"
-    # Safe metadata extraction from LLMResponse.raw (since provider/latency/tokens
-    # are not guaranteed as top-level dataclass fields)
-    am_raw = getattr(am, 'raw', {}) or {}
-    pd_raw = getattr(pd, 'raw', {}) or {}
-    am_provider = am_raw.get('provider', 'unknown')
-    pd_provider = pd_raw.get('provider', 'unknown')
-    am_latency = am_raw.get('latency_ms', '?')
-    pd_latency = pd_raw.get('latency_ms', '?')
-    am_tokens = am_raw.get('tokens')
-    pd_tokens = pd_raw.get('tokens')
+
+    def _meta_line(tag: str, resp: LLMResponse) -> str:
+        raw = getattr(resp, "raw", {}) or {}
+        provider = raw.get("provider", "?")
+        model = getattr(resp, "model", None) or raw.get("model", "?")
+        latency = raw.get("latency_ms", "?")
+        tokens = raw.get("tokens", None)
+        tok_str = f", tokens={tokens}" if tokens is not None else ""
+        return f"- {tag}: **{provider}/{model}** ({latency} ms){tok_str}"
+
     meta = [
         f"- Source: **{src_label}**",
         f"- Input size: **{len(normalized)} chars**" + (f" (truncated: {truncated_chars})" if truncated_chars > 0 else ""),
-        f"- Assistant‑manager: **{am_provider}/{am.model}** ({am_latency} ms)" + (f", tokens={am_tokens}" if am_tokens is not None else ""),
-        f"- Primary‑decider: **{pd_provider}/{pd.model}** ({pd_latency} ms)" + (f", tokens={pd_tokens}" if pd_tokens is not None else ""),
+        _meta_line("Assistant‑manager", am),
+        _meta_line("Primary‑decider", pd),
     ]
 
     merged = [
@@ -523,6 +673,7 @@ def _apply_cli_overrides(args: argparse.Namespace) -> None:
     global MAX_PROMPT_CHARS, MAX_TOKENS, TEMPERATURE, REQUEST_TIMEOUT, OPENAI_BASE_URL, OPENAI_ORG
     global OPENAI_SEED, RUN_GLOB, RUN_RECURSIVE, RUN_EXCLUDE_RE, _RUN_EXCLUDE_RX
     global LATEST_BASENAME, WRITE_WBS_LATEST, USE_STUB, log
+    global OPENAI_FALLBACK_MODELS, ANTHROPIC_FALLBACK_MODELS
 
     if args.max_prompt_chars is not None:
         MAX_PROMPT_CHARS = args.max_prompt_chars
@@ -554,6 +705,11 @@ def _apply_cli_overrides(args: argparse.Namespace) -> None:
 
     if args.use_stub:
         USE_STUB = True
+
+    if args.openai_fallbacks is not None:
+        OPENAI_FALLBACK_MODELS = [m.strip() for m in args.openai_fallbacks.split(",") if m.strip()]
+    if args.anthropic_fallbacks is not None:
+        ANTHROPIC_FALLBACK_MODELS = [m.strip() for m in args.anthropic_fallbacks.split(",") if m.strip()]
 
     if args.log_level is not None:
         # Update root and module logger levels
@@ -641,6 +797,12 @@ def main():
         help="Do not search recursively for run files.")
     parser.set_defaults(recursive=None)
     parser.add_argument("--exclude-re", dest="exclude_re", default=None, help="Regex to exclude run files (env ORCHESTRATOR_RUN_EXCLUDE_RE).")
+
+    # Model fallbacks
+    parser.add_argument("--openai-fallbacks", dest="openai_fallbacks", default=None,
+                        help="Comma-separated OpenAI fallback models (env ORCHESTRATOR_OPENAI_FALLBACK_MODELS).")
+    parser.add_argument("--anthropic-fallbacks", dest="anthropic_fallbacks", default=None,
+                        help="Comma-separated Anthropic fallback models (env ORCHESTRATOR_ANTHROPIC_FALLBACK_MODELS).")
 
     # Logging
     parser.add_argument("--log-level", dest="log_level", default=None, choices=["DEBUG", "INFO", "WARNING", "ERROR"], help="Log level (env ORCHESTRATOR_LOG_LEVEL).")
