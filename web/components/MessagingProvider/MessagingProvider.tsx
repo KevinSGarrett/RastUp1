@@ -1,4 +1,5 @@
-import React, { PropsWithChildren } from 'react';
+import React from 'react';
+import type { PropsWithChildren } from 'react';
 import { createMessagingReactBindings } from '../../../tools/frontend/messaging/react_bindings.mjs';
 
 const bindings = createMessagingReactBindings({ react: React });

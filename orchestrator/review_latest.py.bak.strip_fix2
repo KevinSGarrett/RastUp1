@@ -301,38 +301,6 @@ def _call_provider(provider, model: str, system: str, prompt: str) -> LLMRespons
     return LLMResponse(content=text, model=model, raw=None)
 
 
-
-# --- helper: convert any LLM-like response to plain text -----------------------
-def _to_text(x):
-    if x is None:
-        return ""
-    if isinstance(x, str):
-        return x
-    # Prefer string-ish attributes if present
-    for attr in ("text", "content", "message", "output", "response"):
-        try:
-            v = getattr(x, attr)
-        except Exception:
-            v = None
-        if isinstance(v, str):
-            return v
-    # If present but not a string, stringify
-    for attr in ("text", "content"):
-        try:
-            v = getattr(x, attr)
-        except Exception:
-            v = None
-        if v is not None:
-            try:
-                return str(v)
-            except Exception:
-                pass
-    # Last resort
-    try:
-        return str(x)
-    except Exception:
-        return ""
-# -------------------------------------------------------------------------------
 def compile_dual_review(report_md: str, router: ModelRouter, source: Optional[Path] = None) -> str:
     """Run assistant‑manager then primary‑decider and merge into one markdown document."""
     # Normalize + strip ANSI for safer prompts
@@ -388,9 +356,9 @@ def compile_dual_review(report_md: str, router: ModelRouter, source: Optional[Pa
         HEADER,
         *meta,
         "\n## Assistant‑Manager Review\n",
-        _to_text(am).strip(),
+        (getattr(am, 'text', getattr(am, 'content', '')) or "").strip(),
         "\n## Final Orchestrator Decision\n",
-        _to_text(pd).strip(),
+        (getattr(pd, 'text', getattr(pd, 'content', '')) or "").strip(),
         "",
     ]
     return "\n".join(merged)

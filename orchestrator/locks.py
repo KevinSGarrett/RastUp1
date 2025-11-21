@@ -1,29 +1,21 @@
-from __future__ import annotations
-from pathlib import Path
-from datetime import datetime, timedelta, timezone
+import os
+import time
+import pathlib
 
-ROOT = Path(__file__).resolve().parent.parent
-LOCKS = ROOT / "ops" / "locks"
+LOCK_DIR = pathlib.Path("ops/locks")
+LOCK_TTL_SECS = int(os.getenv("LOCK_TTL_SECS", "1800"))  # 30 minutes default
 
-def sweep(ttl_minutes: int = 60) -> list[str]:
-    removed = []
-    if not LOCKS.exists():
-        return removed
-    now = datetime.now(timezone.utc).timestamp()
-    ttl = ttl_minutes * 60
-    for p in LOCKS.glob("*.lock"):
+def sweep_stale_locks(now=None, ttl=LOCK_TTL_SECS):
+    now = time.time() if now is None else now
+    LOCK_DIR.mkdir(parents=True, exist_ok=True)
+    swept = []
+    for p in LOCK_DIR.glob("*.lock"):
         try:
             age = now - p.stat().st_mtime
             if age > ttl:
                 p.unlink(missing_ok=True)
-                removed.append(p.name)
-        except Exception:
+                swept.append(p.name)
+        except FileNotFoundError:
+            # Race: file disappeared; ignore
             pass
-    return removed
-
-if __name__ == "__main__":
-    gone = sweep()
-    if gone:
-        print("[locks.sweep] removed:", ", ".join(gone))
-    else:
-        print("[locks.sweep] none removed")
+    return swept

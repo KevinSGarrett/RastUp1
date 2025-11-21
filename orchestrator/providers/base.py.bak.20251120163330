@@ -18,14 +18,6 @@ class LLMResponse:
     usage: Optional[Dict[str, int]] = None
     raw: Any = None
 
-    @property
-    def text(self) -> str:
-        val = getattr(self, 'content', None)
-        return _normalize_llm_text(val)
-
-    def __str__(self) -> str:
-        return self.text
-
 
 @runtime_checkable
 class LLMProvider(Protocol):
@@ -128,65 +120,3 @@ def _stub_reply(
 
 
 __all__ = ["LLMResponse", "LLMProvider", "_stub_reply", "stub_enabled"]
-
-# --- injected: normalize LLM content to plain text ---
-from typing import Any
-
-def _normalize_llm_text(val: Any) -> str:
-    """Best-effort conversion of mixed provider payloads to plain text."""
-    try:
-        import types  # noqa: F401
-    except Exception:
-        pass
-
-    if val is None:
-        return ""
-    if isinstance(val, str):
-        return val
-
-    # Lists of content parts
-    if isinstance(val, list):
-        parts = []
-        for item in val:
-            if isinstance(item, str):
-                parts.append(item)
-            elif isinstance(item, dict):
-                t = item.get("text")
-                if isinstance(t, str):
-                    parts.append(t)
-                else:
-                    c = item.get("content")
-                    if c is not None:
-                        parts.append(_normalize_llm_text(c))
-            else:
-                try:
-                    parts.append(str(item))
-                except Exception:
-                    pass
-        return "".join(parts)
-
-    # Dicts: look for common keys
-    if isinstance(val, dict):
-        for k in ("text", "content", "message", "output", "response"):
-            if k in val:
-                return _normalize_llm_text(val[k])
-        try:
-            return str(val)
-        except Exception:
-            return ""
-
-    # Objects with string-like attributes
-    for attr in ("text", "content", "message", "output", "response"):
-        try:
-            v = getattr(val, attr)
-        except Exception:
-            v = None
-        if v is not None:
-            return _normalize_llm_text(v)
-
-    # Last resort
-    try:
-        return str(val)
-    except Exception:
-        return ""
-# --- end injected normalize ---

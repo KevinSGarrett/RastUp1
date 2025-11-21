@@ -23,3 +23,5 @@ logs/
 
 # build output
 **/dist/
+services/**/dist/
+dist/

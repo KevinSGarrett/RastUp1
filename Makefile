@@ -120,3 +120,6 @@ assistant-manager-anthropic:
 # Cleanup caches/reports (safe to skip)
 clean:
 	rm -rf .pytest_cache .cache .tsbuildinfo playwright-report test-results
+
+review-latest:
+	python -m orchestrator.reviewer

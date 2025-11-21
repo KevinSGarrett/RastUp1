@@ -53,7 +53,12 @@ export interface MessagingInboxProps {
   onUnarchiveThread?: (threadId: string) => Promise<void> | void;
   onMuteThread?: (threadId: string) => Promise<void> | void;
   onUnmuteThread?: (threadId: string) => Promise<void> | void;
-  formatThreadLabel?: (thread: ThreadItem) => ThreadLabel;
+  /**
+   * Allows callers to format a thread's label. Receives the current timezone as an optional
+   * second argument so timestamps can be rendered consistently when desired.
+   * Implementations that only accept (thread) remain valid.
+   */
+  formatThreadLabel?: (thread: ThreadItem, timezone?: string) => ThreadLabel;
   requestActions?: {
     acceptLabel?: string;
     declineLabel?: string;

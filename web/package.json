@@ -2,6 +2,9 @@
   "devDependencies": {
     "@playwright/test": "^1.56.1",
     "@types/node": "^20.19.25",
+    "@types/pg": "^8.15.6",
+    "@types/react": "^19.2.6",
+    "@types/react-dom": "^19.2.3",
     "typescript": "^5.9.3"
   },
   "dependencies": {
