@@ -57,8 +57,14 @@ def _default_config(repo_root: Path) -> Dict[str, Any]:
             "agents": {
                 "AGENT-1": {"role": "Bootstrap & DevOps", "model": "gpt-5-codex"},
                 "AGENT-2": {"role": "Backend & Services", "model": "gpt-5-codex"},
-                "AGENT-3": {"role": "Frontend & Developer Experience", "model": "gpt-5-codex"},
-                "AGENT-4": {"role": "QA / Security / Docs / Release", "model": "claude-4.5-sonnet"},
+                "AGENT-3": {
+                    "role": "Frontend & Developer Experience",
+                    "model": "gpt-5-codex",
+                },
+                "AGENT-4": {
+                    "role": "QA / Security / Docs / Release",
+                    "model": "claude-4.5-sonnet",
+                },
             },
         },
     }
@@ -71,7 +77,9 @@ def ensure_basic_layout(repo_root: Path) -> None:
     (repo_root / "ops" / "locks").mkdir(parents=True, exist_ok=True)
     (repo_root / "ops" / "tasks").mkdir(parents=True, exist_ok=True)
     (repo_root / "docs" / "runs").mkdir(parents=True, exist_ok=True)
-    (repo_root / "docs" / "orchestrator" / "from-agents").mkdir(parents=True, exist_ok=True)
+    (repo_root / "docs" / "orchestrator" / "from-agents").mkdir(
+        parents=True, exist_ok=True
+    )
     (repo_root / "docs" / "blueprints").mkdir(parents=True, exist_ok=True)
 
     config_path = repo_root / "ops" / "config.yaml"
@@ -107,7 +115,9 @@ def ensure_basic_layout(repo_root: Path) -> None:
 def load_config(repo_root: Path) -> Dict[str, Any]:
     config_path = repo_root / "ops" / "config.yaml"
     if not config_path.exists():
-        raise SystemExit("ops/config.yaml not found. Run `python -m orchestrator.cli init --root <repo>` first.")
+        raise SystemExit(
+            "ops/config.yaml not found. Run `python -m orchestrator.cli init --root <repo>` first."
+        )
     cfg = yaml.safe_load(config_path.read_text(encoding="utf-8"))
 
     # 🔧 Auto-patch old configs that still use the GUI 'cursor' launcher
@@ -117,7 +127,10 @@ def load_config(repo_root: Path) -> Dict[str, Any]:
         cursor_cfg["cli_command"] = "cursor-agent"
         cfg["cursor"] = cursor_cfg
         config_path.write_text(yaml.safe_dump(cfg, sort_keys=False), encoding="utf-8")
-        print(f"[config] Updated cursor.cli_command from 'cursor' to 'cursor-agent' in {config_path}")
+        print(
+            "[config] Updated cursor.cli_command from 'cursor' to 'cursor-agent' in "
+            f"{config_path}"
+        )
 
     return cfg
 
@@ -132,8 +145,58 @@ def make_llm(config: Dict[str, Any]) -> LLMClient:
     try:
         return LLMClient(cfg)
     except Exception as e:
-        print(f"[llm] WARN: failed to init SDKs cleanly: {e}. Some subcommands may still run." )
+        print(
+            f"[llm] WARN: failed to init SDKs cleanly: {e}. Some subcommands may still run."
+        )
         return LLMClient(cfg)  # let it raise later if actually used
+
+
+# ----------------------------
+# Helpers
+# ----------------------------
+def _extract_json_from_text(raw: str) -> str:
+    """
+    Best-effort: given a model string that *should* contain JSON, pull out the JSON object.
+
+    Handles:
+    - Plain JSON
+    - ```json ... ``` fenced blocks
+    - Extra prose before/after the JSON by slicing between first '{' and last '}'.
+    """
+    if not isinstance(raw, str):
+        return raw  # let json.loads complain
+
+    text = raw.strip()
+    if not text:
+        return text
+
+    # Fenced block: ```json\n{...}\n```
+    if text.startswith("```"):
+        fence = "```"
+        first = 0
+        second = text.find(fence, first + len(fence))
+        if second != -1:
+            inner = text[first + len(fence) : second]
+            inner = inner.lstrip()
+            if inner.lower().startswith("json"):
+                inner = inner[4:].lstrip()
+            return inner.strip()
+
+    # If it's already valid JSON, we're done.
+    try:
+        json.loads(text)
+        return text
+    except Exception:
+        pass
+
+    # Fallback: slice from first '{' to last '}'.
+    first = text.find("{")
+    last = text.rfind("}")
+    if 0 <= first < last:
+        candidate = text[first : last + 1].strip()
+        return candidate
+
+    return text
 
 
 # ----------------------------
@@ -172,7 +235,10 @@ def cmd_verify_blueprints(args: argparse.Namespace) -> None:
     try:
         meta, paths = blueprints.load_blueprint_index(repo_root)
     except FileNotFoundError:
-        raise SystemExit(f"[verify-blueprints] Missing index at {repo_root/'docs/blueprints/blueprint_index.json'}")
+        raise SystemExit(
+            f"[verify-blueprints] Missing index at "
+            f"{repo_root/'docs/blueprints/blueprint_index.json'}"
+        )
     nt = sum(1 for r in meta if (r.get("doc_type") or "").startswith("non"))
     tt = sum(1 for r in meta if (r.get("doc_type") or "").startswith("tech"))
     print(f"[verify-blueprints] OK: {len(meta)} chunks ({nt} non-tech, {tt} tech).")
@@ -200,8 +266,9 @@ def cmd_plan(args: argparse.Namespace) -> None:
         "- AGENT-2: Backend & Services\n"
         "- AGENT-3: Frontend & Developer Experience\n"
         "- AGENT-4: QA, Security, Docs, Release\n\n"
-        "WBS must reflect implementation order, NOT document order.\n\n"
-        "Output pure JSON:\n"
+        "WBS must reflect implementation order, NOT document order.\n"
+        "You MUST produce between 20 and 40 tasks; fewer than 20 tasks is too coarse, more than 40 is unnecessary.\n\n"
+        "Output pure JSON only (no markdown, no commentary):\n"
         "{ \"tasks\": [ { \"id\":\"WBS-001\", \"title\":\"…\", \"description\":\"…\", "
         "\"agent\":\"AGENT-1|AGENT-2|AGENT-3|AGENT-4\", \"depends_on\":[\"WBS-000\"], "
         "\"blueprint_ids\":[\"NT-0001\",\"TD-0007\"], \"phase\":\"Bootstrap|Backend|Frontend|QA|Ops|Docs|Other\", "
@@ -216,6 +283,8 @@ def cmd_plan(args: argparse.Namespace) -> None:
         "- docs/ACCESS_ENVELOPE.md, docs/TEST_POLICY.md, docs/RISKS.md\n"
         "- docs/FILE_INDEX.md (or CODEMAP.json)\n"
         "- orchestrator improvements (idempotence/state, token-discipline, agent prompts, meta-QA, usage tracking)\n\n"
+        "For each task, `blueprint_ids` MUST be a small, relevant subset (roughly 3–25 IDs) "
+        "and MUST NOT just list all chunk IDs.\n"
         "Assign agents sensibly (infra->backend->frontend->E2E QA; docs as work matures).\n\n"
         "Blueprint chunk summaries:\n\n"
         f"{summaries_block}"
@@ -229,8 +298,10 @@ def cmd_plan(args: argparse.Namespace) -> None:
         temperature=0.2,
     )
 
+    cleaned = _extract_json_from_text(raw)
+
     try:
-        data = json.loads(raw)
+        data = json.loads(cleaned)
     except json.JSONDecodeError:
         print("[plan] Failed to parse JSON from model output. Raw output:")
         print(raw)
@@ -241,7 +312,9 @@ def cmd_plan(args: argparse.Namespace) -> None:
         raise SystemExit("[plan] Model returned no tasks.")
 
     wbs_path = repo_root / "ops" / "wbs.json"
-    wbs_path.write_text(json.dumps(tasks, indent=2, ensure_ascii=False), encoding="utf-8")
+    wbs_path.write_text(
+        json.dumps(tasks, indent=2, ensure_ascii=False), encoding="utf-8"
+    )
     print(f"[plan] Wrote WBS with {len(tasks)} tasks to {wbs_path}")
 
     queue_path = repo_root / "ops" / "queue.jsonl"
@@ -251,7 +324,9 @@ def cmd_plan(args: argparse.Namespace) -> None:
                 "task_id": t["id"],
                 "agent": t["agent"],
                 "status": "todo",
-                "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00","Z"),
+                "created_at": datetime.now(timezone.utc)
+                .isoformat()
+                .replace("+00:00", "Z"),
                 "blueprint_ids": t.get("blueprint_ids", []),
                 "title": t.get("title", ""),
                 "phase": t.get("phase", ""),
@@ -284,7 +359,8 @@ def cmd_plan(args: argparse.Namespace) -> None:
             lines_out.append(f"\n## Phase: {phase}\n")
             current_phase = phase
         lines_out.append(
-            f"- [ ] `{item['task_id']}` **({item['agent']})** - {item.get('title','') or '(no title)'} "
+            f"- [ ] `{item['task_id']}` **({item['agent']})** - "
+            f"{item.get('title','') or '(no title)'} "
             f"(priority {item['priority']})"
         )
 
@@ -310,11 +386,19 @@ def build_task_file(
         sub = "non-tech" if row["doc_type"] == "non-tech" else "tech"
         bp_path = repo_root / "docs" / "blueprints" / sub / f"{row['id']}.md"
         if bp_path.exists():
-            blueprint_chunks.append(f"### {row['id']} ({sub})\n\n" + bp_path.read_text(encoding="utf-8"))
+            blueprint_chunks.append(
+                f"### {row['id']} ({sub})\n\n" + bp_path.read_text(encoding="utf-8")
+            )
         else:
-            blueprint_chunks.append(f"### {row['id']} ({sub})\n\n" + (row.get("text") or ""))
+            blueprint_chunks.append(
+                f"### {row['id']} ({sub})\n\n" + (row.get("text") or "")
+            )
 
-    bp_section = "\n\n".join(blueprint_chunks) if blueprint_chunks else "_No linked blueprint chunks._"
+    bp_section = (
+        "\n\n".join(blueprint_chunks)
+        if blueprint_chunks
+        else "_No linked blueprint chunks._"
+    )
 
     content = (
         f"# Task for {agent_name}: {wbs_task['id']} — {wbs_task.get('title','')}\n\n"
@@ -398,30 +482,45 @@ def _decide_agent_model(
         "AGENT-3": "gpt-5-codex",
         "AGENT-4": "claude-4.5-sonnet",
     }
-    suggested = defaults.get(agent_name) or cfg.get("cursor", {}).get("default_model") or "gpt-5"
+    suggested = (
+        defaults.get(agent_name)
+        or cfg.get("cursor", {}).get("default_model")
+        or "gpt-5"
+    )
 
     # Ask OpenAI to pick (you can change this to Anthropic if desired).
-    prompt = json.dumps({
-        "agent": agent_name,
-        "task": {
-            "id": wbs_task.get("id"),
-            "title": wbs_task.get("title"),
-            "phase": wbs_task.get("phase"),
-            "desc": (wbs_task.get("description") or "")[:1500],
+    prompt = json.dumps(
+        {
+            "agent": agent_name,
+            "task": {
+                "id": wbs_task.get("id"),
+                "title": wbs_task.get("title"),
+                "phase": wbs_task.get("phase"),
+                "desc": (wbs_task.get("description") or "")[:1500],
+            },
+            "available_models": [
+                "gpt-5",
+                "gpt-5-codex",
+                "gpt-4o",
+                "gpt-4o-mini",
+                "claude-4.5-sonnet",
+                "claude-4.5-haiku",
+                "composer-1",
+            ],
+            "instruction": "Pick exactly one `model` from available_models and a boolean `max`. "
+            "Return JSON only: {\"model\":\"...\",\"max\":true|false,\"reason\":\"...\"}.",
         },
-        "available_models": [
-            "gpt-5","gpt-5-codex","gpt-4o","gpt-4o-mini",
-            "claude-4.5-sonnet","claude-4.5-haiku","composer-1"
-        ],
-        "instruction": "Pick exactly one `model` from available_models and a boolean `max`. "
-                       "Return JSON only: {\"model\":\"...\",\"max\":true|false,\"reason\":\"...\"}."
-    }, ensure_ascii=False)
+        ensure_ascii=False,
+    )
 
     try:
-        raw = llm.chat_openai([
-            {"role": "system", "content": "You are the orchestrator's model selector."},
-            {"role": "user", "content": prompt},
-        ], temperature=0.1)
+        raw = llm.chat_openai(
+            [
+                {"role": "system", "content": "You are the orchestrator's model selector."},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.1,
+        )
         data = json.loads(raw)
         model = str(data.get("model") or suggested)
         mx = bool(data.get("max") or False)
@@ -432,14 +531,22 @@ def _decide_agent_model(
     # Log the decision
     md_log = repo_root / "ops" / "model-decisions.jsonl"
     md_log.parent.mkdir(parents=True, exist_ok=True)
-    md_log.open("a", encoding="utf-8").write(json.dumps({
-        "time": datetime.now(timezone.utc).isoformat().replace("+00:00","Z"),
-        "task_id": wbs_task.get("id"),
-        "agent": agent_name,
-        "model": model,
-        "max": mx,
-        "reason": reason,
-    }, ensure_ascii=False) + "\n")
+    md_log.open("a", encoding="utf-8").write(
+        json.dumps(
+            {
+                "time": datetime.now(timezone.utc)
+                .isoformat()
+                .replace("+00:00", "Z"),
+                "task_id": wbs_task.get("id"),
+                "agent": agent_name,
+                "model": model,
+                "max": mx,
+                "reason": reason,
+            },
+            ensure_ascii=False,
+        )
+        + "\n"
+    )
     return model, mx, reason
 
 
@@ -449,7 +556,15 @@ def cmd_run_next(args: argparse.Namespace) -> None:
     llm = make_llm(cfg)
 
     queue_path = repo_root / "ops" / "queue.jsonl"
-    lines = [l for l in queue_path.read_text(encoding="utf-8").splitlines() if l.strip()] if queue_path.exists() else []
+    lines = (
+        [
+            l
+            for l in queue_path.read_text(encoding="utf-8").splitlines()
+            if l.strip()
+        ]
+        if queue_path.exists()
+        else []
+    )
     if not lines:
         print("[run-next] Queue is empty.")
         return
@@ -488,7 +603,9 @@ def cmd_run_next(args: argparse.Namespace) -> None:
     print(f"[run-next] Created task file for {agent_name}: {task_file}")
 
     # Decide Cursor model (orchestrator decides; Cursor executes)
-    model, max_flag, reason = _decide_agent_model(repo_root, agent_name, wbs_task, cfg, llm)
+    model, max_flag, reason = _decide_agent_model(
+        repo_root, agent_name, wbs_task, cfg, llm
+    )
 
     cursor_cfg = cfg.get("cursor", {})
     cli_cmd = cursor_cfg.get("cli_command") or "cursor-agent"
@@ -497,7 +614,7 @@ def cmd_run_next(args: argparse.Namespace) -> None:
 
     prompt = (
         f"You are {agent_name}, a Cursor CLI agent with role: "
-        f"{(cursor_cfg.get('agents') or {}).get(agent_name,{}).get('role','(unspecified)')}.\n"
+        f"{(cursor_cfg.get('agents') or {}).get(agent_name, {}).get('role','(unspecified)')}.\n"
         f"Repository root on disk: {repo_root}\n"
         f"Task file path: {task_file}\n\n"
         "Instructions:\n"
@@ -507,12 +624,12 @@ def cmd_run_next(args: argparse.Namespace) -> None:
         "4. When finished, ensure all required tests and checks in the task file are run and documented.\n"
     )
     cmd = [cli_cmd, "-p", prompt, "--model", model, "--force"]
-    if max_flag:
-        cmd += ["--max"]
+    # NOTE: `cursor-agent` currently errors on `--max`, so we *don't* pass it.
+    # We still log the `max_flag` decision for observability, but execution ignores it.
 
     print(
         "[run-next] About to run Cursor Agent CLI (non-interactive): "
-        f"{cli_cmd} -p \"[task instructions]\" --model {model}{' --max' if max_flag else ''} --force"
+        f"{cli_cmd} -p \"[task instructions]\" --model {model} --force"
     )
     env = os.environ.copy()
     # Let the Cursor CLI pick up CURSOR_API_KEY from env if present
@@ -531,7 +648,11 @@ def cmd_status(args: argparse.Namespace) -> None:
     if not queue_path.exists():
         print("Queue not found; run init and plan.")
         return
-    lines = [l for l in queue_path.read_text(encoding="utf-8").splitlines() if l.strip()]
+    lines = [
+        l
+        for l in queue_path.read_text(encoding="utf-8").splitlines()
+        if l.strip()
+    ]
     if not lines:
         print("Queue is empty.")
         return
@@ -605,7 +726,9 @@ def cmd_index_files(args: argparse.Namespace) -> None:
     docs_root.mkdir(parents=True, exist_ok=True)
 
     json_path = docs_root / "FILE_INDEX.json"
-    json_path.write_text(json.dumps(entries, indent=2, ensure_ascii=False), encoding="utf-8")
+    json_path.write_text(
+        json.dumps(entries, indent=2, ensure_ascii=False), encoding="utf-8"
+    )
 
     md_path = docs_root / "FILE_INDEX.md"
     lines = ["# File Index\n", "_Generated; do not edit manually._\n"]
@@ -621,17 +744,33 @@ def cmd_index_files(args: argparse.Namespace) -> None:
 # ----------------------------
 def main() -> None:
     parser = argparse.ArgumentParser(description="RastUp Orchestrator CLI")
-    parser.add_argument("--root", help="Project root (falls back to RASTUP_REPO_ROOT env or package parent).", default=None)
+    parser.add_argument(
+        "--root",
+        help="Project root (falls back to RASTUP_REPO_ROOT env or package parent).",
+        default=None,
+    )
     sub = parser.add_subparsers(dest="command", required=True)
 
     sub.add_parser("init", help="Initialise ops/ and docs/ structure.")
-    sub.add_parser("ingest-blueprints", help="Convert + index the two big project plans.")
-    sub.add_parser("verify-blueprints", help="Verify the blueprint index exists and show counts.")
-    sub.add_parser("plan", help="Generate WBS, queue.jsonl, and TODO_MASTER.md from blueprint index.")
-    sub.add_parser("run-next", help="Pop next queue item and dispatch to Cursor agent.")
+    sub.add_parser(
+        "ingest-blueprints", help="Convert + index the two big project plans."
+    )
+    sub.add_parser(
+        "verify-blueprints",
+        help="Verify the blueprint index exists and show counts.",
+    )
+    sub.add_parser(
+        "plan",
+        help="Generate WBS, queue.jsonl, and TODO_MASTER.md from blueprint index.",
+    )
+    sub.add_parser(
+        "run-next", help="Pop next queue item and dispatch to Cursor agent."
+    )
     sub.add_parser("status", help="Print high-level queue status.")
 
-    index_parser = sub.add_parser("index-files", help="Build the file/directory map from the repo.")
+    index_parser = sub.add_parser(
+        "index-files", help="Build the file/directory map from the repo."
+    )
     index_parser.add_argument(
         "--max-files",
         type=int,

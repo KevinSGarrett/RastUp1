@@ -38,11 +38,13 @@ except Exception:
 def _local_stub_reply(provider_name: str, prompt: str) -> str:
     return f"[stub:{provider_name}] No provider available; reviewed {min(len(prompt), 2000)} chars."
 
+
 @dataclass
 class LLMResponse:
     content: str
     model: str
     raw: dict
+
 
 if _InternalLLMResponse is not None:
     LLMResponse = _InternalLLMResponse  # type: ignore[assignment]
@@ -67,14 +69,16 @@ ASSISTANT_MANAGER_SYSTEM = os.getenv(
         "You are the assistant‑manager reviewer. Critically review the agent run report, "
         "identify concrete risks, missing deliverables, and propose specific follow‑up tasks "
         "the orchestrator should queue. Output in markdown with sections: Risk Log, Missing Deliverables, Recommended Follow‑Ups."
-    ))
+    ),
+)
 
 PRIMARY_DECIDER_SYSTEM = os.getenv(
     "ORCHESTRATOR_PRIMARY_DECIDER_SYSTEM",
     (
         "You are the orchestrator's primary reviewer/decider. Consider the assistant‑manager review, "
         "produce the final review with accept/reject decisions and a prioritized set of next actions."
-    ))
+    ),
+)
 
 # Tunables
 MAX_PROMPT_CHARS = int(os.getenv("ORCHESTRATOR_MAX_PROMPT_CHARS", "120000"))
@@ -87,7 +91,7 @@ REQUEST_TIMEOUT = float(os.getenv("ORCHESTRATOR_LLM_TIMEOUT", "45"))  # seconds
 
 OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL") or os.getenv("OPENAI_API_BASE")
 OPENAI_ORG = os.getenv("OPENAI_ORG_ID") or os.getenv("OPENAI_ORGANIZATION")
-OPENAI_SEED = os.getenv("ORCHESTRATOR_SEED")
+OPENAI_SEED: Optional[int] = os.getenv("ORCHESTRATOR_SEED")  # type: ignore[assignment]
 if OPENAI_SEED is not None:
     try:
         OPENAI_SEED = int(OPENAI_SEED)  # type: ignore[assignment]
@@ -105,11 +109,20 @@ WRITE_WBS_LATEST = os.getenv("ORCHESTRATOR_WRITE_WBS_LATEST", "1") == "1"
 DEFAULT_OUT_FILE = os.getenv("ORCHESTRATOR_REVIEW_OUT_FILE", None)  # exact output path if set
 
 OPENAI_FALLBACK_MODELS = [
-    m for m in (os.getenv("ORCHESTRATOR_OPENAI_FALLBACK_MODELS", "gpt-5,gpt-4.1,gpt-4o,gpt-4o-mini").split(","))
+    m
+    for m in (
+        os.getenv("ORCHESTRATOR_OPENAI_FALLBACK_MODELS", "gpt-5,gpt-4.1,gpt-4o,gpt-4o-mini").split(",")
+    )
     if m.strip()
 ]
 ANTHROPIC_FALLBACK_MODELS = [
-    m for m in (os.getenv("ORCHESTRATOR_ANTHROPIC_FALLBACK_MODELS", "claude-3-5-sonnet-20241022,claude-3-5-haiku-20241022").split(","))
+    m
+    for m in (
+        os.getenv(
+            "ORCHESTRATOR_ANTHROPIC_FALLBACK_MODELS",
+            "claude-3-5-sonnet-20241022,claude-3-5-haiku-20241022",
+        ).split(",")
+    )
     if m.strip()
 ]
 
@@ -123,8 +136,10 @@ log = logging.getLogger(__name__)
 # ----------------------------
 _ANSI_RX = re.compile(r"\x1B\[[0-?]*[ -/]*[@-~]")
 
+
 def _strip_ansi(text: str) -> str:
     return _ANSI_RX.sub("", text)
+
 
 def _balance_fences(head: str, tail: str) -> Tuple[str, str]:
     head_fence_count = head.count("```")
@@ -132,6 +147,7 @@ def _balance_fences(head: str, tail: str) -> Tuple[str, str]:
         head = head.rstrip() + "\n```"
         tail = "```\n" + tail.lstrip()
     return head, tail
+
 
 def _latest_run_file(run_dir: Path = RUN_DIR) -> Path:
     candidates: List[Path] = []
@@ -144,8 +160,11 @@ def _latest_run_file(run_dir: Path = RUN_DIR) -> Path:
         candidates.append(p)
     candidates.sort(key=lambda p: (p.stat().st_mtime, p.stat().st_ctime), reverse=True)
     if not candidates:
-        raise FileNotFoundError(f"No run reports found in {run_dir} (glob={RUN_GLOB}, recursive={RUN_RECURSIVE})")
+        raise FileNotFoundError(
+            f"No run reports found in {run_dir} (glob={RUN_GLOB}, recursive={RUN_RECURSIVE})"
+        )
     return candidates[0]
+
 
 def _truncate_middle(text: str, max_chars: int) -> str:
     if len(text) <= max_chars:
@@ -156,14 +175,16 @@ def _truncate_middle(text: str, max_chars: int) -> str:
     head_len = (keep * 6) // 10
     tail_len = keep - head_len
     head = text[: max(head_len, 0)]
-    tail = text[-max(tail_len, 0):]
+    tail = text[-max(tail_len, 0) :]
     head, tail = _balance_fences(head, tail)
     return f"{head}{placeholder}{tail}"
+
 
 def _atomic_write(path: Path, data: str) -> None:
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_text(data, encoding="utf-8")
     tmp.replace(path)
+
 
 def _to_text(x):
     if x is None:
@@ -190,8 +211,10 @@ def _model_needs_responses_api(model: str) -> bool:
     m = (model or "").lower()
     return m.startswith("gpt-5") or m.startswith("gpt-4.1")
 
+
 def _call_openai(model: str, system: str, prompt: str) -> tuple[str, dict]:
     import openai
+
     client_kwargs: dict[str, Any] = {"api_key": os.getenv("OPENAI_API_KEY")}
     if not client_kwargs["api_key"]:
         raise RuntimeError("Missing OPENAI_API_KEY")
@@ -215,7 +238,7 @@ def _call_openai(model: str, system: str, prompt: str) -> tuple[str, dict]:
                 max_output_tokens=MAX_TOKENS,
                 timeout=REQUEST_TIMEOUT,
             )
-        except Exception as e1:
+        except Exception:
             # Some deployments expect max_completion_tokens
             resp = client.responses.create(
                 model=model,
@@ -228,7 +251,7 @@ def _call_openai(model: str, system: str, prompt: str) -> tuple[str, dict]:
         if not text:
             # Older SDK shapes:
             try:
-                parts = []
+                parts: List[str] = []
                 for block in getattr(resp, "output", []):
                     for c in getattr(block, "content", []):
                         t = getattr(c, "text", None)
@@ -256,12 +279,21 @@ def _call_openai(model: str, system: str, prompt: str) -> tuple[str, dict]:
 
     resp = client.chat.completions.create(**create_kwargs)
     choice = resp.choices[0]
-    text = getattr(choice.message, "content", None) or getattr(choice, "text", None) or ""
+    text = (
+        getattr(choice.message, "content", None)
+        or getattr(choice, "text", None)
+        or ""
+    )
     usage = getattr(resp, "usage", None)
     tokens = getattr(usage, "total_tokens", None) if usage else None
 
     vendor_raw = resp.model_dump() if hasattr(resp, "model_dump") else resp
-    meta = {"provider": "openai", "model": model, "tokens": tokens, "vendor_raw": vendor_raw}
+    meta = {
+        "provider": "openai",
+        "model": model,
+        "tokens": tokens,
+        "vendor_raw": vendor_raw,
+    }
     return text, meta
 
 
@@ -270,6 +302,7 @@ def _call_anthropic(model: str, system: str, prompt: str) -> tuple[str, dict]:
     if not api_key:
         raise RuntimeError("Missing ANTHROPIC_API_KEY")
     import anthropic
+
     client = anthropic.Anthropic(api_key=api_key)
     msg = client.messages.create(
         model=model,
@@ -295,6 +328,7 @@ class _SimpleProvider:
     def __init__(self, name: str):
         self.name = name
 
+
 class _FallbackRouter:
     def __init__(self, override_plan: Optional[List[tuple]] = None):
         self._override_plan = override_plan
@@ -309,13 +343,20 @@ class _FallbackRouter:
 
 
 def _get_router(override_plan: Optional[List[tuple]] = None):
+    """
+    Return either:
+    - an internal ModelRouter() if available, or
+    - a simple fallback router (optionally seeded with an override plan).
+    """
     if override_plan:
         return _FallbackRouter(override_plan)
-    if _HAVE_ROUTER and _InternalLLMRouter is not None:
+    if _HAVE_ROUTER and _InternalModelRouter is not None:
         try:
-            return _InternalLLMRouter()
+            return _InternalModelRouter()
         except Exception as e:
-            log.warning(f"[review_latest] Internal ModelRouter failed to init ({e}); using fallback router.")
+            log.warning(
+                f"[review_latest] Internal ModelRouter failed to init ({e}); using fallback router."
+            )
     return _FallbackRouter()
 
 
@@ -350,7 +391,15 @@ def _call_with_fallbacks(
 
     if USE_STUB:
         text = _stub_reply(name, prompt)
-        return LLMResponse(content=text, model=requested_model, raw={"provider": name, "model": requested_model, "note": "stubbed"})
+        return LLMResponse(
+            content=text,
+            model=requested_model,
+            raw={
+                "provider": name,
+                "model": requested_model,
+                "note": "stubbed",
+            },
+        )
 
     for model in candidates:
         attempt = 0
@@ -364,7 +413,12 @@ def _call_with_fallbacks(
                 else:
                     text = _stub_reply(name, prompt)
                     latency_ms = int((time.time() - start) * 1000)
-                    raw = {"provider": name, "model": model, "latency_ms": latency_ms, "note": "unknown provider; stub"}
+                    raw = {
+                        "provider": name,
+                        "model": model,
+                        "latency_ms": latency_ms,
+                        "note": "unknown provider; stub",
+                    }
                     return LLMResponse(content=text, model=model, raw=raw)
 
                 latency_ms = int((time.time() - start) * 1000)
@@ -375,23 +429,35 @@ def _call_with_fallbacks(
                 last_exc = e
                 attempt += 1
                 if attempt <= RETRIES:
-                    backoff = min(2 ** attempt, 8) + (0.05 * attempt)
+                    backoff = min(2**attempt, 8) + (0.05 * attempt)
                     log.warning(
-                        f"[review_latest] {name}/{model} failed (attempt {attempt}/{RETRIES}): {e}. Retrying in {backoff:.2f}s …"
+                        f"[review_latest] {name}/{model} failed (attempt {attempt}/{RETRIES}): {e}. "
+                        f"Retrying in {backoff:.2f}s …"
                     )
                     time.sleep(backoff)
                 else:
-                    log.warning(f"[review_latest] {name}/{model} exhausted retries: {e}. Trying next fallback (if any).")
+                    log.warning(
+                        f"[review_latest] {name}/{model} exhausted retries: {e}. "
+                        "Trying next fallback (if any)."
+                    )
                     break
 
     text = f"{_stub_reply(name, prompt)} (fallback: {type(last_exc).__name__ if last_exc else 'UnknownError'})"
-    return LLMResponse(content=text, model=candidates[0] if candidates else requested_model, raw={"provider": name, "model": requested_model, "note": "all candidates failed; stubbed"})
+    return LLMResponse(
+        content=text,
+        model=candidates[0] if candidates else requested_model,
+        raw={
+            "provider": name,
+            "model": requested_model,
+            "note": "all candidates failed; stubbed",
+        },
+    )
 
 
 def compile_dual_review(
     report_md: str,
     source: Optional[Path] = None,
-    plan_override: Optional[List[tuple]] = None
+    plan_override: Optional[List[tuple]] = None,
 ) -> str:
     normalized = _strip_ansi(report_md).replace("\r\n", "\n")
     truncated_chars = max(0, len(normalized) - MAX_PROMPT_CHARS)
@@ -410,30 +476,56 @@ def compile_dual_review(
     if not plan:
         raise RuntimeError("providers_for_kind('review') returned no providers")
 
+    # Assistant‑manager (usually Anthropic or OpenAI, depending on router)
     am_provider, am_model = plan[0]
     am_provider_name = getattr(am_provider, "name", str(am_provider))
     am_candidates = _provider_model_candidates(am_provider_name, am_model)
     if len(am_candidates) > 1:
-        log.info(f"[orchestrator.review_latest] Assistant‑manager models: {am_candidates[0]} (fallbacks: {am_candidates[1:]})")
+        log.info(
+            "[orchestrator.review_latest] Assistant‑manager models: "
+            f"{am_candidates[0]} (fallbacks: {am_candidates[1:]})"
+        )
     else:
-        log.info(f"[orchestrator.review_latest] Assistant‑manager model: {am_candidates[0]}")
+        log.info(
+            "[orchestrator.review_latest] Assistant‑manager model: "
+            f"{am_candidates[0]}"
+        )
 
-    am = _call_with_fallbacks(am_provider_name, am_candidates[0], ASSISTANT_MANAGER_SYSTEM, am_prompt, fallbacks=am_candidates[1:])
+    am = _call_with_fallbacks(
+        am_provider_name,
+        am_candidates[0],
+        ASSISTANT_MANAGER_SYSTEM,
+        am_prompt,
+        fallbacks=am_candidates[1:],
+    )
 
+    # Primary decider
     pd_provider, pd_model = plan[1] if len(plan) > 1 else plan[0]
     pd_provider_name = getattr(pd_provider, "name", str(pd_provider))
     pd_candidates = _provider_model_candidates(pd_provider_name, pd_model)
     if len(pd_candidates) > 1:
-        log.info(f"[orchestrator.review_latest] Primary‑decider models: {pd_candidates[0]} (fallbacks: {pd_candidates[1:]})")
+        log.info(
+            "[orchestrator.review_latest] Primary‑decider models: "
+            f"{pd_candidates[0]} (fallbacks: {pd_candidates[1:]})"
+        )
     else:
-        log.info(f"[orchestrator.review_latest] Primary‑decider model: {pd_candidates[0]}")
+        log.info(
+            "[orchestrator.review_latest] Primary‑decider model: "
+            f"{pd_candidates[0]}"
+        )
 
     pd_prompt = (
         f"{_to_text(am)}\n\n"
         "Now decide: accept or reject the work, and output a prioritized list of next actions "
         "for the orchestrator with owners and due dates when possible."
     )
-    pd = _call_with_fallbacks(pd_provider_name, pd_candidates[0], PRIMARY_DECIDER_SYSTEM, pd_prompt, fallbacks=pd_candidates[1:])
+    pd = _call_with_fallbacks(
+        pd_provider_name,
+        pd_candidates[0],
+        PRIMARY_DECIDER_SYSTEM,
+        pd_prompt,
+        fallbacks=pd_candidates[1:],
+    )
 
     src_label = str(source) if source is not None else "STDIN/override"
 
@@ -448,7 +540,8 @@ def compile_dual_review(
 
     meta = [
         f"- Source: **{src_label}**",
-        f"- Input size: **{len(normalized)} chars**" + (f" (truncated: {truncated_chars})" if truncated_chars > 0 else ""),
+        f"- Input size: **{len(normalized)} chars**"
+        + (f" (truncated: {truncated_chars})" if truncated_chars > 0 else ""),
         _meta_line("Assistant‑manager", am),
         _meta_line("Primary‑decider", pd),
     ]
@@ -479,10 +572,15 @@ def _resolve_run_file(cli_run_file: Optional[str]) -> Path:
     return _latest_run_file(RUN_DIR)
 
 
-def _write_latest_aliases(final_path: Path, target_dir: Path, wbs: str, mode: str) -> list[Path]:
+def _write_latest_aliases(
+    final_path: Path, target_dir: Path, wbs: str, mode: str
+) -> list[Path]:
     created: list[Path] = []
     if mode not in {"copy", "symlink", "none"}:
-        log.warning(f"[orchestrator.review_latest] Unknown latest alias mode '{mode}', defaulting to 'copy'")
+        log.warning(
+            f"[orchestrator.review_latest] Unknown latest alias mode '{mode}', "
+            "defaulting to 'copy'"
+        )
         mode = "copy"
     if mode == "none":
         return created
@@ -496,7 +594,9 @@ def _write_latest_aliases(final_path: Path, target_dir: Path, wbs: str, mode: st
             if alias.exists() or alias.is_symlink():
                 alias.unlink()
         except Exception as e:
-            log.warning(f"[orchestrator.review_latest] Could not remove existing alias {alias}: {e}")
+            log.warning(
+                f"[orchestrator.review_latest] Could not remove existing alias {alias}: {e}"
+            )
 
         if mode == "symlink":
             try:
@@ -506,7 +606,8 @@ def _write_latest_aliases(final_path: Path, target_dir: Path, wbs: str, mode: st
                 continue
             except Exception as e:
                 log.warning(
-                    f"[orchestrator.review_latest] Symlink failed for {alias} -> {final_path}: {e}. Falling back to copy."
+                    "[orchestrator.review_latest] Symlink failed for "
+                    f"{alias} -> {final_path}: {e}. Falling back to copy."
                 )
 
         try:
@@ -514,7 +615,9 @@ def _write_latest_aliases(final_path: Path, target_dir: Path, wbs: str, mode: st
             alias.write_bytes(data)
             created.append(alias)
         except Exception as e:
-            log.error(f"[orchestrator.review_latest] Failed to write alias {alias}: {e}")
+            log.error(
+                f"[orchestrator.review_latest] Failed to write alias {alias}: {e}"
+            )
 
     return created
 
@@ -529,17 +632,20 @@ def run(
     write_latest: bool = True,
     plan_override: Optional[List[tuple]] = None,
 ) -> Path:
-
     if report_text is not None:
         latest = Path(review_run_file) if review_run_file else Path("stdin.md")
-        log.info("[orchestrator.review_latest] Using report content from STDIN/override")
+        log.info(
+            "[orchestrator.review_latest] Using report content from STDIN/override"
+        )
         report_md = report_text
     else:
         latest = _resolve_run_file(review_run_file)
         log.info(f"[orchestrator.review_latest] Found run report: {latest}")
         report_md = latest.read_text(encoding="utf-8")
 
-    merged = compile_dual_review(report_md, source=latest, plan_override=plan_override)
+    merged = compile_dual_review(
+        report_md, source=latest, plan_override=plan_override
+    )
 
     target_dir = Path(out_dir) if out_dir else OUT_DIR
     target_dir.mkdir(parents=True, exist_ok=True)
@@ -558,13 +664,19 @@ def run(
         return out_path
 
     _atomic_write(out_path, merged)
-    log.info(f"[orchestrator.review_latest] Wrote orchestrator review to: {out_path}")
+    log.info(
+        f"[orchestrator.review_latest] Wrote orchestrator review to: {out_path}"
+    )
 
     if write_latest and out_file is None:
-        created = _write_latest_aliases(out_path, target_dir, wbs=wbs, mode=latest_mode)
+        created = _write_latest_aliases(
+            out_path, target_dir, wbs=wbs, mode=latest_mode
+        )
         if created:
             joined = ", ".join(str(p) for p in created)
-            log.info(f"[orchestrator.review_latest] Updated latest aliases: {joined}")
+            log.info(
+                f"[orchestrator.review_latest] Updated latest aliases: {joined}"
+            )
 
     return out_path
 
@@ -573,7 +685,7 @@ def _apply_cli_overrides(args: argparse.Namespace) -> None:
     global MAX_PROMPT_CHARS, MAX_TOKENS, TEMPERATURE, REQUEST_TIMEOUT
     global RUN_GLOB, RUN_RECURSIVE, RUN_EXCLUDE_RE, _RUN_EXCLUDE_RX
     global LATEST_BASENAME, WRITE_WBS_LATEST, USE_STUB
-    global OPENAI_FALLBACK_MODELS, ANTHROPIC_FALLBACK_MODELS, LOG_LEVEL
+    global OPENAI_FALLBACK_MODELS, ANTHROPIC_FALLBACK_MODELS, LOG_LEVEL, OPENAI_SEED
 
     if args.max_prompt_chars is not None:
         MAX_PROMPT_CHARS = args.max_prompt_chars
@@ -601,13 +713,23 @@ def _apply_cli_overrides(args: argparse.Namespace) -> None:
         USE_STUB = True
 
     if args.openai_fallbacks is not None:
-        OPENAI_FALLBACK_MODELS = [m.strip() for m in args.openai_fallbacks.split(",") if m.strip()]
+        OPENAI_FALLBACK_MODELS = [
+            m.strip() for m in args.openai_fallbacks.split(",") if m.strip()
+        ]
     if args.anthropic_fallbacks is not None:
-        ANTHROPIC_FALLBACK_MODELS = [m.strip() for m in args.anthropic_fallbacks.split(",") if m.strip()]
+        ANTHROPIC_FALLBACK_MODELS = [
+            m.strip() for m in args.anthropic_fallbacks.split(",") if m.strip()
+        ]
 
     if args.log_level is not None:
         logging.getLogger().setLevel(args.log_level)
         log.setLevel(args.log_level)
+
+    if getattr(args, "seed", None) is not None:
+        try:
+            OPENAI_SEED = int(args.seed)
+        except Exception:
+            OPENAI_SEED = None
 
 
 def main():
@@ -615,53 +737,133 @@ def main():
         description="Compile a dual review (assistant‑manager + primary‑decider) for the latest run."
     )
     # Input selection
-    parser.add_argument("--run-file", dest="run_file", default=None,
-                        help="Optional path to a specific run .md file (defaults to most recent in RUN_DIR).")
-    parser.add_argument("--stdin", action="store_true",
-                        help="Read the run report markdown from STDIN instead of disk (useful for piping).")
+    parser.add_argument(
+        "--run-file",
+        dest="run_file",
+        default=None,
+        help="Optional path to a specific run .md file (defaults to most recent in RUN_DIR).",
+    )
+    parser.add_argument(
+        "--stdin",
+        action="store_true",
+        help="Read the run report markdown from STDIN instead of disk (useful for piping).",
+    )
 
     # Output / aliasing
-    parser.add_argument("--out-dir", dest="out_dir", default=None,
-                        help="Override output directory (defaults to ORCHESTRATOR_REVIEW_OUT_DIR).")
-    parser.add_argument("--out-file", dest="out_file", default=DEFAULT_OUT_FILE,
-                        help="Write to this exact path (disables latest-alias updates).")
-    parser.add_argument("--print-only", action="store_true", help="Print merged review to stdout.")
-    parser.add_argument("--no-latest", action="store_true", help="Do not update latest aliases.")
-    parser.add_argument("--latest-mode", choices=["copy", "symlink", "none"], default="copy", help="How to maintain latest aliases.")
-    parser.add_argument("--latest-basename", dest="latest_basename", default=None, help="Basename for the stable alias.")
-    parser.add_argument("--wbs-latest", dest="wbs_latest", action="store_true", help="Also write latest-<WBS>.md alias.")
-    parser.add_argument("--no-wbs-latest", dest="wbs_latest", action="store_false", help="Do not write latest-<WBS>.md alias.")
+    parser.add_argument(
+        "--out-dir",
+        dest="out_dir",
+        default=None,
+        help="Override output directory (defaults to ORCHESTRATOR_REVIEW_OUT_DIR).",
+    )
+    parser.add_argument(
+        "--out-file",
+        dest="out_file",
+        default=DEFAULT_OUT_FILE,
+        help="Write to this exact path (disables latest-alias updates).",
+    )
+    parser.add_argument(
+        "--print-only", action="store_true", help="Print merged review to stdout."
+    )
+    parser.add_argument(
+        "--no-latest",
+        action="store_true",
+        help="Do not update latest aliases.",
+    )
+    parser.add_argument(
+        "--latest-mode",
+        choices=["copy", "symlink", "none"],
+        default="copy",
+        help="How to maintain latest aliases.",
+    )
+    parser.add_argument(
+        "--latest-basename",
+        dest="latest_basename",
+        default=None,
+        help="Basename for the stable alias.",
+    )
+    parser.add_argument(
+        "--wbs-latest",
+        dest="wbs_latest",
+        action="store_true",
+        help="Also write latest-<WBS>.md alias.",
+    )
+    parser.add_argument(
+        "--no-wbs-latest",
+        dest="wbs_latest",
+        action="store_false",
+        help="Do not write latest-<WBS>.md alias.",
+    )
     parser.set_defaults(wbs_latest=None)
 
     # LLM/provider behavior
     parser.add_argument("--temperature", type=float, default=None)
-    parser.add_argument("--timeout", type=float, dest="timeout", default=None)
-    parser.add_argument("--max-tokens", type=int, dest="max_tokens", default=None)
-    parser.add_argument("--max-prompt-chars", type=int, dest="max_prompt_chars", default=None)
+    parser.add_argument(
+        "--timeout", type=float, dest="timeout", default=None
+    )
+    parser.add_argument(
+        "--max-tokens", type=int, dest="max_tokens", default=None
+    )
+    parser.add_argument(
+        "--max-prompt-chars", type=int, dest="max_prompt_chars", default=None
+    )
     parser.add_argument("--seed", type=int, dest="seed", default=None)
     parser.add_argument("--use-stub", action="store_true")
 
     # Run discovery behavior
     parser.add_argument("--run-glob", dest="run_glob", default=None)
-    parser.add_argument("--recursive", dest="recursive", action="store_true")
-    parser.add_argument("--no-recursive", dest="recursive", action="store_false")
+    parser.add_argument(
+        "--recursive", dest="recursive", action="store_true"
+    )
+    parser.add_argument(
+        "--no-recursive", dest="recursive", action="store_false"
+    )
     parser.set_defaults(recursive=None)
     parser.add_argument("--exclude-re", dest="exclude_re", default=None)
 
     # Model fallbacks
-    parser.add_argument("--openai-fallbacks", dest="openai_fallbacks", default=None,
-                        help="Comma-separated OpenAI fallbacks.")
-    parser.add_argument("--anthropic-fallbacks", dest="anthropic_fallbacks", default=None,
-                        help="Comma-separated Anthropic fallbacks.")
+    parser.add_argument(
+        "--openai-fallbacks",
+        dest="openai_fallbacks",
+        default=None,
+        help="Comma-separated OpenAI fallbacks.",
+    )
+    parser.add_argument(
+        "--anthropic-fallbacks",
+        dest="anthropic_fallbacks",
+        default=None,
+        help="Comma-separated Anthropic fallbacks.",
+    )
 
     # Logging
-    parser.add_argument("--log-level", dest="log_level", default=None, choices=["DEBUG", "INFO", "WARNING", "ERROR"])
+    parser.add_argument(
+        "--log-level",
+        dest="log_level",
+        default=None,
+        choices=["DEBUG", "INFO", "WARNING", "ERROR"],
+    )
 
     # Provider overrides
-    parser.add_argument("--am-provider", dest="am_provider", default=os.getenv("ORCHESTRATOR_AM_PROVIDER"))
-    parser.add_argument("--am-model", dest="am_model", default=os.getenv("ORCHESTRATOR_AM_MODEL"))
-    parser.add_argument("--pd-provider", dest="pd_provider", default=os.getenv("ORCHESTRATOR_PD_PROVIDER"))
-    parser.add_argument("--pd-model", dest="pd_model", default=os.getenv("ORCHESTRATOR_PD_MODEL"))
+    parser.add_argument(
+        "--am-provider",
+        dest="am_provider",
+        default=os.getenv("ORCHESTRATOR_AM_PROVIDER"),
+    )
+    parser.add_argument(
+        "--am-model",
+        dest="am_model",
+        default=os.getenv("ORCHESTRATOR_AM_MODEL"),
+    )
+    parser.add_argument(
+        "--pd-provider",
+        dest="pd_provider",
+        default=os.getenv("ORCHESTRATOR_PD_PROVIDER"),
+    )
+    parser.add_argument(
+        "--pd-model",
+        dest="pd_model",
+        default=os.getenv("ORCHESTRATOR_PD_MODEL"),
+    )
 
     args = parser.parse_args()
 
@@ -669,7 +871,12 @@ def main():
         _apply_cli_overrides(args)
 
         plan_override: Optional[List[tuple]] = None
-        if args.am_provider and args.am_model and args.pd_provider and args.pd_model:
+        if (
+            args.am_provider
+            and args.am_model
+            and args.pd_provider
+            and args.pd_model
+        ):
             plan_override = [
                 (_SimpleProvider(args.am_provider), args.am_model),
                 (_SimpleProvider(args.pd_provider), args.pd_model),
@@ -680,7 +887,9 @@ def main():
             if sys.stdin is not None and not sys.stdin.isatty():
                 report_text = sys.stdin.read()
             else:
-                log.error("[orchestrator.review_latest] --stdin specified but no STDIN data was provided.")
+                log.error(
+                    "[orchestrator.review_latest] --stdin specified but no STDIN data was provided."
+                )
                 sys.exit(2)
 
         run(
