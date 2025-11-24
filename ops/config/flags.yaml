@@ -51,7 +51,7 @@ flags:
       prod: off
     activation_conditions:
       - waf_signal: botcontrol_challenge_spike
-      - abuse_ticket: >= SEV3
+      - abuse_ticket: ">= SEV3"
     kill_switch: manual
 
 metadata:
