@@ -68,15 +68,27 @@ ASSISTANT_MANAGER_SYSTEM = os.getenv(
     (
         "You are the assistant‑manager reviewer. Critically review the agent run report, "
         "identify concrete risks, missing deliverables, and propose specific follow‑up tasks "
-        "the orchestrator should queue. Output in markdown with sections: Risk Log, Missing Deliverables, Recommended Follow‑Ups."
+        "the orchestrator should queue. Output in markdown with sections: Risk Log, Missing Deliverables, "
+        "Recommended Follow‑Ups."
     ),
 )
 
 PRIMARY_DECIDER_SYSTEM = os.getenv(
     "ORCHESTRATOR_PRIMARY_DECIDER_SYSTEM",
     (
-        "You are the orchestrator's primary reviewer/decider. Consider the assistant‑manager review, "
-        "produce the final review with accept/reject decisions and a prioritized set of next actions."
+        "You are the orchestrator's primary reviewer/decider (the manager). "
+        "You receive the assistant‑manager review and must produce the final, conservative decision. "
+        "Your job is to:\n"
+        "1) Summarise the overall state and risks.\n"
+        "2) Decide whether the work is ready to mark DONE or should remain IN PROGRESS.\n"
+        "3) Output a prioritized list of next actions with owners and target dates.\n\n"
+        "CRITICAL FORMAT REQUIREMENT:\n"
+        "- At the very END of your response, add exactly TWO lines, on their own lines:\n"
+        "  ACCEPTANCE: yes|no\n"
+        "  Decision: done|in_progress\n"
+        "- Use 'yes' and 'done' ONLY when the work is clearly safe to mark as done "
+        "(CI green, critical deliverables present, no major risks outstanding).\n"
+        "- Otherwise, use 'no' and 'in_progress'. Bias towards safety when unsure."
     ),
 )
 
@@ -135,6 +147,8 @@ log = logging.getLogger(__name__)
 # Helpers
 # ----------------------------
 _ANSI_RX = re.compile(r"\x1B\[[0-?]*[ -/]*[@-~]")
+_ACCEPT_LINE_RX = re.compile(r"^ACCEPTANCE:\s*(yes|no)\b", re.I | re.M)
+_DECISION_LINE_RX = re.compile(r"^Decision:\s*(done|in_progress)\b", re.I | re.M)
 
 
 def _strip_ansi(text: str) -> str:
@@ -202,6 +216,34 @@ def _to_text(x):
         return str(x)
     except Exception:
         return ""
+
+
+def _ensure_manager_footer(text: str) -> str:
+    """
+    Ensure the manager review always exposes explicit decision lines:
+
+        ACCEPTANCE: yes|no
+        Decision: done|in_progress
+
+    If the model forgets, default to safe:
+        ACCEPTANCE: no
+        Decision: in_progress
+    """
+    has_accept = bool(_ACCEPT_LINE_RX.search(text))
+    has_decision = bool(_DECISION_LINE_RX.search(text))
+
+    if has_accept and has_decision:
+        return text
+
+    footer_lines: List[str] = []
+    if not has_accept:
+        footer_lines.append("ACCEPTANCE: no")
+    if not has_decision:
+        footer_lines.append("Decision: in_progress")
+
+    if text and not text.endswith("\n"):
+        text = text + "\n"
+    return text + "\n" + "\n".join(footer_lines) + "\n"
 
 
 # ----------------------------
@@ -509,8 +551,12 @@ def compile_dual_review(
 
     pd_prompt = (
         f"{_to_text(am)}\n\n"
-        "Now decide: accept or reject the work, and output a prioritized list of next actions "
-        "for the orchestrator with owners and due dates when possible."
+        "Using the assistant‑manager review above, produce the final orchestrator review and plan. "
+        "Include a brief rationale and a prioritized list of next actions with owners and target dates.\n\n"
+        "Remember: at the very end of your answer, you MUST output exactly two lines on their own lines:\n"
+        "ACCEPTANCE: yes|no\n"
+        "Decision: done|in_progress\n"
+        "Be conservative: if there is any doubt, choose 'ACCEPTANCE: no' and 'Decision: in_progress'."
     )
     pd = _call_with_fallbacks(
         pd_provider_name,
@@ -531,6 +577,10 @@ def compile_dual_review(
         tok_str = f", tokens={tokens}" if tokens is not None else ""
         return f"- {tag}: **{provider}/{model}** ({latency} ms){tok_str}"
 
+    am_text = _to_text(am).strip()
+    pd_text_raw = _to_text(pd).strip()
+    pd_text = _ensure_manager_footer(pd_text_raw)
+
     meta = [
         f"- Source: **{src_label}**",
         f"- Input size: **{len(normalized)} chars**"
@@ -543,9 +593,9 @@ def compile_dual_review(
         HEADER,
         *meta,
         "\n## Assistant‑Manager Review\n",
-        _to_text(am).strip(),
+        am_text,
         "\n## Final Orchestrator Decision\n",
-        _to_text(pd).strip(),
+        pd_text.strip(),
         "",
     ]
     return "\n".join(merged)

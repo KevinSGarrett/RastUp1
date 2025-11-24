@@ -20,3 +20,5 @@ def log_decision(entry: DecisionLogEntry):
     with DECISION_LOG_PATH.open("a", encoding="utf-8") as f:
         f.write(row)
 - 2025-11-24 17:36:16Z WBS=WBS-001 acceptance=no ci=FAIL gate_apply=BLOCK review=./docs/orchestrator/reviews/latest.md run_report=docs/runs/2025-11-24-WBS-001-AGENT-1.md
+- 2025-11-24 18:13:19Z WBS=WBS-001 acceptance=no ci=FAIL gate_apply=BLOCK review=./docs/orchestrator/reviews/latest.md run_report=docs/runs/2025-11-24-WBS-001-AGENT-1.md
+- 2025-11-24 18:14:25Z WBS=WBS-001 acceptance=no ci=FAIL gate_apply=BLOCK review=./docs/orchestrator/reviews/latest.md run_report=docs/runs/2025-11-24-WBS-001-AGENT-1.md

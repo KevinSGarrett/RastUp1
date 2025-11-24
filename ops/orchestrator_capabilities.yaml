@@ -30,12 +30,23 @@ capabilities:
       - docs/OUTLINE.md
 
   run_review:
-    status: planned
+    status: in_progress
     description: >
-      CLI commands for reviewing latest agent runs and updating queue/progress.
+      Orchestrator manager + assistant-manager flow for reviewing latest agent
+      run reports, deciding acceptance, and updating WBS/task status. Includes
+      CI-aware gating so work is never marked DONE when tests are red.
+    files:
+      - docs/orchestrator/reviews/
+      - docs/runs/
+      - docs/orchestrator/decision-log.md
+      - orchestrator/review_latest.py
+      - orchestrator/apply_latest_review.py
+      - orchestrator/review_all_in_progress.py
     commands:
-      - python -m orchestrator.cli review-latest
-      - python -m orchestrator.cli update-progress
+      - python -m orchestrator.review_latest
+      - python -m orchestrator.apply_latest_review .
+      - python -m orchestrator.review_all_in_progress
+      - python -m orchestrator.autopilot_loop
 
   security_and_secrets:
     status: planned
@@ -71,3 +82,22 @@ capabilities:
     files:
       - docs/orchestrator/primer.md
       - docs/orchestrator/rotations/
+
+  auto_remediation:
+    status: planned
+    description: >
+      Automatic remediation loop for failing tests/CI and unmet acceptance
+      criteria. The assistant-manager (Anthropic) analyses run reports and
+      reviews, proposes concrete fixes, and the orchestrator dispatches Cursor
+      agents to apply changes and re-run validation until CI is green.
+    files:
+      - orchestrator/autopilot_loop.py
+      - orchestrator/review_latest.py
+      - orchestrator/apply_latest_review.py
+      - docs/orchestrator/decision-log.md
+      - docs/orchestrator/reviews/
+      - docs/runs/
+    commands:
+      - python -m orchestrator.review_latest
+      - python -m orchestrator.apply_latest_review .
+      - python -m orchestrator.autopilot_loop
