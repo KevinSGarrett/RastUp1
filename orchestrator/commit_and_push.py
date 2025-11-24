@@ -50,7 +50,9 @@ def git_capture(*args: str, check: bool = True) -> Tuple[int, str, str]:
         capture_output=True,
     )
     if check and proc.returncode != 0:
-        raise subprocess.CalledProcessError(proc.returncode, proc.args, proc.stdout, proc.stderr)
+        raise subprocess.CalledProcessError(
+            proc.returncode, proc.args, proc.stdout, proc.stderr
+        )
     return proc.returncode, proc.stdout.strip(), proc.stderr.strip()
 
 
@@ -60,7 +62,9 @@ def current_branch() -> Optional[str]:
 
 
 def has_upstream(branch: str) -> bool:
-    rc, out, _ = git_capture("rev-parse", "--abbrev-ref", f"{branch}@{{upstream}}", check=False)
+    rc, out, _ = git_capture(
+        "rev-parse", "--abbrev-ref", f"{branch}@{{upstream}}", check=False
+    )
     return rc == 0 and bool(out)
 
 
@@ -114,7 +118,9 @@ def main() -> None:
     git("add", ".")
 
     if not has_staged_changes():
-        print("[orchestrator.commit_and_push] No staged changes; nothing to commit.")
+        print(
+            "[orchestrator.commit_and_push] No staged changes; nothing to commit."
+        )
         return
 
     latest = find_latest_run_report()
@@ -128,35 +134,56 @@ def main() -> None:
         footer = "\n\nWBS: unknown\n"
 
     commit_message = summary + footer
-    print(f"[orchestrator.commit_and_push] committing with message:\n{commit_message!r}")
+    print(
+        "[orchestrator.commit_and_push] committing with message:\n"
+        f"{commit_message!r}"
+    )
     git("commit", "-m", commit_message)
 
     if not do_push:
-        print("[orchestrator.commit_and_push] ORCHESTRATOR_GIT_PUSH=0 → skipping push.")
+        print(
+            "[orchestrator.commit_and_push] "
+            "ORCHESTRATOR_GIT_PUSH=0 → skipping push."
+        )
         return
 
     if not remote_exists(remote):
-        print(f"[orchestrator.commit_and_push] ERROR: remote '{remote}' does not exist.")
+        print(
+            f"[orchestrator.commit_and_push] ERROR: remote '{remote}' "
+            "does not exist."
+        )
         print("  - Configure your remote first, e.g.:")
         print(f"    git -C {ROOT} remote add {remote} <your-repo-url>")
         raise SystemExit(2)
 
     branch = current_branch()
     if not branch:
-        print("[orchestrator.commit_and_push] ERROR: could not determine current branch.")
+        print(
+            "[orchestrator.commit_and_push] ERROR: could not determine "
+            "current branch."
+        )
         raise SystemExit(2)
 
-    print(f"[orchestrator.commit_and_push] pushing to {remote}/{branch} (uses your existing auth)...")
+    print(
+        f"[orchestrator.commit_and_push] pushing to {remote}/{branch} "
+        "(uses your existing auth)..."
+    )
     try:
         if has_upstream(branch):
             git("push", remote, branch)
         else:
             # first push for this branch: set upstream automatically
-            print(f"[orchestrator.commit_and_push] no upstream; setting upstream: {remote}/{branch}")
+            print(
+                "[orchestrator.commit_and_push] no upstream; setting "
+                f"upstream: {remote}/{branch}"
+            )
             git("push", "--set-upstream", remote, branch)
     except subprocess.CalledProcessError as exc:
         # Report a clear message but keep original stderr for debugging.
-        print(f"[orchestrator.commit_and_push] ERROR: git push failed: returncode={exc.returncode}")
+        print(
+            "[orchestrator.commit_and_push] ERROR: git push failed: "
+            f"returncode={exc.returncode}"
+        )
         raise
 
     print("[orchestrator.commit_and_push] Done. git status (after):")

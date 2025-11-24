@@ -32,7 +32,11 @@ LOGS.mkdir(parents=True, exist_ok=True)
 
 # ---------- Subprocess helpers ----------
 
-def run(args: List[str], capture: bool = False, timeout: Optional[int] = None) -> subprocess.CompletedProcess[str]:
+def run(
+    args: List[str],
+    capture: bool = False,
+    timeout: Optional[int] = None,
+) -> subprocess.CompletedProcess[str]:
     """
     Run a subprocess in the repo root, optionally capturing stdout/stderr.
     """
@@ -45,7 +49,12 @@ def run(args: List[str], capture: bool = False, timeout: Optional[int] = None) -
     )
 
 
-def run_py_module(mod: str, *args: str, capture: bool = False, timeout: Optional[int] = None) -> subprocess.CompletedProcess[str]:
+def run_py_module(
+    mod: str,
+    *args: str,
+    capture: bool = False,
+    timeout: Optional[int] = None,
+) -> subprocess.CompletedProcess[str]:
     """
     Helper to run `python -m <mod> [args...]` under the repo root.
     """
@@ -126,28 +135,30 @@ def main() -> None:
 
         # 1) Dispatch next task
         try:
-            print("[autopilot] Dispatching next task with "
-                  "`python -m orchestrator.cli run-next` ...")
+            print(
+                "[autopilot] Dispatching next task with "
+                "`python -m orchestrator.cli run-next` ..."
+            )
+            # We rely on cwd=ROOT, so no need to pass --root; that was causing
+            # `cli.py: error: unrecognized arguments: --root /mnt/c/RastUp1`.
             proc = run_py_module(
                 "orchestrator.cli",
                 "run-next",
-                "--root",
-                str(ROOT),
                 capture=True,
             )
             txt = (proc.stdout or "") + (proc.stderr or "")
             sys.stdout.write(txt)
 
             if "No unblocked todo items found." in txt:
-                print("[autopilot] No unblocked todo items found; "
-                      "attempting sweep of in_progress items without run reports...")
+                print(
+                    "[autopilot] No unblocked todo items found; "
+                    "attempting sweep of in_progress items without run reports..."
+                )
                 sweep_in_progress_without_reports()
                 print("[autopilot] Sweep complete. Retrying `run-next` once ...")
                 proc = run_py_module(
                     "orchestrator.cli",
                     "run-next",
-                    "--root",
-                    str(ROOT),
                     capture=True,
                 )
                 txt2 = (proc.stdout or "") + (proc.stderr or "")
@@ -158,24 +169,36 @@ def main() -> None:
 
         # 2) Review latest run (best-effort)
         try:
-            print("[autopilot] Running `python -m orchestrator.review_latest` ...")
+            print(
+                "[autopilot] Running `python -m orchestrator.review_latest` ..."
+            )
             run_py_module("orchestrator.review_latest", capture=False)
         except Exception as e:
-            print(f"[autopilot] WARN: review_latest raised {e!r}; continuing.")
+            print(
+                f"[autopilot] WARN: review_latest raised {e!r}; continuing."
+            )
 
         # 3) Apply latest review (best-effort)
         try:
-            print("[autopilot] Running `python -m orchestrator.apply_latest_review` ...")
+            print(
+                "[autopilot] Running `python -m orchestrator.apply_latest_review` ..."
+            )
             run_py_module("orchestrator.apply_latest_review", capture=False)
         except Exception as e:
-            print(f"[autopilot] WARN: apply_latest_review raised {e!r}; continuing.")
+            print(
+                f"[autopilot] WARN: apply_latest_review raised {e!r}; continuing."
+            )
 
         # 4) Optional git sync
         try:
-            print("[autopilot] Running `python -m orchestrator.commit_and_push` ...")
+            print(
+                "[autopilot] Running `python -m orchestrator.commit_and_push` ..."
+            )
             run_py_module("orchestrator.commit_and_push", capture=False)
         except Exception as e:
-            print(f"[autopilot] WARN: commit_and_push raised {e!r}; continuing.")
+            print(
+                f"[autopilot] WARN: commit_and_push raised {e!r}; continuing."
+            )
 
         print(f"[autopilot] Sleeping {sleep_s}s ...")
         try:
