@@ -15,9 +15,13 @@ except Exception:
 # --------------------------------------------------------------------------------------
 # Defaults (overridable via environment)
 # --------------------------------------------------------------------------------------
-DEFAULT_OAI_MODEL = os.getenv("ORCHESTRATOR_MODEL_HIGH", "gpt-4.1")
+# High‑end OpenAI model used as the "manager" / primary decider.
+DEFAULT_OAI_MODEL = os.getenv("ORCHESTRATOR_MODEL_HIGH", "gpt-5")
+
+# Anthropic model used as assistant‑manager / second opinion. We default to a
+# model we know works on your account; you can override via ORCHESTRATOR_ANTHROPIC_MODEL.
 DEFAULT_ANTHROPIC_MODEL = os.getenv(
-    "ORCHESTRATOR_ANTHROPIC_MODEL", "claude-3-5-sonnet-20240620"
+    "ORCHESTRATOR_ANTHROPIC_MODEL", "claude-3-5-haiku-20241022"
 )
 
 OAI_MAX_TOKENS = int(os.getenv("ORCHESTRATOR_OPENAI_MAX_TOKENS", "2048"))

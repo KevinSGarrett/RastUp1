@@ -13,7 +13,7 @@ import anthropic          # pip install anthropic
 class LLMConfig:
     openai_model: str = "gpt-4.1-mini"          # you can change in ops/config.yaml
     embedding_model: str = "text-embedding-3-large"
-    anthropic_model: Optional[str] = None       # e.g. "claude-3-5-sonnet-latest"
+    anthropic_model: Optional[str] = None       # e.g. "claude-3-5-haiku-20241022"
     temperature: float = 0.2
 
 
@@ -84,7 +84,7 @@ class LLMClient:
         if not model:
             raise RuntimeError("No anthropic_model configured in LLMConfig.")
 
-        # Anthropic messages API expects system + messages. :contentReference[oaicite:5]{index=5}
+        # Anthropic messages API expects system + messages.
         system_msg = ""
         converted: List[Dict[str, Any]] = []
         for m in messages:

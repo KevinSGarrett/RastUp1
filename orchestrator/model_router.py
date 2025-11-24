@@ -4,13 +4,26 @@ from typing import Dict, List, Tuple
 from .providers import OpenAIProvider, AnthropicProvider, LLMProvider
 
 # High-level policy: which providers/models per task "kind"
-# - "review": use BOTH providers → Anthropic as assistant-manager/secondary reviewer; OpenAI as primary/decider
+# - "review": Anthropic as assistant‑manager, OpenAI as primary decider
 # - "sweep": OpenAI-only (fast/cheap)
 # - default: OpenAI-only fallback
+
+DEFAULT_OPENAI_REVIEW_MODEL = os.getenv(
+    "ORCHESTRATOR_OPENAI_REVIEW_MODEL", "gpt-5"
+)
+
+# Default Anthropic review model; we use a model we know works for you as the
+# assistant‑manager. Override via ORCHESTRATOR_ANTHROPIC_REVIEW_MODEL if needed.
+DEFAULT_ANTHROPIC_REVIEW_MODEL = os.getenv(
+    "ORCHESTRATOR_ANTHROPIC_REVIEW_MODEL", "claude-3-5-haiku-20241022"
+)
+
 POLICY: Dict[str, List[Tuple[str, str]]] = {
     "review": [
-        ("openai", os.getenv("ORCHESTRATOR_OPENAI_REVIEW_MODEL", "gpt-5")),
-        ("anthropic", os.getenv("ORCHESTRATOR_ANTHROPIC_REVIEW_MODEL", "claude-3-5-sonnet")),
+        # 0: Assistant‑manager reviewer
+        ("anthropic", DEFAULT_ANTHROPIC_REVIEW_MODEL),
+        # 1: Primary decider (manager)
+        ("openai", DEFAULT_OPENAI_REVIEW_MODEL),
     ],
     "sweep": [
         ("openai", os.getenv("ORCHESTRATOR_OPENAI_SWEEP_MODEL", "gpt-4.1-mini")),

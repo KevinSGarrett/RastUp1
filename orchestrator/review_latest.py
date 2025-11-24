@@ -222,6 +222,10 @@ def _call_openai(model: str, system: str, prompt: str) -> tuple[str, dict]:
         client_kwargs["base_url"] = OPENAI_BASE_URL
     if OPENAI_ORG:
         client_kwargs["organization"] = OPENAI_ORG
+    # With the modern OpenAI client, timeout is set on the client, not per-call.
+    if REQUEST_TIMEOUT:
+        client_kwargs["timeout"] = REQUEST_TIMEOUT
+
     client = openai.OpenAI(**client_kwargs)
 
     if _model_needs_responses_api(model):
@@ -230,30 +234,20 @@ def _call_openai(model: str, system: str, prompt: str) -> tuple[str, dict]:
             {"role": "system", "content": system},
             {"role": "user", "content": prompt},
         ]
-        try:
-            resp = client.responses.create(
-                model=model,
-                input=messages,
-                temperature=TEMPERATURE,
-                max_output_tokens=MAX_TOKENS,
-                timeout=REQUEST_TIMEOUT,
-            )
-        except Exception:
-            # Some deployments expect max_completion_tokens
-            resp = client.responses.create(
-                model=model,
-                input=messages,
-                temperature=TEMPERATURE,
-                max_completion_tokens=MAX_TOKENS,
-                timeout=REQUEST_TIMEOUT,
-            )
+        # IMPORTANT: Do NOT send `temperature` here; some Responses models (e.g. gpt‑5)
+        # reject it with "Unsupported parameter: 'temperature' is not supported with this model."
+        resp = client.responses.create(
+            model=model,
+            input=messages,
+            max_output_tokens=MAX_TOKENS,
+        )
         text = getattr(resp, "output_text", None)
         if not text:
             # Older SDK shapes:
             try:
                 parts: List[str] = []
-                for block in getattr(resp, "output", []):
-                    for c in getattr(block, "content", []):
+                for block in getattr(resp, "output", []) or []:
+                    for c in getattr(block, "content", []) or []:
                         t = getattr(c, "text", None)
                         if t:
                             parts.append(t)
@@ -272,7 +266,6 @@ def _call_openai(model: str, system: str, prompt: str) -> tuple[str, dict]:
         ],
         "temperature": TEMPERATURE,
         "max_tokens": MAX_TOKENS,
-        "timeout": REQUEST_TIMEOUT,
     }
     if OPENAI_SEED is not None:
         create_kwargs["seed"] = OPENAI_SEED
@@ -499,7 +492,7 @@ def compile_dual_review(
         fallbacks=am_candidates[1:],
     )
 
-    # Primary decider
+    # Primary decider (manager)
     pd_provider, pd_model = plan[1] if len(plan) > 1 else plan[0]
     pd_provider_name = getattr(pd_provider, "name", str(pd_provider))
     pd_candidates = _provider_model_candidates(pd_provider_name, pd_model)
