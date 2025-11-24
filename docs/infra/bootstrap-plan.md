@@ -73,6 +73,8 @@ cdk/
 
 Branch protection rules enforce status checks, signed commits, change management tags (security, migration, cost).
 
+- Local guardrails: `make ci` now invokes `infra-preflight` and `infra-smoke` targets, blocking merges if registry, feature flag, runbook, or rotation checks fail.
+
 ## Observability Foundation
 
 - CloudWatch dashboards: `Latency`, `ErrorRate`, `QueueDepth`, `Spend`.

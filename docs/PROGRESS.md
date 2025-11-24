@@ -379,3 +379,13 @@
 - Enabled moderation queue prefetch for support/admin viewers by extending `createMessagingNextAdapter`, the messaging workspace client, and Next.js page to read `x-viewer-roles` / `MESSAGING_SHOW_MODERATION_QUEUE`, hydrate cases during SSR, and surface the queue sidebar immediately.
 - Updated messaging data source helpers plus unit suites (`tests/frontend/messaging/{next_adapter,dataSources}.test.mjs`) to cover moderation queue GraphQL/stub execution alongside refreshed docs (`implementation_plan.md`, `test_plan.md`, `ui_flows.md`).
 - Regression: `node --test tests/frontend/messaging/*.test.mjs` → pass (see run artifacts); `make ci` → pass (Python booking schema + Node booking suites).
+
+## 2025-11-24 — AGENT-1 (WBS-001) Part 2
+
+- Added `tsconfig.ci.json` and pointed the `typecheck` target at it so CI can use Bundler resolution without forcing `.js` suffixes while keeping runtime configs unchanged.
+- Extended the `Makefile` with `infra-preflight`, `infra-smoke`, and `infra-rotation-report` targets and wired them into `make ci`; tightened Node test discovery to use `find`-based globbing and converted the legacy `tests/frontend/index.js` placeholder to ESM.
+- Quoted the `abuse_ticket` activation condition in `ops/config/flags.yaml` to maintain YAML compatibility and documented the new guardrail stage in `docs/infra/bootstrap-plan.md`.
+- Tests:
+  - `python -m unittest tests.python.test_infra_tools`
+  - `python -m unittest tests.python.test_infra_docs`
+  - `make ci`
