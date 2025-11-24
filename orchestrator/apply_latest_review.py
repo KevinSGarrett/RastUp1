@@ -148,7 +148,6 @@ def _append_decision_log(
     """
     os.makedirs(os.path.dirname(DECISION_LOG_PATH), exist_ok=True)
 
-    # Use timezone-aware UTC to avoid DeprecationWarning.
     now_utc = datetime.datetime.now(datetime.timezone.utc)
     ts = now_utc.strftime("%Y-%m-%d %H:%M:%SZ")
 
@@ -243,11 +242,9 @@ def gate_apply(review_path: str) -> bool:
     # 5) If the manager did not explicitly accept, block.
     if not acceptance_yes:
         ci_status = (
-            "PASS"
-            if ci_from_report is True
-            else "UNKNOWN"
-            if ci_from_report is None
-            else "FAIL"
+            "PASS" if ci_from_report is True else
+            "UNKNOWN" if ci_from_report is None else
+            "FAIL"
         )
         _append_decision_log(
             wbs_id=wbs_id,
@@ -348,10 +345,7 @@ def main(argv: Optional[list[str]] = None) -> None:
     # Figure out the WBS id from the review path / contents.
     wbs_id = _guess_wbs_id(review_path)
     if not wbs_id:
-        print(
-            f"[apply_latest_review] Could not determine WBS id from "
-            f"{review_path}; skipping."
-        )
+        print(f"[apply_latest_review] Could not determine WBS id from {review_path}; skipping.")
         return
 
     status = "done" if allowed else "in_progress"
