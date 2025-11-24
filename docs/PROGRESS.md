@@ -105,7 +105,7 @@
 - Authored infrastructure bootstrap roadmap (`docs/infra/bootstrap-plan.md`) covering multi-account setup, Amplify Gen 2/CDK structure, security baseline, CI/CD pipeline, observability, cost controls, phased rollout, and validation strategy aligned to TD-0062 – TD-0114.
 - Added Python unit test (`tests/python/test_infra_docs.py`) to enforce roadmap completeness (required headings, environment matrix integrity, no placeholder text).
 - `python -m unittest tests.python.test_infra_docs` → pass (3 tests).
-- `make ci` → pass (Python booking schema tests + Node booking suites executed via target).
+- `make ci` → pass (Python booking schema tests + Node booking suites executed via target). At this stage CI was still narrow (booking-focused) and did not yet include infra preflight/smoke or TypeScript Bundler config; those were added in the later Part 2 run.
 
 ## 2025-11-19 — AGENT-3 (WBS-006) Part 3
 
@@ -288,7 +288,7 @@
   - `node --test tests/search/*.test.mjs` → pass (8 tests).
   - `python -m unittest tests.search.test_collections_json` → pass (3 tests).
   - `node --test tests/booking/*.test.mjs` → pass (65 tests).
-    - `make ci` → pass (Python booking schema + Node booking suites).
+  - `make ci` → pass (Python booking schema + Node booking suites).
 
 ## 2025-11-19 — AGENT-3 (WBS-006) Part 9
 
@@ -388,4 +388,7 @@
 - Tests:
   - `python -m unittest tests.python.test_infra_tools`
   - `python -m unittest tests.python.test_infra_docs`
-  - `make ci`
+  - `make ci` (TypeScript Bundler typecheck + Python infra/docs tests + full frontend/search/booking Node suites, followed by `tools.infra.preflight` / `tools.infra.smoke` and rotation summary; all passing).
+- Scope and follow-ups:
+  - This closes WBS-001 for **local CI + guardrails**: `make ci` is now green and enforces infra roadmap/docs, registry/feature-flag/runbook/rotation checks, and Node/TypeScript correctness.
+  - Deeper AWS infrastructure automation (Amplify/CDK stacks, AWS Organizations/AppConfig wiring, IaC static analysis via cdk-nag/infracost, and comprehensive deployment validation) is explicitly deferred to later infrastructure WBS items and tracked in `TODO_ORCHESTRATOR.md`.
