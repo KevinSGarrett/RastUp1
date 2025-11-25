@@ -25,3 +25,8 @@ logs/
 **/dist/
 services/**/dist/
 dist/
+
+web/.next/
+web/tsconfig.tsbuildinfo
+pr-body.md
+log_*.txt

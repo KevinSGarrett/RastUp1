@@ -205,3 +205,8 @@ clean:
 # Tries orchestrator.review_latest first, then falls back to the older name.
 review-latest:
 	@$(PY) -m orchestrator.review_latest || $(PY) -m orchestrator.reviewer
+
+.PHONY: web-build
+web-build:
+	cd web && npx next build --no-lint
+
