@@ -1,9 +1,9 @@
 # Orchestrator Review
 
-- Source: **docs/runs/2025-11-24-WBS-001-AGENT-1.md**
-- Input size: **5349 chars**
-- Assistant‑manager: **anthropic/claude-3-5-haiku-20241022** (17483 ms)
-- Primary‑decider: **openai/gpt-5** (37781 ms)
+- Source: **docs/runs/2025-11-24-WBS-001-AGENT-1-Part2.md**
+- Input size: **4879 chars**
+- Assistant‑manager: **anthropic/claude-3-5-haiku-20241022** (18129 ms)
+- Primary‑decider: **openai/gpt-5** (41643 ms)
 
 ## Assistant‑Manager Review
 
@@ -11,101 +11,94 @@
 
 ## Risk Log
 
-1. **CI/CD Pipeline Blockage**
-   - TypeScript module resolution is currently breaking `make ci`
-   - Risk: Potential deployment and integration delays
-   - Severity: High - Blocks continuous integration process
+1. **Upstream Delta Risk**
+   - `ops/model-decisions.jsonl` remains an unresolved upstream delta
+   - Potential integration or compatibility issues if left unaddressed
+   - Risk Level: Medium
 
-2. **Incomplete Infrastructure Automation**
-   - Tooling developed but not yet integrated into CI/attach-pack
-   - Risk: Partial implementation may lead to inconsistent deployment practices
-   - Severity: Medium
+2. **Runtime Warning Accumulation**
+   - Repeated `python -m` invocations causing module caching runtime warnings
+   - Potential performance and consistency degradation over time
+   - Risk Level: Low
 
-3. **Module Caching Warnings**
-   - Runtime warnings when sequentially invoking infrastructure tools
-   - Risk: Potential subtle runtime inconsistencies or unexpected behavior
-   - Severity: Low
+3. **Incomplete Infrastructure Automation**
+   - Infra targets not fully integrated into orchestrator automation
+   - Manual artifact collection still required
+   - Risk Level: Medium
 
 ## Missing Deliverables
 
-1. CI Integration
-   - Preflight/smoke scripts not yet wired into CI pipeline
-   - No automated JSON output storage mechanism
+1. AWS Infrastructure Dry-Run Artifacts
+   - No `cdk diff`, `cfn-lint`, or `infracost` outputs captured
+   - Missing static analysis and cost estimation reports
 
-2. AWS Infrastructure Implementation
-   - Amplify/CDK stacks not yet implemented
-   - No dry-run or static analysis for cloud resources
+2. Amplify/CDK Stack Templates
+   - Mentioned as pending, not yet implemented
+   - No concrete infrastructure-as-code (IaC) templates delivered
 
-3. TypeScript Module Configuration
-   - Missing `.js` extension resolution strategy
-   - No coordinated update plan for `services/*` modules
+3. Comprehensive Attach-Pack Generation
+   - Current attach-pack generation is manual
+   - Lacks automated, standardized packaging process
 
 ## Recommended Follow-Ups
 
-1. **Immediate Technical Debt Resolution**
-   - Create a targeted task to resolve TypeScript `.js` extension issue
-     * Audit all `services/*` modules
-     * Implement consistent import strategy
-     * Update TypeScript configuration to support module resolution
+1. **Upstream Delta Resolution**
+   - Schedule a dedicated review of `ops/model-decisions.jsonl`
+   - Determine merge strategy or conflict resolution
+   - Create a specific task to reconcile or document the delta
 
-2. **CI/CD Pipeline Enhancement**
-   - Develop integration script for:
-     * Automatic preflight/smoke script execution
-     * JSON output capture and archival
-     * Blocking conditions based on tooling checks
+2. **Infrastructure Automation Enhancement**
+   - Develop script to automate attach-pack generation
+   - Create wrapper for `tools/infra` to standardize AWS dry-run checks
+   - Implement CI/CD pipeline integration for infrastructure validation
 
-3. **Infrastructure Automation Expansion**
-   - Queue tasks for:
-     * Implement AWS Organizations dry-run scripts
-     * Add AppConfig static analysis
-     * Begin Amplify/CDK stack development using new preflight guardrails
+3. **Runtime Environment Optimization**
+   - Investigate module caching warnings
+   - Develop a Python runner with improved isolation
+   - Create a POC for reducing runtime warning frequency
 
-4. **Tooling Refinement**
-   - Investigate and resolve module caching warning
-   - Create a robust runner mechanism to prevent sequential invocation issues
+4. **IaC Development**
+   - Prioritize Amplify/CDK stack template creation
+   - Establish guardrail criteria for infrastructure deployment
+   - Draft initial dry-run and static analysis requirements
 
 5. **Documentation and Tracking**
-   - Update infrastructure roadmap with specific implementation milestones
-   - Create detailed tracking for each recommended follow-up task
-   - Establish clear ownership and timeline for each action item
+   - Update `docs/PROGRESS.md` with detailed status of pending items
+   - Create explicit tracking for each recommended follow-up
+   - Establish clear ownership and timeline for each task
 
-**Priority Ranking:**
-1. TypeScript Module Resolution
-2. CI Pipeline Integration
-3. Infrastructure Automation Expansion
-4. Tooling Refinement
-5. Documentation Update
+Recommended Priority Order:
+1. Upstream Delta Resolution
+2. Infrastructure Automation Enhancement
+3. IaC Development
+4. Runtime Environment Optimization
+5. Documentation and Tracking
 
 ## Final Orchestrator Decision
 
-Overall state and risks
-- Status: Not ready to mark done. CI is currently blocked by TypeScript module resolution failures, and key deliverables (CI integration, infra stacks, automated outputs) are missing.
-- High risk: CI/CD pipeline blockage (make ci failing). This prevents integration, gating, and safe deployment.
-- Medium risk: Infrastructure automation is only partially implemented; no CDK/Amplify stacks or dry-run/static analysis yet, risking drift and inconsistent practices.
-- Low-to-medium risk: Module caching warnings could lead to subtle runtime inconsistencies, especially under sequential tooling invocations.
-- Operational impact: Without CI gating and artifacted preflight results, we lack automated signal-to-block merges and no audit trail of checks.
+Overall state and risks summary:
+- State: Core orchestration appears functional, but key infra validation artifacts are missing, IaC templates are not delivered, and attach-pack generation remains manual. An unresolved upstream delta in ops/model-decisions.jsonl introduces integration risk. Runtime warnings are low risk but signal technical debt.
+- Key risks:
+  - Medium: Unresolved upstream delta (ops/model-decisions.jsonl) could cause compatibility regressions or drift if not reconciled.
+  - Medium: Incomplete infra automation and missing AWS dry-run artifacts (cdk diff, cfn-lint, infracost) block validation and guardrails.
+  - Low: Accumulating runtime warnings from repeated python -m invocations; potential performance and consistency issues over time.
+- Readiness: Not ready for acceptance. Critical deliverables (infra dry-run outputs, IaC templates, automated attach-pack) are missing. CI/validation gating is unspecified.
 
-Decision and rationale
-- Decision: Keep IN PROGRESS. CI is not green, multiple critical deliverables are missing, and risks remain unmitigated. We should not accept until CI is unblocked, preflight checks are running and enforced, and initial infra automation guardrails are in place.
+Decision:
+- Keep IN PROGRESS. Gating deliverables and medium risks remain unresolved. Acceptance requires: upstream delta resolved and documented; infra dry-run automation in CI with artifacts; initial Amplify/CDK templates merged with guardrails; attach-pack automation implemented; runtime warning strategy in place or mitigated.
 
-Prioritized next actions, owners, and target dates
-1) P0 – Unblock CI: TypeScript module resolution fix
-- Scope:
-  - Audit services/* imports and standardize .js extension usage for ESM/NodeNext.
-  - Update tsconfig: "module": "NodeNext", "moduleResolution": "NodeNext"; ensure "type": "module" where appropriate.
-  - Add ESLint rule and CI check to forbid extensionless ESM imports.
-  - Implement automated codemod to add .js extensions where needed and update barrel files.
-  - Verify build, test, and local make ci; open PR with migration notes.
-- Owner: Alex (TS Platform Lead) with service owners for reviews.
-- Target date: 2025-11-27.
-- Exit criteria: make ci passes locally and in CI; no unresolved module warnings; lints enforce the rule; migration doc merged.
+Prioritized next actions, owners, target dates, and acceptance criteria:
 
-2) P1 – CI pipeline integration for preflight/smoke with artifacts
-- Scope:
-  - Add CI job (e.g., GitHub Actions/CircleCI) to run preflight/smoke on PRs and main.
-  - Capture JSON outputs as build artifacts; retain for 14 days; upload to artifact store or S3 with prefix per commit SHA.
-  - Define blocking conditions from tooling checks; failing checks block merges.
-  - Wire into attach-pack
+1) Upstream Delta Resolution (Highest priority)
+- Owner: Model Ops Lead
+- Target date: 2025-11-28
+- Actions:
+  - Produce a diff and impact analysis for ops/model-decisions.jsonl (fields, semantics, consumers).
+  - Propose and agree merge strategy (rebase/squash + migration notes) via a short RFC in docs/ops/decisions-delta-RFC.md.
+  - Implement schema harmonization or adapters; add unit tests and a contract test in CI.
+  - Land PR resolving the delta and update CHANGELOG.
+- Acceptance criteria:
+  - No outstanding deltas for ops/model-decisions.jsonl
 
 ACCEPTANCE: no
 Decision: in_progress

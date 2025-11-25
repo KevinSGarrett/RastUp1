@@ -1,5 +1,5 @@
 agent: AGENT-2
-wbs_id: WBS-007
-timestamp_utc: 2025-11-19T10:47:21Z
+wbs_id: WBS-002
+timestamp_utc: 2025-11-25T11:20:00Z
 host: Cursor-CLI
-notes: "Lock refreshed for Smart Docs CMS backend scope (WBS-007 §1.5 data model, services, e-sign adapter groundwork)."
+notes: "Lock refreshed for WBS-002 core backend scope: migrations, profiles, trust services."
