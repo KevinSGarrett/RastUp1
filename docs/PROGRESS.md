@@ -105,7 +105,7 @@
 - Authored infrastructure bootstrap roadmap (`docs/infra/bootstrap-plan.md`) covering multi-account setup, Amplify Gen 2/CDK structure, security baseline, CI/CD pipeline, observability, cost controls, phased rollout, and validation strategy aligned to TD-0062 – TD-0114.
 - Added Python unit test (`tests/python/test_infra_docs.py`) to enforce roadmap completeness (required headings, environment matrix integrity, no placeholder text).
 - `python -m unittest tests.python.test_infra_docs` → pass (3 tests).
-- `make ci` → pass (Python booking schema tests + Node booking suites executed via target).
+- `make ci` → pass (Python booking schema tests + Node booking suites executed via target). At this stage CI was still narrow (booking-focused) and did not yet include infra preflight/smoke or TypeScript Bundler config; those were added in the later Part 2 run.
 
 ## 2025-11-19 — AGENT-3 (WBS-006) Part 3
 
@@ -288,7 +288,7 @@
   - `node --test tests/search/*.test.mjs` → pass (8 tests).
   - `python -m unittest tests.search.test_collections_json` → pass (3 tests).
   - `node --test tests/booking/*.test.mjs` → pass (65 tests).
-    - `make ci` → pass (Python booking schema + Node booking suites).
+  - `make ci` → pass (Python booking schema + Node booking suites).
 
 ## 2025-11-19 — AGENT-3 (WBS-006) Part 9
 
@@ -379,3 +379,16 @@
 - Enabled moderation queue prefetch for support/admin viewers by extending `createMessagingNextAdapter`, the messaging workspace client, and Next.js page to read `x-viewer-roles` / `MESSAGING_SHOW_MODERATION_QUEUE`, hydrate cases during SSR, and surface the queue sidebar immediately.
 - Updated messaging data source helpers plus unit suites (`tests/frontend/messaging/{next_adapter,dataSources}.test.mjs`) to cover moderation queue GraphQL/stub execution alongside refreshed docs (`implementation_plan.md`, `test_plan.md`, `ui_flows.md`).
 - Regression: `node --test tests/frontend/messaging/*.test.mjs` → pass (see run artifacts); `make ci` → pass (Python booking schema + Node booking suites).
+
+## 2025-11-24 — AGENT-1 (WBS-001) Part 2
+
+- Added `tsconfig.ci.json` and pointed the `typecheck` target at it so CI can use Bundler resolution without forcing `.js` suffixes while keeping runtime configs unchanged.
+- Extended the `Makefile` with `infra-preflight`, `infra-smoke`, and `infra-rotation-report` targets and wired them into `make ci`; tightened Node test discovery to use `find`-based globbing and converted the legacy `tests/frontend/index.js` placeholder to ESM.
+- Quoted the `abuse_ticket` activation condition in `ops/config/flags.yaml` to maintain YAML compatibility and documented the new guardrail stage in `docs/infra/bootstrap-plan.md`.
+- Tests:
+  - `python -m unittest tests.python.test_infra_tools`
+  - `python -m unittest tests.python.test_infra_docs`
+  - `make ci` (TypeScript Bundler typecheck + Python infra/docs tests + full frontend/search/booking Node suites, followed by `tools.infra.preflight` / `tools.infra.smoke` and rotation summary; all passing).
+- Scope and follow-ups:
+  - This closes WBS-001 for **local CI + guardrails**: `make ci` is now green and enforces infra roadmap/docs, registry/feature-flag/runbook/rotation checks, and Node/TypeScript correctness.
+  - Deeper AWS infrastructure automation (Amplify/CDK stacks, AWS Organizations/AppConfig wiring, IaC static analysis via cdk-nag/infracost, and comprehensive deployment validation) is explicitly deferred to later infrastructure WBS items and tracked in `TODO_ORCHESTRATOR.md`.

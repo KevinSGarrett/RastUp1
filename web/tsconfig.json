@@ -6,7 +6,10 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "moduleDetection": "force",
+
+    // 👇 This is what makes TS treat TSX/JSX correctly for Next/React
     "jsx": "preserve",
+
     "incremental": true,
     "strict": true,
     "noEmit": true,
@@ -18,6 +21,7 @@
     "checkJs": false,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
+    "esModuleInterop": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"]
@@ -29,6 +33,7 @@
     "**/*.ts",
     "**/*.tsx",
     "**/*.js",
+    "**/*.jsx",
     "**/*.mjs",
     ".next/types/**/*.ts"
   ],
