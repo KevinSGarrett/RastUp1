@@ -2,8 +2,8 @@
 
 - Source: **docs/runs/2025-11-24-WBS-001-AGENT-1-Part2.md**
 - Input size: **4879 chars**
-- Assistant‑manager: **anthropic/claude-3-5-haiku-20241022** (18129 ms)
-- Primary‑decider: **openai/gpt-5** (41643 ms)
+- Assistant‑manager: **anthropic/claude-3-5-haiku-20241022** (16236 ms)
+- Primary‑decider: **openai/gpt-5** (27591 ms)
 
 ## Assistant‑Manager Review
 
@@ -16,9 +16,9 @@
    - Potential integration or compatibility issues if left unaddressed
    - Risk Level: Medium
 
-2. **Runtime Warning Accumulation**
-   - Repeated `python -m` invocations causing module caching runtime warnings
-   - Potential performance and consistency degradation over time
+2. **Module Caching Warning**
+   - Runtime warnings from consecutive `python -m` invocations
+   - Potential performance and isolation concerns in test execution
    - Risk Level: Low
 
 3. **Incomplete Infrastructure Automation**
@@ -28,77 +28,62 @@
 
 ## Missing Deliverables
 
-1. AWS Infrastructure Dry-Run Artifacts
-   - No `cdk diff`, `cfn-lint`, or `infracost` outputs captured
-   - Missing static analysis and cost estimation reports
+1. AWS Infrastructure Deployment
+   - No AWS dry-run hooks implemented
+   - Missing Amplify/CDK stack scaffolding
+   - No static analysis wrappers for infrastructure code
 
-2. Amplify/CDK Stack Templates
-   - Mentioned as pending, not yet implemented
-   - No concrete infrastructure-as-code (IaC) templates delivered
+2. Comprehensive CI/CD Integration
+   - Attach-pack generation not automated
+   - Incomplete orchestrator automation for new infrastructure targets
 
-3. Comprehensive Attach-Pack Generation
-   - Current attach-pack generation is manual
-   - Lacks automated, standardized packaging process
+3. Test Runner Improvements
+   - No resolution for Node test runner's recursive testing limitation
+   - No comprehensive test isolation strategy
 
 ## Recommended Follow-Ups
 
-1. **Upstream Delta Resolution**
-   - Schedule a dedicated review of `ops/model-decisions.jsonl`
-   - Determine merge strategy or conflict resolution
-   - Create a specific task to reconcile or document the delta
+1. **Infrastructure Automation Tasks**
+   - [ ] Implement AWS dry-run wrappers (`cdk diff`, `cfn-lint`, `infracost`)
+   - [ ] Develop initial Amplify/CDK stack templates
+   - [ ] Create static analysis pipeline for infrastructure code
+   - [ ] Automate attach-pack generation in CI workflow
 
-2. **Infrastructure Automation Enhancement**
-   - Develop script to automate attach-pack generation
-   - Create wrapper for `tools/infra` to standardize AWS dry-run checks
-   - Implement CI/CD pipeline integration for infrastructure validation
+2. **Testing and Execution Improvements**
+   - [ ] Investigate alternative Node test runners with recursive testing support
+   - [ ] Develop test runner isolation strategy to mitigate module caching warnings
+   - [ ] Create comprehensive test discovery and execution framework
 
-3. **Runtime Environment Optimization**
-   - Investigate module caching warnings
-   - Develop a Python runner with improved isolation
-   - Create a POC for reducing runtime warning frequency
+3. **Upstream Delta Resolution**
+   - [ ] Review and resolve pending changes in `ops/model-decisions.jsonl`
+   - [ ] Establish clear merge/integration strategy for upstream deltas
 
-4. **IaC Development**
-   - Prioritize Amplify/CDK stack template creation
-   - Establish guardrail criteria for infrastructure deployment
-   - Draft initial dry-run and static analysis requirements
+4. **Continuous Integration Enhancements**
+   - [ ] Fully integrate new infrastructure targets into orchestrator automation
+   - [ ] Develop automated artifact collection and reporting mechanisms
+   - [ ] Implement comprehensive CI gating for infrastructure and application code
 
-5. **Documentation and Tracking**
-   - Update `docs/PROGRESS.md` with detailed status of pending items
-   - Create explicit tracking for each recommended follow-up
-   - Establish clear ownership and timeline for each task
-
-Recommended Priority Order:
-1. Upstream Delta Resolution
-2. Infrastructure Automation Enhancement
-3. IaC Development
-4. Runtime Environment Optimization
-5. Documentation and Tracking
+Priority: High - These follow-ups are critical for maintaining project momentum and ensuring robust infrastructure and testing processes.
 
 ## Final Orchestrator Decision
 
-Overall state and risks summary:
-- State: Core orchestration appears functional, but key infra validation artifacts are missing, IaC templates are not delivered, and attach-pack generation remains manual. An unresolved upstream delta in ops/model-decisions.jsonl introduces integration risk. Runtime warnings are low risk but signal technical debt.
-- Key risks:
-  - Medium: Unresolved upstream delta (ops/model-decisions.jsonl) could cause compatibility regressions or drift if not reconciled.
-  - Medium: Incomplete infra automation and missing AWS dry-run artifacts (cdk diff, cfn-lint, infracost) block validation and guardrails.
-  - Low: Accumulating runtime warnings from repeated python -m invocations; potential performance and consistency issues over time.
-- Readiness: Not ready for acceptance. Critical deliverables (infra dry-run outputs, IaC templates, automated attach-pack) are missing. CI/validation gating is unspecified.
+Overall state and rationale
+- Status: Not ready to mark done. Core workflows run, but multiple critical gaps remain in infrastructure automation, CI gating, and testing ergonomics. An unresolved upstream delta (ops/model-decisions.jsonl) increases integration risk. Missing AWS dry-run hooks and incomplete orchestrator integration for infra targets block safe iteration.
+- Rationale for conservatism: Without CI-enforced dry-run and static analysis for infra, we risk regressions and cost/safety issues. Test runner gaps and manual artifact collection reduce reliability and observability. The upstream delta could cause merge or behavior drift.
 
-Decision:
-- Keep IN PROGRESS. Gating deliverables and medium risks remain unresolved. Acceptance requires: upstream delta resolved and documented; infra dry-run automation in CI with artifacts; initial Amplify/CDK templates merged with guardrails; attach-pack automation implemented; runtime warning strategy in place or mitigated.
+Key risks and impact
+- Medium: Unresolved upstream delta (ops/model-decisions.jsonl) may cause merge conflicts and policy drift; must be resolved before expanding automation.
+- Medium: Incomplete infra automation (no cdk diff/cfn-lint/infracost, no Amplify/CDK scaffolding, no static checks); risk of unintended changes and poor visibility.
+- Medium: CI/CD integration gaps (no automated attach-pack, no artifact collection/reporting, infra targets not wired to orchestrator) reduce traceability and deployment safety.
+- Low: Module caching warnings from consecutive python -m runs; minor but symptomatic of insufficient test isolation.
+- Medium: Test runner limitations (Node recursive testing, isolation strategy missing) reduce coverage and signal quality.
 
-Prioritized next actions, owners, target dates, and acceptance criteria:
+Decision
+- Keep IN PROGRESS. Critical deliverables (infra dry-run pipeline, upstream delta resolution, CI gating) are not complete; risks remain above acceptable thresholds.
 
-1) Upstream Delta Resolution (Highest priority)
-- Owner: Model Ops Lead
-- Target date: 2025-11-28
-- Actions:
-  - Produce a diff and impact analysis for ops/model-decisions.jsonl (fields, semantics, consumers).
-  - Propose and agree merge strategy (rebase/squash + migration notes) via a short RFC in docs/ops/decisions-delta-RFC.md.
-  - Implement schema harmonization or adapters; add unit tests and a contract test in CI.
-  - Land PR resolving the delta and update CHANGELOG.
-- Acceptance criteria:
-  - No outstanding deltas for ops/model-decisions.jsonl
+Prioritized next actions (owners and target dates)
+1) Resolve upstream delta and define policy integration
+   - Action: Review and reconcile ops/model-decisions.jsonl with upstream; document merge/integration policy and add pre-commit
 
 ACCEPTANCE: no
 Decision: in_progress
