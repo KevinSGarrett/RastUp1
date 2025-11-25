@@ -8,15 +8,18 @@ on:
 jobs:
   node-tests:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+
       - run: npm ci
+
       - run: node --version
-      - run: npm run triage
-        env:
-          ORCHESTRATOR_WEBHOOK_URL: ${{ secrets.ORCHESTRATOR_WEBHOOK_URL }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      # Was: npm run triage (which calls tools/test-triage.mjs and blows up on CI)
+      # Now we just run the normal Node test suite, same as your local sanity check.
+      - run: npm test

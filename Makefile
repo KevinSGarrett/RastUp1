@@ -13,6 +13,7 @@ ORCHESTRATOR_AUTOPILOT_SLEEP_SECONDS ?= 10
 NODE_TEST_DIRS := tests/frontend tests/booking tests/search tests/docs
 
 .PHONY: help ci test test-python test-node test-e2e typecheck \
+        infra-preflight infra-smoke infra-rotation-report \
         install-playwright playwright-report clean \
         autopilot autopilot-log run-next assistant-manager-anthropic
 
@@ -24,6 +25,9 @@ help:
 	@echo "  make test-python             # Python unit tests"
 	@echo "  make test-node               # Node tests"
 	@echo "  make typecheck               # TypeScript type-check (no emit)"
+	@echo "  make infra-preflight         # run infrastructure preflight checks"
+	@echo "  make infra-smoke             # run preflight + supplemental guardrails"
+	@echo "  make infra-rotation-report   # summarise rotation coverage"
 	@echo "  make test-e2e                # Playwright E2E tests"
 	@echo "  make install-playwright      # Install Playwright deps"
 	@echo "  make autoplay                # (alias: autopilot) run orchestrator loop"
@@ -32,9 +36,9 @@ help:
 	@echo "  make assistant-manager-anthropic  # run-next with Anthropic manager"
 	@echo "  make clean                   # clean caches/reports"
 
-# Run full CI: type-check + unit tests (Python & Node).
+# Run full CI: type-check + unit tests (Python & Node) + infra guardrails.
 # E2E is optional; enable by running: make ci RUN_E2E=1
-ci: typecheck test
+ci: typecheck test infra-preflight infra-smoke
 ifdef RUN_E2E
 	$(MAKE) test-e2e
 endif
@@ -64,7 +68,12 @@ test-node:
 	  if [ -d $$d ]; then \
 	    found=1; \
 	    echo ">>> Running Node tests in $$d"; \
-	    $(NODE) --test $$d; \
+	    tests=$$(find $$d -type f \( -name "*.test.mjs" -o -name "*.test.js" -o -name "*.test.ts" \)); \
+	    if [ -n "$$tests" ]; then \
+	      $(NODE) --test $$tests; \
+	    else \
+	      $(NODE) --test $$d; \
+	    fi; \
 	  fi; \
 	done; \
 	if [ $$found -eq 0 ]; then \
@@ -73,7 +82,17 @@ test-node:
 
 # TypeScript type checking across the repo (no emit)
 typecheck:
-	npx -y tsc --noEmit
+	npx -y tsc --noEmit -p tsconfig.ci.json
+
+# Infrastructure guardrail helpers
+infra-preflight:
+	$(PY) -m tools.infra.preflight --format text
+
+infra-smoke:
+	$(PY) -m tools.infra.smoke --format text
+
+infra-rotation-report:
+	$(PY) -m tools.infra.rotation_report --format text
 
 # Playwright E2E tests (expects config at playwright.config.ts)
 test-e2e:

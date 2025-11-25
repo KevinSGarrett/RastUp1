@@ -1,0 +1,210 @@
+# WBS-002 Core Accounts, Profiles, and Trust GraphQL Contract
+
+scalar AWSDateTime
+scalar AWSJSON
+
+enum RoleType {
+  MODEL
+  PHOTOGRAPHER
+  VIDEOGRAPHER
+  CREATOR
+  FANSUB
+}
+
+enum TrustBadgeKind {
+  ID_VERIFIED
+  TRUSTED_PRO
+  SOCIAL_VERIFIED
+}
+
+enum ServiceProfileStatus {
+  DRAFT
+  PENDING_REVIEW
+  PUBLISHED
+  SUSPENDED
+}
+
+enum TrustFlowType {
+  IDV
+  BACKGROUND_CHECK
+  SOCIAL_VERIFICATION
+}
+
+type TrustBadge {
+  kind: TrustBadgeKind!
+  issuedAt: AWSDateTime
+  expiresAt: AWSDateTime
+  sourceId: ID
+}
+
+type ProfileVerification {
+  idVerified: Boolean!
+  ageVerified: Boolean!
+  trustedPro: Boolean!
+  socialVerified: Boolean!
+  riskScore: Int!
+  badges: [TrustBadge!]!
+  lastIdvAt: AWSDateTime
+  lastBgAt: AWSDateTime
+}
+
+type PricingAddon {
+  name: String!
+  priceCents: Int!
+}
+
+type PricingPackage {
+  packageId: ID!
+  name: String!
+  priceCents: Int!
+  durationMin: Int!
+  includes: [String!]
+  addons: [PricingAddon!]
+  licensing: AWSJSON
+}
+
+type ServiceProfile {
+  id: ID!
+  userId: ID!
+  role: RoleType!
+  status: ServiceProfileStatus!
+  displayName: String!
+  slug: String!
+  city: String!
+  region: String
+  country: String!
+  about: AWSJSON!
+  pricing: [PricingPackage!]!
+  social: AWSJSON
+  languages: [String!]!
+  tags: [String!]!
+  safeModeBand: Int!
+  completenessScore: Int!
+  verification: ProfileVerification!
+  instantBook: Boolean!
+  updatedAt: AWSDateTime!
+  publishedAt: AWSDateTime
+}
+
+type ValidationIssue {
+  code: String!
+  message: String!
+  path: [String!]!
+  severity: String
+  meta: AWSJSON
+}
+
+type ProfileEvaluation {
+  ok: Boolean!
+  completenessScore: Int!
+  blockingReasons: [ValidationIssue!]!
+  warnings: [ValidationIssue!]!
+  recommendedActions: [String!]!
+}
+
+type TrustStatus {
+  idVerified: Boolean!
+  ageVerified: Boolean!
+  trustedPro: Boolean!
+  socialVerified: Boolean!
+  riskScore: Int!
+  badges: [TrustBadge!]!
+  lastIdvAt: AWSDateTime
+  lastBgAt: AWSDateTime
+}
+
+input PricingAddonInput {
+  name: String!
+  priceCents: Int!
+}
+
+input PricingPackageInput {
+  packageId: ID!
+  name: String!
+  priceCents: Int!
+  durationMin: Int!
+  includes: [String!]
+  addons: [PricingAddonInput!]
+  licensing: AWSJSON
+}
+
+input ServiceProfileInput {
+  role: RoleType!
+  displayName: String!
+  slug: String!
+  city: String!
+  region: String
+  country: String!
+  about: AWSJSON!
+  pricing: [PricingPackageInput!]!
+  social: AWSJSON
+  languages: [String!]!
+  tags: [String!]!
+  safeModeBand: Int
+  instantBook: Boolean
+}
+
+input UpsertServiceProfileInput {
+  id: ID
+  payload: ServiceProfileInput!
+  correlationId: ID
+}
+
+input PublishServiceProfileInput {
+  id: ID!
+  minScore: Int = 70
+  force: Boolean = false
+}
+
+input TrustFlowInput {
+  type: TrustFlowType!
+  provider: String
+}
+
+input ServiceProfileFilter {
+  role: RoleType
+  status: ServiceProfileStatus
+  city: String
+  country: String
+  userId: ID
+  query: String
+}
+
+type ServiceProfileEdge {
+  node: ServiceProfile!
+  cursor: String!
+}
+
+type ServiceProfileConnection {
+  edges: [ServiceProfileEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  endCursor: String
+}
+
+type ProfileMutationResult {
+  profile: ServiceProfile!
+  evaluation: ProfileEvaluation!
+}
+
+type PublishProfileResult {
+  profile: ServiceProfile!
+  evaluation: ProfileEvaluation!
+}
+
+type Query {
+  serviceProfile(slug: String!): ServiceProfile
+  serviceProfiles(filter: ServiceProfileFilter, after: String, first: Int = 20): ServiceProfileConnection!
+  trustStatus(userId: ID): TrustStatus!
+  evaluateServiceProfile(input: ServiceProfileInput!, userId: ID): ProfileEvaluation!
+}
+
+type Mutation {
+  upsertServiceProfile(input: UpsertServiceProfileInput!): ProfileMutationResult!
+  publishServiceProfile(input: PublishServiceProfileInput!): PublishProfileResult!
+  requestTrustFlow(input: TrustFlowInput!): TrustStatus!
+}
