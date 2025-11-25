@@ -1,7 +1,39 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "module": "ESNext",
-    "moduleResolution": "Bundler"
-  }
+    // CI: type-check only
+    "noEmit": true,
+
+    // Use classic Node module resolution so "./types" works
+    "module": "CommonJS",
+    "moduleResolution": "node",
+
+    // Reasonable defaults for backend code
+    "target": "ES2022",
+    "esModuleInterop": true,
+    "resolveJsonModule": true
+  },
+  "include": [
+    // Backend / domain code
+    "services/**/*.ts",
+    "services/**/*.tsx",
+
+    // Scripts & tools
+    "scripts/**/*.ts",
+    "scripts/**/*.tsx",
+
+    // Optional, if you start adding TS tests or libs
+    "tests/**/*.ts",
+    "tests/**/*.tsx",
+    "lib/**/*.ts",
+    "lib/**/*.tsx",
+    "backend/**/*.ts",
+    "backend/**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "web",
+    ".next",
+    "dist"
+  ]
 }
