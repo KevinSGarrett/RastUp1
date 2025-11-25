@@ -392,3 +392,12 @@
 - Scope and follow-ups:
   - This closes WBS-001 for **local CI + guardrails**: `make ci` is now green and enforces infra roadmap/docs, registry/feature-flag/runbook/rotation checks, and Node/TypeScript correctness.
   - Deeper AWS infrastructure automation (Amplify/CDK stacks, AWS Organizations/AppConfig wiring, IaC static analysis via cdk-nag/infracost, and comprehensive deployment validation) is explicitly deferred to later infrastructure WBS items and tracked in `TODO_ORCHESTRATOR.md`.
+
+## 2025-11-25 — AGENT-2 (WBS-002)
+
+- Derived the blueprint DDL into executable migration `db/migrations/021_core_base.sql`, establishing accounts, service profiles, studios, booking legs, payments, trust telemetry, analytics tiers, DSAR, and schema registry tables with supporting indexes and constraints.
+- Added Python schema guard `tests/python/test_core_schema.py` (now exercised via `make ci`) to lock enum values, required tables, and safety checks for profiles/trust analytics.
+- Implemented service profile validation/completeness/safe-mode utilities (`services/profiles/{domain.js,domain.ts,types.ts,index.ts}`) and trust aggregation modules (`services/trust/{domain.js,domain.ts,types.ts,index.ts}`) aligned with §1.1 and §1.6 invariants.
+- Authored Node unit suites `node --test tests/profiles/*.test.mjs tests/trust/*.test.mjs` (11 passing subtests) covering validation, scoring, safe-mode filtering, trust badges, risk scoring, eligibility gates, and recertification logic.
+- Delivered GraphQL contract `api/schema/core.graphql` exposing profile management, evaluation, and trust/status operations for downstream AppSync resolvers.
+- `make ci` → pass (tsc, Python schema/infra suites, frontend/search/booking Node suites, infra preflight/smoke).
