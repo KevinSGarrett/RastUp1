@@ -5,8 +5,59 @@ spec (the giant "Initial prompt for cursor agents..." you wrote) into
 concrete repo artifacts and CI-enforced behavior.
 
 The high-level capabilities are mirrored from `ops/orchestrator_capabilities.yaml`
-and the long-form rules live in your original orchestrator prompt (to be
-copied into a long-spec file later if desired).
+and the long-form rules now live in `docs/orchestrator/LONG_SPEC.md`
+(your original orchestrator prompt, saved into the repo).
+
+---
+
+## Verticals (End-to-End Flows)
+
+This section tracks concrete “vertical” flows that cut across multiple subsystems
+(search, profile, booking, auth, payments, messaging, etc.). Each vertical should have:
+
+- A checklist doc under `docs/checklists/`.
+- Design references under `docs/design/`.
+- At least one WBS item in `ops/wbs.json`.
+- At least one E2E smoke path once the UI is more complete.
+
+### V-001: Search → Profile → Booking → Signup → Payment
+
+Targets:
+
+- `docs/checklists/search_profile_booking.md`
+- `docs/design/foundations.md`
+- `web/app/search`, `web/app/booking`
+- `web/components/Search/*`, `web/components/Profile/*`, `web/components/Booking/*`
+
+Tasks:
+
+- [x] Create vertical checklist file:
+      - `docs/checklists/search_profile_booking.md`.
+- [x] Draft design foundations v0:
+      - `docs/design/foundations.md`.
+- [x] Implement initial search/profile/booking pages wired to stub stores
+      and data sources (WBS-003).
+- [x] Add at least one visible UX improvement to the Search UI
+      (results header + empty state).
+- [ ] Add a dedicated WBS entry in `ops/wbs.json` for
+      “V-001: Search → Profile → Booking → Signup → Payment” that:
+      - References this checklist.
+      - Lists primary code paths (search workspace, profile page, booking page,
+        auth/signup, payment).
+      - Has clear “done” criteria tied to the checklist.
+- [ ] Extend `docs/PROGRESS.md` / `docs/OUTLINE.md` (once implemented) to
+      show per-vertical status using the checklist.
+- [ ] Add an E2E smoke test covering this full vertical (e.g. Playwright):
+      - Search → open profile → start booking → (stub) signup/login → (stub) payment.
+      - Wire into `make ci` or a dedicated `make test-e2e`.
+- [ ] Teach `orchestrator.autopilot_loop` (or a future planner) to prefer
+      completing one vertical before spreading to new ones when reasonable.
+
+### Future verticals (examples)
+
+- [ ] V-002: Messaging → Moderation → Safe Mode
+- [ ] V-003: Studio Management → Availability → Calendar Connect
+- [ ] V-004: Disputes → Evidence → Payouts
 
 ---
 
