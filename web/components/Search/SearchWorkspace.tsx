@@ -121,6 +121,25 @@ export function SearchWorkspace({
     }
   }, [role, store]);
 
+  // Compute whether there are any active filters (for the header/empty state)
+  const hasActiveFilters = useMemo(() => {
+    const filterValues = state.filters as Record<string, unknown> | undefined;
+    if (!filterValues) return false;
+    return Object.values(filterValues).some((value) => {
+      if (value == null) return false;
+      if (Array.isArray(value)) {
+        return value.length > 0;
+      }
+      if (typeof value === 'object') {
+        const nested = value as Record<string, unknown>;
+        return Object.values(nested).some(
+          (v) => v != null && v !== ''
+        );
+      }
+      return true;
+    });
+  }, [state.filters]);
+
   // ---- PRIMARY SEARCH EFFECT ----
   //
   // Depend only on the inputs that logically trigger a search and
@@ -409,6 +428,11 @@ export function SearchWorkspace({
             total={totalResults}
             hasNext={hasNextPage}
             onLoadMore={handleLoadMore}
+            surface={state.surface}
+            role={role}
+            query={state.query}
+            hasActiveFilters={hasActiveFilters}
+            onResetFilters={() => handleClearFilters()}
           />
         </main>
       </div>

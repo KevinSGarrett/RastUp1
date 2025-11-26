@@ -10,9 +10,16 @@ export interface SearchResultsListProps {
   loading: boolean;
   error?: string | null;
   total?: number | null;
+  hasNext?: boolean;
   onSelectResult?: (resultId: string) => void;
   onLoadMore?: () => void;
-  hasNext?: boolean;
+
+  // New context props for nicer UX
+  surface: 'PEOPLE' | 'STUDIOS';
+  role?: string | null;
+  query?: string;
+  hasActiveFilters?: boolean;
+  onResetFilters?: () => void;
 }
 
 export function SearchResultsList({
@@ -21,19 +28,56 @@ export function SearchResultsList({
   loading,
   error,
   total,
+  hasNext,
   onSelectResult,
   onLoadMore,
-  hasNext
+  surface,
+  role,
+  query,
+  hasActiveFilters,
+  onResetFilters
 }: SearchResultsListProps) {
+  const totalCount = typeof total === 'number' ? total : results.length;
+  const surfaceLabel = surface === 'PEOPLE' ? 'People' : 'Studios';
+  const roleLabel =
+    role != null && role !== ''
+      ? role.charAt(0) + role.slice(1).toLowerCase()
+      : null;
+
+  const contextParts: string[] = [surfaceLabel];
+  if (roleLabel) {
+    contextParts.push(`Role: ${roleLabel}`);
+  }
+  if (hasActiveFilters) {
+    contextParts.push('Filters on');
+  }
+
+  const showEmptyState = !error && !loading && results.length === 0;
+
   return (
     <section className="search-results" aria-live="polite">
       <header className="search-results__header">
-        <h2 className="search-results__title">Results</h2>
-        {typeof total === 'number' ? (
-          <p className="search-results__count" aria-live="polite">
-            {total} match{total === 1 ? '' : 'es'}
-          </p>
-        ) : null}
+        <div className="search-results__header-main">
+          <h2 className="search-results__title">Results</h2>
+          {typeof totalCount === 'number' ? (
+            <p className="search-results__count" aria-live="polite">
+              {totalCount} match{totalCount === 1 ? '' : 'es'}
+            </p>
+          ) : null}
+        </div>
+
+        <div className="search-results__header-meta">
+          {contextParts.length ? (
+            <p className="search-results__context">
+              {contextParts.join(' • ')}
+            </p>
+          ) : null}
+          {query ? (
+            <p className="search-results__query">
+              for <span className="search-results__query-value">“{query}”</span>
+            </p>
+          ) : null}
+        </div>
       </header>
 
       {error ? (
@@ -43,8 +87,31 @@ export function SearchResultsList({
         </div>
       ) : null}
 
-      {results.length === 0 && !loading ? (
-        <p className="search-results__empty">No results match your filters. Try broadening your query.</p>
+      {showEmptyState ? (
+        <div className="search-results__empty">
+          <p>No results match your current search.</p>
+          {query ? (
+            <p className="search-results__empty-line">
+              Query: <strong>“{query}”</strong>
+            </p>
+          ) : null}
+          {hasActiveFilters ? (
+            <p className="search-results__empty-line">
+              You have filters applied. Clearing them may show more results.
+            </p>
+          ) : null}
+          {onResetFilters ? (
+            <div className="search-results__empty-actions">
+              <button
+                type="button"
+                className="search-results__clear-filters"
+                onClick={onResetFilters}
+              >
+                Clear all filters
+              </button>
+            </div>
+          ) : null}
+        </div>
       ) : null}
 
       <div className="search-results__grid">
@@ -59,7 +126,15 @@ export function SearchResultsList({
       </div>
 
       <div className="search-results__footer">
-        {loading ? <span className="search-results__loading">Loading…</span> : null}
+        {loading ? (
+          <span
+            className="search-results__loading"
+            role="status"
+            aria-live="polite"
+          >
+            Loading…
+          </span>
+        ) : null}
         {hasNext ? (
           <button
             type="button"
