@@ -55,10 +55,8 @@ export default async function SearchPage({ searchParams = {} }: SearchPageProps)
     }
   }
 
-  // Ensure TypeScript sees this as a proper filter map
   const filters = parseFilters(filterParams) as Record<string, unknown>;
   if (role) {
-    // Enforce role filter from query params
     (filters as Record<string, unknown> & { role?: string }).role = role;
   }
 
@@ -71,7 +69,6 @@ export default async function SearchPage({ searchParams = {} }: SearchPageProps)
     safeMode
   });
 
-  // Ensure payload shape is normalized for hydration safety
   const normalizedPayload = normalizeGraphqlSearchPayload(payload);
 
   return (

@@ -7,7 +7,6 @@ import {
   useMemo,
   useRef,
   useState,
-  useSyncExternalStore,
   useTransition
 } from 'react';
 
@@ -92,17 +91,17 @@ export function ProfilePage({
     })
   );
 
-  const subscribe = useCallback(
-    (listener: () => void) => store.subscribe(listener),
-    [store]
+  // React-facing snapshot of store state
+  const [state, setState] = useState<ProfileViewState>(
+    () => store.getState() as ProfileViewState
   );
-  const getSnapshot = useCallback<() => ProfileState>(() => store.getState(), [store]);
 
-  const state = useSyncExternalStore(
-    subscribe,
-    getSnapshot,
-    getSnapshot
-  ) as ProfileViewState;
+  useEffect(() => {
+    const unsubscribe = store.subscribe(() => {
+      setState(store.getState() as ProfileViewState);
+    });
+    return unsubscribe;
+  }, [store]);
 
   const [pending, startTransition] = useTransition();
   const dataSource = useMemo(
@@ -202,7 +201,7 @@ export function ProfilePage({
       <ProfileHero
         profile={state.profile}
         heroMedia={state.heroMedia}
-        safeModeEnabled={state.safeModeEnabled}
+        safeModeEnabled={state.safeModeEnabled ?? true}
         safeModeBand={state.safeModeBand ?? 0}
         onToggleSafeMode={handleSafeModeToggle}
         onBook={handleBook}
@@ -239,7 +238,7 @@ export function ProfilePage({
           <ProfilePackages packages={state.packages} />
           <ProfileGallery
             gallery={state.gallery}
-            safeModeEnabled={state.safeModeEnabled}
+            safeModeEnabled={state.safeModeEnabled ?? true}
           />
           <ProfileTestimonials testimonials={state.testimonials} />
         </div>

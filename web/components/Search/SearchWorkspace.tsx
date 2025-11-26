@@ -7,14 +7,10 @@ import {
   useMemo,
   useRef,
   useState,
-  useSyncExternalStore,
   useTransition
 } from 'react';
 
-import {
-  normalizeGraphqlSearchPayload,
-  createSearchDataSource
-} from '../../lib/search';
+import { normalizeGraphqlSearchPayload, createSearchDataSource } from '../../lib/search';
 import {
   SEARCH_STATUS,
   createSearchStore,
@@ -43,27 +39,6 @@ export interface SearchWorkspaceProps {
   dataSource?: ReturnType<typeof createSearchDataSource>;
 }
 
-function serializePayloadKey(payload: SearchPayload | null | undefined) {
-  if (!payload) return 'empty';
-  const results = (payload.results ?? []) as Array<{ id: string }>;
-  return JSON.stringify({
-    surface: payload.surface,
-    total: payload.stats?.total ?? 0,
-    page: payload.pageInfo?.page ?? 1,
-    resultIds: results.map((result) => result.id)
-  });
-}
-
-function buildRequestKey(state: SearchState) {
-  return JSON.stringify({
-    surface: state.surface,
-    query: state.query,
-    filters: state.filters,
-    sort: state.sort,
-    safeMode: state.safeMode
-  });
-}
-
 export function SearchWorkspace({
   initialSurface = 'PEOPLE',
   initialRole = null,
@@ -80,8 +55,6 @@ export function SearchWorkspace({
     [incomingFilters]
   );
 
-  const initialPayloadKey = serializePayloadKey(initialPayload ?? null);
-
   const [store] = useState<SearchStore>(() => {
     const created = createSearchStore({
       surface: initialSurface,
@@ -96,32 +69,44 @@ export function SearchWorkspace({
     return created;
   });
 
-  const subscribe = useCallback(
-    (listener: () => void) => store.subscribe(listener),
-    [store]
-  );
-  const getSnapshot = useCallback<() => SearchState>(() => store.getState(), [store]);
+  // React-facing snapshot of store state
+  const [state, setState] = useState<SearchState>(() => store.getState());
 
-  const state = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+  useEffect(() => {
+    const unsubscribe = store.subscribe(() => {
+      setState(store.getState());
+    });
+    return unsubscribe;
+  }, [store]);
 
   const [role, setRole] = useState<string | null>(initialRole);
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
   const [pending, startTransition] = useTransition();
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
 
-  const requestKey = useMemo(() => buildRequestKey(state), [state]);
   const dataSource = useMemo(
     () => injectedDataSource ?? createSearchDataSource(),
     [injectedDataSource]
   );
-  const lastRequestKeyRef = useRef<string | null>(initialPayload ? requestKey : null);
+
+  // Track the last "search input" key so we don't double-fire when
+  // we re-apply a response that doesn't change the inputs.
+  const lastSearchKeyRef = useRef<string | null>(null);
 
   // Re-apply initial payload when it changes from the server.
   useEffect(() => {
     if (!initialPayload) return;
     store.applyResponse(initialPayload);
-    lastRequestKeyRef.current = buildRequestKey(store.getState());
-  }, [initialPayload, initialPayloadKey, store]);
+    // Reset the lastSearchKey so the next real change triggers a fetch.
+    lastSearchKeyRef.current = JSON.stringify({
+      surface: initialSurface,
+      query: initialQuery,
+      filters: initialFilters,
+      sort: initialSort,
+      safeMode: initialSafeMode
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialPayload]);
 
   // Keep "role" filter in sync with the dedicated dropdown.
   useEffect(() => {
@@ -136,33 +121,46 @@ export function SearchWorkspace({
     }
   }, [role, store]);
 
-  // Run the primary search whenever the request key changes.
+  // ---- PRIMARY SEARCH EFFECT ----
+  //
+  // Depend only on the inputs that logically trigger a search and
+  // guard with an explicit "search key" so we don't loop.
+  const { surface, query, filters, sort, safeMode, status } = state;
+
   useEffect(() => {
-    const snapshot = store.getState();
-    const currentKey = buildRequestKey(snapshot);
-    if (currentKey === lastRequestKeyRef.current && snapshot.status !== SEARCH_STATUS.LOADING) {
+    const searchKey = JSON.stringify({ surface, query, filters, sort, safeMode });
+
+    // Don't refetch if the inputs haven't changed.
+    if (searchKey === lastSearchKeyRef.current) {
       return;
     }
-    lastRequestKeyRef.current = currentKey;
+    lastSearchKeyRef.current = searchKey;
+
+    // If we're already loading for this key, bail.
+    if (status === SEARCH_STATUS.LOADING) {
+      return;
+    }
 
     let cancelled = false;
+    const filtersSnapshot = filters;
+
     store.setStatus(SEARCH_STATUS.LOADING);
-    const filtersSnapshot = snapshot.filters;
 
     startTransition(() => {
       dataSource
         .search({
-          surface: snapshot.surface,
-          query: snapshot.query,
+          surface,
+          query,
           filters: filtersSnapshot,
-          sort: snapshot.sort,
-          safeMode: snapshot.safeMode
+          sort,
+          safeMode
         })
         .then((payload: SearchPayload) => {
           if (cancelled) return;
           store.applyResponse(payload);
           setErrorBanner(null);
-          lastRequestKeyRef.current = buildRequestKey(store.getState());
+          // after a successful response, inputs still match searchKey,
+          // so the effect will not re-run until the user changes something.
         })
         .catch((error: unknown) => {
           if (cancelled) return;
@@ -180,7 +178,7 @@ export function SearchWorkspace({
     return () => {
       cancelled = true;
     };
-  }, [requestKey, dataSource, startTransition, store]);
+  }, [surface, query, filters, sort, safeMode, status, dataSource, startTransition, store]);
 
   // Fetch suggestions as the user types.
   useEffect(() => {
@@ -286,7 +284,6 @@ export function SearchWorkspace({
         })
         .then((payload: SearchPayload) => {
           store.appendResponse(payload);
-          lastRequestKeyRef.current = buildRequestKey(store.getState());
           emitTelemetry('search:load_more', {
             page: store.getState().pageInfo?.page,
             resultCount: payload.results?.length ?? 0

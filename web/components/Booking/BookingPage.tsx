@@ -6,7 +6,6 @@ import {
   useMemo,
   useRef,
   useState,
-  useSyncExternalStore,
   useTransition
 } from 'react';
 
@@ -49,13 +48,15 @@ export function BookingPage({
 
   const [store] = useState<BookingStore>(() => createBookingStore(initialBooking));
 
-  const subscribe = useCallback(
-    (listener: () => void) => store.subscribe(listener),
-    [store]
-  );
-  const getSnapshot = useCallback<() => BookingState>(() => store.getState(), [store]);
+  // React-facing snapshot of the store
+  const [state, setState] = useState<BookingState>(() => store.getState());
 
-  const state = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+  useEffect(() => {
+    const unsubscribe = store.subscribe(() => {
+      setState(store.getState());
+    });
+    return unsubscribe;
+  }, [store]);
 
   const [pending, startTransition] = useTransition();
   const dataSource = useMemo(
@@ -66,12 +67,14 @@ export function BookingPage({
   const [paymentMethod, setPaymentMethod] = useState('card');
   const lastFetchKeyRef = useRef<string | null>(initialKey);
 
+  // Re‑hydrate when the server-provided initial booking changes
   useEffect(() => {
     store.hydrate(initialBooking);
     lastFetchKeyRef.current = initialKey;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialKey]);
 
+  // Fetch booking configuration when the serviceProfileId changes
   useEffect(() => {
     const key = buildKey(serviceProfileId);
     if (lastFetchKeyRef.current === key) {
