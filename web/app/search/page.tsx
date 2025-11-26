@@ -13,6 +13,24 @@ export const metadata: Metadata = {
     'Discover verified models, photographers, creators, videographers, and studios with availability, instant book, and Safe-Mode controls.',
   alternates: {
     canonical: 'https://rastup.com/search'
+  },
+  openGraph: {
+    title: 'Search Talent & Studios | RastUp',
+    description:
+      'Discover verified models, photographers, creators, videographers, and studios with availability, instant book, and Safe-Mode controls.',
+    url: 'https://rastup.com/search',
+    siteName: 'RastUp',
+    type: 'website'
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Search Talent & Studios | RastUp',
+    description:
+      'Discover verified models, photographers, creators, videographers, and studios with availability, instant book, and Safe-Mode controls.'
+  },
+  robots: {
+    index: true,
+    follow: true
   }
 };
 
