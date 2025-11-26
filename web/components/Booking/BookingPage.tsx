@@ -51,11 +51,21 @@ export function BookingPage({
   // React-facing snapshot of the store
   const [state, setState] = useState<BookingState>(() => store.getState());
 
+  // Subscribe to store updates once
   useEffect(() => {
-    const unsubscribe = store.subscribe(() => {
+    const listener = () => {
       setState(store.getState());
-    });
-    return unsubscribe;
+    };
+
+    // Note: subscribe's return type is not a cleanup fn in the typings,
+    // so we just fire-and-forget here.
+    store.subscribe(listener);
+
+    return () => {
+      // No unsubscribe API exposed at the type level.
+      // If subscribe() starts returning an unsubscribe fn in the future,
+      // wire it up here.
+    };
   }, [store]);
 
   const [pending, startTransition] = useTransition();

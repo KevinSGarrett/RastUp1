@@ -97,10 +97,17 @@ export function ProfilePage({
   );
 
   useEffect(() => {
-    const unsubscribe = store.subscribe(() => {
+    const listener = () => {
       setState(store.getState() as ProfileViewState);
-    });
-    return unsubscribe;
+    };
+
+    // As with Booking, subscribe's return type isn't a cleanup fn,
+    // so we just subscribe and return a no-op cleanup.
+    store.subscribe(listener);
+
+    return () => {
+      // If subscribe() ever exposes an unsubscribe function, call it here.
+    };
   }, [store]);
 
   const [pending, startTransition] = useTransition();
@@ -248,8 +255,8 @@ export function ProfilePage({
           <div className="profile-page__safety">
             <h3 className="profile-page__safety-title">Safety & Reporting</h3>
             <p>
-              Spot something concerning? Capture context and share with support.
-              Sensitive media remains hidden while Safe-Mode is enabled.
+              Spot something concerning? Capture context and share with support. Sensitive media
+              remains hidden while Safe-Mode is enabled.
             </p>
             <label className="profile-page__safety-toggle">
               <input
