@@ -7,6 +7,14 @@
 
 - Orchestrator initialised. Blueprints not yet ingested.
 
+## 2025-11-26 — AGENT-1 (WBS-001)
+
+- Scaffolded Amplify Gen 2 blueprint (`amplify/stack.ts`, `amplify/backend/**`, `amplify/scripts/print-blueprint.ts`) capturing environment guardrails, stack decomposition, and secret rotation policy for dev/stage/prod.
+- Introduced CDK multi-account bootstrap (`cdk/bin/infra.ts`, `cdk/lib/{org-stack,budgets-stack,identity-stack}.ts`, `cdk/scripts/run-nag.ts`) plus package scripts to run synth/diff/nag under `tsx`.
+- Updated `Makefile` to run Node tests with `--loader tsx`; added infrastructure test suites (`tests/infra/*.test.ts`) validating Amplify blueprints and CDK assembly contents.
+- Refreshed infrastructure roadmap with current status and next steps for resource-level CDK implementation.
+- `make ci` → pass (Python infra docs/tests + Node frontend/search/booking/docs suites + new infra tests); artefacts captured for attach pack.
+
 ## 2025-11-18 — AGENT-1 (WBS-002)
 
 - Seeded core data architecture docs under `docs/data/` (Aurora schema, event contracts, pipelines, privacy, metrics).

@@ -9,7 +9,12 @@
     "@playwright/test": "1.56.1",
     "@types/node": "^24.10.1",
     "@types/pg": "^8.15.6",
+    "aws-cdk": "^2.1033.0",
+    "aws-cdk-lib": "^2.230.0",
+    "cdk-nag": "^2.37.55",
+    "constructs": "^10.4.3",
     "dotenv": "^16.4.5",
+    "source-map-support": "^0.5.21",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3"
   },
@@ -18,6 +23,10 @@
     "test:booking": "node --test tests/booking/**/*.test.js",
     "test:watch": "node --test --watch",
     "triage": "node tools/test-triage.mjs",
-    "test:env": "node -r dotenv/config --test"
+    "test:env": "node -r dotenv/config --test",
+    "cdk:synth": "npx cdk synth --app \"node --import tsx cdk/bin/infra.ts\"",
+    "cdk:diff": "npx cdk diff --app \"node --import tsx cdk/bin/infra.ts\"",
+    "cdk:nag": "node --import tsx cdk/scripts/run-nag.ts",
+    "amplify:plan": "node --import tsx amplify/scripts/print-blueprint.ts"
   }
 }

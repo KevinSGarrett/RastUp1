@@ -35,7 +35,7 @@ This checklist is the “requirements view” for the main customer flow:
 
 ### 1.3 SEO & telemetry
 
-- [ ] Basic SEO tags for `/search`
+- [x] Basic SEO tags for `/search`
 - [~] Telemetry events: `search:surface_change`, `search:query_input`,
       `search:filter_change`, `search:load_more`
 

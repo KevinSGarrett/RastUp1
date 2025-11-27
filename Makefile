@@ -10,7 +10,7 @@ ORCHESTRATOR_AUTOPILOT_MAX_LOOPS ?= 100
 ORCHESTRATOR_AUTOPILOT_SLEEP_SECONDS ?= 10
 
 # Node test directories (these exist in this repo)
-NODE_TEST_DIRS := tests/frontend tests/booking tests/search tests/docs
+NODE_TEST_DIRS := tests/frontend tests/booking tests/search tests/docs tests/infra
 
 .PHONY: help ci test test-python test-node test-e2e typecheck \
         infra-preflight infra-smoke infra-rotation-report \
@@ -67,6 +67,7 @@ test-python:
 
 # Node tests:
 # We run Node's built-in test runner recursively in the known test dirs.
+NODE_TEST_IMPORT ?= --import tsx
 test-node:
 	@set -e; \
 	found=0; \
@@ -76,9 +77,9 @@ test-node:
 	    echo ">>> Running Node tests in $$d"; \
 	    tests=$$(find $$d -type f \( -name "*.test.mjs" -o -name "*.test.js" -o -name "*.test.ts" \)); \
 	    if [ -n "$$tests" ]; then \
-	      $(NODE) --test $$tests; \
+	      $(NODE) $(NODE_TEST_IMPORT) --test $$tests; \
 	    else \
-	      $(NODE) --test $$d; \
+	      $(NODE) $(NODE_TEST_IMPORT) --test $$d; \
 	    fi; \
 	  fi; \
 	done; \
