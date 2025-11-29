@@ -1,4 +1,7 @@
 {
+  "name": "rastup",
+  "version": "0.1.0",
+  "private": true,
   "type": "module",
   "packageManager": "pnpm@10.18.3",
   "dependencies": {
@@ -6,6 +9,7 @@
     "pg": "^8.16.3"
   },
   "devDependencies": {
+    "@aws-amplify/backend": "^1.0.0",
     "@playwright/test": "1.56.1",
     "@types/node": "^24.10.1",
     "@types/pg": "^8.15.6",
@@ -27,6 +31,7 @@
     "cdk:synth": "npx cdk synth --app \"node --import tsx cdk/bin/infra.ts\"",
     "cdk:diff": "npx cdk diff --app \"node --import tsx cdk/bin/infra.ts\"",
     "cdk:nag": "node --import tsx cdk/scripts/run-nag.ts",
-    "amplify:plan": "node --import tsx amplify/scripts/print-blueprint.ts"
+    "amplify:plan": "node --import tsx amplify/scripts/print-blueprint.ts",
+    "amplify:sandbox": "npx -p @aws-amplify/backend-cli ampx sandbox"
   }
 }
