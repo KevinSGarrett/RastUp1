@@ -2,17 +2,26 @@ name: CI
 on:
   push:
   pull_request:
+
 jobs:
   ci:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
+
       - run: python -m pip install -r requirements.txt
-      - run: npm ci --workspaces --if-present
+
+      # Install Node dependencies for root and web/ via Makefile helper
+      - run: make node-install
+
+      # Runs the full CI suite (TS, Python, Node tests, infra checks, etc.)
       - run: make ci

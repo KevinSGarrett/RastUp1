@@ -1,0 +1,2474 @@
+{
+  "version": "48.0.0",
+  "artifacts": {
+    "amplify-rastup-indows11-sandbox-0437e2d5bf.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "amplify-rastup-indows11-sandbox-0437e2d5bf.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "amplify-rastup-indows11-sandbox-0437e2d5bf": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://unknown-account/unknown-region",
+      "properties": {
+        "templateFile": "amplify-rastup-indows11-sandbox-0437e2d5bf.template.json",
+        "terminationProtection": false,
+        "tags": {
+          "amplify:deployment-type": "sandbox",
+          "created-by": "amplify"
+        },
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-${AWS::Region}",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-${AWS::Region}",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/65120bc469c277689eb53334490c2cac5f3a4091c68e712d93399b5d7f08d87c.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "amplify-rastup-indows11-sandbox-0437e2d5bf.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-${AWS::Region}",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "amplify-rastup-indows11-sandbox-0437e2d5bf.assets"
+      ],
+      "metadata": {
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf": [
+          {
+            "type": "aws:cdk:stack-tags",
+            "data": [
+              {
+                "Key": "amplify:deployment-type",
+                "Value": "sandbox"
+              },
+              {
+                "Key": "created-by",
+                "Value": "amplify"
+              }
+            ]
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/deploymentType": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "deploymentType"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/region": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "region"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/auth/amplifyAuth/UserPool/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyAuthUserPool4BA7F805"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/auth/amplifyAuth/UserPoolAppClient/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyAuthUserPoolAppClient2626C6F8"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/auth/amplifyAuth/IdentityPool": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyAuthIdentityPool3FDE84CC"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/auth/amplifyAuth/authenticatedUserRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyAuthauthenticatedUserRoleD8DA3689"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/auth/amplifyAuth/unauthenticatedUserRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyAuthunauthenticatedUserRole2B524D9E"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/auth/amplifyAuth/IdentityPoolRoleAttachment": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyAuthIdentityPoolRoleAttachment045F17C8"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/auth/amplifyAuth/buyerGroupRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyAuthbuyerGroupRole4A45C410"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/auth/amplifyAuth/buyerGroup": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyAuthbuyerGroup20A7999C"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/auth/amplifyAuth/sellerGroupRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyAuthsellerGroupRole0A8A2328"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/auth/amplifyAuth/sellerGroup": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyAuthsellerGroup63E3092F"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/auth/amplifyAuth/studio_ownerGroupRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyAuthstudioownerGroupRole7E0D3565"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/auth/amplifyAuth/studio_ownerGroup": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyAuthstudioownerGroup234FCE59"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/auth/amplifyAuth/adminGroupRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyAuthadminGroupRole7DCAC20D"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/auth/amplifyAuth/adminGroup": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyAuthadminGroupBF1343DA"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/auth/amplifyAuth/trustGroupRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyAuthtrustGroupRoleFAF91C8A"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/auth/amplifyAuth/trustGroup": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyAuthtrustGroup8A03432F"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/auth/amplifyAuth/supportGroupRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyAuthsupportGroupRole93B294EB"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/auth/amplifyAuth/supportGroup": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyAuthsupportGroup38331A73"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/auth/amplifyAuth/financeGroupRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyAuthfinanceGroupRoleD80FDDBA"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/auth/amplifyAuth/financeGroup": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyAuthfinanceGroup150E8F24"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/auth/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/auth/CDKMetadata/Condition": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadataAvailable"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/auth/amplifyrastupindows11sandbox0437e2d5bfauthamplifyAuthUserPool3D77D7D4Ref": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyrastupindows11sandbox0437e2d5bfauthamplifyAuthUserPool3D77D7D4Ref"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/auth/amplifyrastupindows11sandbox0437e2d5bfauthamplifyAuthUserPoolAppClientBAD37A69Ref": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyrastupindows11sandbox0437e2d5bfauthamplifyAuthUserPoolAppClientBAD37A69Ref"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/auth/amplifyrastupindows11sandbox0437e2d5bfauthamplifyAuthIdentityPool60CC43F7Ref": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyrastupindows11sandbox0437e2d5bfauthamplifyAuthIdentityPool60CC43F7Ref"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/auth/amplifyrastupindows11sandbox0437e2d5bfauthamplifyAuthauthenticatedUserRoleC0F3E3F2Ref": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyrastupindows11sandbox0437e2d5bfauthamplifyAuthauthenticatedUserRoleC0F3E3F2Ref"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/auth/amplifyrastupindows11sandbox0437e2d5bfauthamplifyAuthunauthenticatedUserRoleBF23473CRef": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyrastupindows11sandbox0437e2d5bfauthamplifyAuthunauthenticatedUserRoleBF23473CRef"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/auth.NestedStack/auth.NestedStackResource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "auth179371D7"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/userPoolId": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "userPoolId"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/webClientId": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "webClientId"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/identityPoolId": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "identityPoolId"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/authRegion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "authRegion"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/allowUnauthenticatedIdentities": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "allowUnauthenticatedIdentities"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/signupAttributes": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "signupAttributes"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/usernameAttributes": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "usernameAttributes"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/verificationMechanisms": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "verificationMechanisms"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/passwordPolicyMinLength": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "passwordPolicyMinLength"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/passwordPolicyRequirements": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "passwordPolicyRequirements"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/mfaConfiguration": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "mfaConfiguration"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/mfaTypes": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "mfaTypes"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/socialProviders": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "socialProviders"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/oauthCognitoDomain": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "oauthCognitoDomain"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/oauthScope": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "oauthScope"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/oauthRedirectSignIn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "oauthRedirectSignIn"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/oauthRedirectSignOut": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "oauthRedirectSignOut"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/oauthResponseType": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "oauthResponseType"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/oauthClientId": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "oauthClientId"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/groups": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "groups"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/GraphQLAPI/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "rastupdevapiGraphQLAPI234A8D50"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/GraphQLAPI/TransformerSchema": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "rastupdevapiGraphQLAPITransformerSchema6AEDB616"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/GraphQLAPI/NONE_DS": [
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "NONE_DS"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/GraphQLAPI/NONE_DS/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "rastupdevapiGraphQLAPINONEDSB62F3B40"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "NONE_DS"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/AmplifyTableManager/AmplifyManagedTableIsCompleteRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AmplifyManagedTableIsCompleteRoleF825222C"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/AmplifyTableManager/AmplifyManagedTableOnEventRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AmplifyManagedTableOnEventRoleB4E71DEA"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/AmplifyTableManager/AmplifyManagedTableOnEventRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AmplifyManagedTableOnEventRoleDefaultPolicyF6DABCB6"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/AmplifyTableManager/TableManagerCustomProvider/framework-onEvent/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "TableManagerCustomProviderframeworkonEvent1DFC2ECC"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/AmplifyTableManager/TableManagerCustomProvider/framework-isComplete/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "TableManagerCustomProviderframeworkisComplete2E51021B"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/AmplifyTableManager/AmplifyTableWaiterStateMachine/Role/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AmplifyTableWaiterStateMachineRole470BE899"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/AmplifyTableManager/AmplifyTableWaiterStateMachine/Role/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AmplifyTableWaiterStateMachineRoleDefaultPolicy89F3836A"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/AmplifyTableManager/AmplifyTableWaiterStateMachine/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AmplifyTableWaiterStateMachine060600BC"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/AmplifyTableManager/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/AmplifyTableManager/CDKMetadata/Condition": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadataAvailable"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/AmplifyTableManager/reference-to-amplifyrastupindows11sandbox0437e2d5bfdatarastupdevapiGraphQLAPI6348C470ApiId": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "referencetoamplifyrastupindows11sandbox0437e2d5bfdatarastupdevapiGraphQLAPI6348C470ApiId"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/AmplifyTableManager/amplifyrastupindows11sandbox0437e2d5bfdatarastupdevapiAmplifyTableManagerTableManagerCustomProviderframeworkonEvent61CBAE4EArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyrastupindows11sandbox0437e2d5bfdatarastupdevapiAmplifyTableManagerTableManagerCustomProviderframeworkonEvent61CBAE4EArn"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/AmplifyTableManager.NestedStack/AmplifyTableManager.NestedStackResource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "rastupdevapiAmplifyTableManagerNestedStackAmplifyTableManagerNestedStackResource9E47F859"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/DynamoDBModelTableReadIOPS": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DynamoDBModelTableReadIOPS"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/DynamoDBModelTableWriteIOPS": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DynamoDBModelTableWriteIOPS"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/DynamoDBBillingMode": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DynamoDBBillingMode"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/DynamoDBEnablePointInTimeRecovery": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DynamoDBEnablePointInTimeRecovery"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/DynamoDBEnableServerSideEncryption": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DynamoDBEnableServerSideEncryption"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/HasEnvironmentParameter": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HasEnvironmentParameter"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/ShouldUsePayPerRequestBilling": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ShouldUsePayPerRequestBilling"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/ShouldUsePointInTimeRecovery": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ShouldUsePointInTimeRecovery"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/ProfileTable": [
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "Profile"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/ProfileTable/Default/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProfileTable"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "Profile"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/CustomTableProfileTable": [
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "Profile"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/GetAttProfileTableStreamArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GetAttProfileTableStreamArn"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/GetAttProfileTableName": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GetAttProfileTableName"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/ProfileIAMRole": [
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "ProfileIAMRole"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/ProfileIAMRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProfileIAMRole80484AAA"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "ProfileIAMRole"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/ProfileDataSource": [
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "ProfileTable"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/ProfileDataSource/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProfileDataSource"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "ProfileTable"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/QuerygetProfilepreAuth0Function/QuerygetProfilepreAuth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "QuerygetProfilepreAuth0FunctionQuerygetProfilepreAuth0FunctionAppSyncFunction987B1272"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "QuerygetProfilepreAuth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/QuerygetProfileauth0Function/QuerygetProfileauth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "QuerygetProfileauth0FunctionQuerygetProfileauth0FunctionAppSyncFunction5E7A5803"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "QuerygetProfileauth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/QuerygetProfilepostAuth0Function/QuerygetProfilepostAuth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "QuerygetProfilepostAuth0FunctionQuerygetProfilepostAuth0FunctionAppSyncFunctionB9CDE501"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "QuerygetProfilepostAuth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/QueryGetProfileDataResolverFn/QueryGetProfileDataResolverFn.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "QueryGetProfileDataResolverFnQueryGetProfileDataResolverFnAppSyncFunctionCB729908"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "QueryGetProfileDataResolverFn"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/queryGetProfileResolver": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GetProfileResolver"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "Query.getProfile"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/QuerylistProfilespreAuth0Function/QuerylistProfilespreAuth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "QuerylistProfilespreAuth0FunctionQuerylistProfilespreAuth0FunctionAppSyncFunction8DE364BD"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "QuerylistProfilespreAuth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/QuerylistProfilesauth0Function/QuerylistProfilesauth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "QuerylistProfilesauth0FunctionQuerylistProfilesauth0FunctionAppSyncFunctionC1680E9E"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "QuerylistProfilesauth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/QuerylistProfilespostAuth0Function/QuerylistProfilespostAuth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "QuerylistProfilespostAuth0FunctionQuerylistProfilespostAuth0FunctionAppSyncFunction6C416119"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "QuerylistProfilespostAuth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/QueryListProfilesDataResolverFn/QueryListProfilesDataResolverFn.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "QueryListProfilesDataResolverFnQueryListProfilesDataResolverFnAppSyncFunction599CDB47"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "QueryListProfilesDataResolverFn"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/queryListProfilesResolver": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ListProfileResolver"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "Query.listProfiles"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/MutationcreateProfileinit0Function/MutationcreateProfileinit0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MutationcreateProfileinit0FunctionMutationcreateProfileinit0FunctionAppSyncFunction4BDCCBDF"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "MutationcreateProfileinit0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/MutationcreateProfilepreAuth0Function/MutationcreateProfilepreAuth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MutationcreateProfilepreAuth0FunctionMutationcreateProfilepreAuth0FunctionAppSyncFunction2D76CC82"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "MutationcreateProfilepreAuth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/MutationcreateProfileauth0Function/MutationcreateProfileauth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MutationcreateProfileauth0FunctionMutationcreateProfileauth0FunctionAppSyncFunctionBD7AD1AD"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "MutationcreateProfileauth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/MutationcreateProfilepostAuth0Function/MutationcreateProfilepostAuth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MutationcreateProfilepostAuth0FunctionMutationcreateProfilepostAuth0FunctionAppSyncFunction3A4F48A6"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "MutationcreateProfilepostAuth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/MutationCreateProfileDataResolverFn/MutationCreateProfileDataResolverFn.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MutationCreateProfileDataResolverFnMutationCreateProfileDataResolverFnAppSyncFunction00237783"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "MutationCreateProfileDataResolverFn"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/mutationCreateProfileResolver": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CreateProfileResolver"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "Mutation.createProfile"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/MutationupdateProfileinit0Function/MutationupdateProfileinit0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MutationupdateProfileinit0FunctionMutationupdateProfileinit0FunctionAppSyncFunction35E77D66"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "MutationupdateProfileinit0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/MutationupdateProfilepreAuth0Function/MutationupdateProfilepreAuth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MutationupdateProfilepreAuth0FunctionMutationupdateProfilepreAuth0FunctionAppSyncFunctionA3E94FDC"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "MutationupdateProfilepreAuth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/MutationupdateProfileauth0Function/MutationupdateProfileauth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MutationupdateProfileauth0FunctionMutationupdateProfileauth0FunctionAppSyncFunction38E06A8A"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "MutationupdateProfileauth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/MutationupdateProfilepostAuth0Function/MutationupdateProfilepostAuth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MutationupdateProfilepostAuth0FunctionMutationupdateProfilepostAuth0FunctionAppSyncFunctionF899C16F"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "MutationupdateProfilepostAuth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/MutationUpdateProfileDataResolverFn/MutationUpdateProfileDataResolverFn.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MutationUpdateProfileDataResolverFnMutationUpdateProfileDataResolverFnAppSyncFunction4BC0C6E8"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "MutationUpdateProfileDataResolverFn"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/mutationUpdateProfileResolver": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "UpdateProfileResolver"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "Mutation.updateProfile"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/MutationdeleteProfilepreAuth0Function/MutationdeleteProfilepreAuth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MutationdeleteProfilepreAuth0FunctionMutationdeleteProfilepreAuth0FunctionAppSyncFunction9BA74736"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "MutationdeleteProfilepreAuth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/MutationdeleteProfileauth0Function/MutationdeleteProfileauth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MutationdeleteProfileauth0FunctionMutationdeleteProfileauth0FunctionAppSyncFunction4A5CBB70"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "MutationdeleteProfileauth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/MutationdeleteProfilepostAuth0Function/MutationdeleteProfilepostAuth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MutationdeleteProfilepostAuth0FunctionMutationdeleteProfilepostAuth0FunctionAppSyncFunctionA246E1E1"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "MutationdeleteProfilepostAuth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/MutationDeleteProfileDataResolverFn/MutationDeleteProfileDataResolverFn.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MutationDeleteProfileDataResolverFnMutationDeleteProfileDataResolverFnAppSyncFunctionFD80DBEF"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "MutationDeleteProfileDataResolverFn"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/mutationDeleteProfileResolver": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DeleteProfileResolver"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "Mutation.deleteProfile"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/SubscriptiononCreateProfileauth0Function/SubscriptiononCreateProfileauth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SubscriptiononCreateProfileauth0FunctionSubscriptiononCreateProfileauth0FunctionAppSyncFunction90396F5D"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "SubscriptiononCreateProfileauth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/SubscriptiononCreateProfilepostAuth0Function/SubscriptiononCreateProfilepostAuth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SubscriptiononCreateProfilepostAuth0FunctionSubscriptiononCreateProfilepostAuth0FunctionAppSyncFunction1582FBD5"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "SubscriptiononCreateProfilepostAuth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/SubscriptionOnCreateProfileDataResolverFn/SubscriptionOnCreateProfileDataResolverFn.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SubscriptionOnCreateProfileDataResolverFnSubscriptionOnCreateProfileDataResolverFnAppSyncFunctionD73E0AEC"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "SubscriptionOnCreateProfileDataResolverFn"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/subscriptionOnCreateProfileResolver": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SubscriptiononCreateProfileResolver"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "Subscription.onCreateProfile"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/SubscriptiononUpdateProfileauth0Function/SubscriptiononUpdateProfileauth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SubscriptiononUpdateProfileauth0FunctionSubscriptiononUpdateProfileauth0FunctionAppSyncFunction3B89C902"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "SubscriptiononUpdateProfileauth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/SubscriptiononUpdateProfilepostAuth0Function/SubscriptiononUpdateProfilepostAuth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SubscriptiononUpdateProfilepostAuth0FunctionSubscriptiononUpdateProfilepostAuth0FunctionAppSyncFunction1B355635"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "SubscriptiononUpdateProfilepostAuth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/SubscriptionOnUpdateProfileDataResolverFn/SubscriptionOnUpdateProfileDataResolverFn.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SubscriptionOnUpdateProfileDataResolverFnSubscriptionOnUpdateProfileDataResolverFnAppSyncFunction23DD563F"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "SubscriptionOnUpdateProfileDataResolverFn"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/subscriptionOnUpdateProfileResolver": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SubscriptiononUpdateProfileResolver"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "Subscription.onUpdateProfile"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/SubscriptiononDeleteProfileauth0Function/SubscriptiononDeleteProfileauth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SubscriptiononDeleteProfileauth0FunctionSubscriptiononDeleteProfileauth0FunctionAppSyncFunctionF3853DAE"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "SubscriptiononDeleteProfileauth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/SubscriptiononDeleteProfilepostAuth0Function/SubscriptiononDeleteProfilepostAuth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SubscriptiononDeleteProfilepostAuth0FunctionSubscriptiononDeleteProfilepostAuth0FunctionAppSyncFunction86BF82FA"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "SubscriptiononDeleteProfilepostAuth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/SubscriptionOnDeleteProfileDataResolverFn/SubscriptionOnDeleteProfileDataResolverFn.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SubscriptionOnDeleteProfileDataResolverFnSubscriptionOnDeleteProfileDataResolverFnAppSyncFunction63C1CC62"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "SubscriptionOnDeleteProfileDataResolverFn"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/subscriptionOnDeleteProfileResolver": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SubscriptiononDeleteProfileResolver"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "Subscription.onDeleteProfile"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/CDKMetadata/Condition": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadataAvailable"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/reference-to-amplifyrastupindows11sandbox0437e2d5bfdatarastupdevapiAmplifyTableManagerNestedStackAmplifyTableManagerNestedStackResource1B08C574Outputs.amplifyrastupindows11sandbox0437e2d5bfdatarastupdevapiAmplifyTableManagerTableManagerCustomProviderframeworkonEvent61CBAE4EArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "referencetoamplifyrastupindows11sandbox0437e2d5bfdatarastupdevapiAmplifyTableManagerNestedStackAmplifyTableManagerNestedStackResource1B08C574Outputsamplifyrastupindows11sandbox0437e2d5bfdatarastupdevapiAmplifyTableManagerTableManagerCustomPB657B791"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/reference-to-amplifyrastupindows11sandbox0437e2d5bfdatarastupdevapiGraphQLAPI6348C470ApiId": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "referencetoamplifyrastupindows11sandbox0437e2d5bfdatarastupdevapiGraphQLAPI6348C470ApiId"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/reference-to-amplifyrastupindows11sandbox0437e2d5bfdatarastupdevapiGraphQLAPINONEDS4D4D5D52Name": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "referencetoamplifyrastupindows11sandbox0437e2d5bfdatarastupdevapiGraphQLAPINONEDS4D4D5D52Name"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/reference-to-amplifyrastupindows11sandbox0437e2d5bfauthNestedStackauthNestedStackResourceA5EAD944Outputs.amplifyrastupindows11sandbox0437e2d5bfauthamplifyAuthauthenticatedUserRoleC0F3E3F2Ref": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "referencetoamplifyrastupindows11sandbox0437e2d5bfauthNestedStackauthNestedStackResourceA5EAD944Outputsamplifyrastupindows11sandbox0437e2d5bfauthamplifyAuthauthenticatedUserRoleC0F3E3F2Ref"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/reference-to-amplifyrastupindows11sandbox0437e2d5bfauthNestedStackauthNestedStackResourceA5EAD944Outputs.amplifyrastupindows11sandbox0437e2d5bfauthamplifyAuthunauthenticatedUserRoleBF23473CRef": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "referencetoamplifyrastupindows11sandbox0437e2d5bfauthNestedStackauthNestedStackResourceA5EAD944Outputsamplifyrastupindows11sandbox0437e2d5bfauthamplifyAuthunauthenticatedUserRoleBF23473CRef"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile/reference-to-amplifyrastupindows11sandbox0437e2d5bfauthNestedStackauthNestedStackResourceA5EAD944Outputs.amplifyrastupindows11sandbox0437e2d5bfauthamplifyAuthIdentityPool60CC43F7Ref": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "referencetoamplifyrastupindows11sandbox0437e2d5bfauthNestedStackauthNestedStackResourceA5EAD944Outputsamplifyrastupindows11sandbox0437e2d5bfauthamplifyAuthIdentityPool60CC43F7Ref"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Profile.NestedStack/Profile.NestedStackResource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "rastupdevapiProfileNestedStackProfileNestedStackResource5A6FA385"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/DynamoDBModelTableReadIOPS": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DynamoDBModelTableReadIOPS"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/DynamoDBModelTableWriteIOPS": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DynamoDBModelTableWriteIOPS"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/DynamoDBBillingMode": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DynamoDBBillingMode"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/DynamoDBEnablePointInTimeRecovery": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DynamoDBEnablePointInTimeRecovery"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/DynamoDBEnableServerSideEncryption": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DynamoDBEnableServerSideEncryption"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/HasEnvironmentParameter": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HasEnvironmentParameter"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/ShouldUsePayPerRequestBilling": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ShouldUsePayPerRequestBilling"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/ShouldUsePointInTimeRecovery": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ShouldUsePointInTimeRecovery"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/BookingTable": [
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "Booking"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/BookingTable/Default/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BookingTable"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "Booking"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/CustomTableBookingTable": [
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "Booking"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/GetAttBookingTableStreamArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GetAttBookingTableStreamArn"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/GetAttBookingTableName": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GetAttBookingTableName"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/BookingIAMRole": [
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "BookingIAMRole"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/BookingIAMRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BookingIAMRoleD7E335C1"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "BookingIAMRole"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/BookingDataSource": [
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "BookingTable"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/BookingDataSource/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BookingDataSource"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "BookingTable"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/QuerygetBookingpreAuth0Function/QuerygetBookingpreAuth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "QuerygetBookingpreAuth0FunctionQuerygetBookingpreAuth0FunctionAppSyncFunctionE7744E35"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "QuerygetBookingpreAuth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/QuerygetBookingauth0Function/QuerygetBookingauth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "QuerygetBookingauth0FunctionQuerygetBookingauth0FunctionAppSyncFunction736FE42B"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "QuerygetBookingauth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/QuerygetBookingpostAuth0Function/QuerygetBookingpostAuth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "QuerygetBookingpostAuth0FunctionQuerygetBookingpostAuth0FunctionAppSyncFunction272982C8"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "QuerygetBookingpostAuth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/QueryGetBookingDataResolverFn/QueryGetBookingDataResolverFn.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "QueryGetBookingDataResolverFnQueryGetBookingDataResolverFnAppSyncFunction06BE0605"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "QueryGetBookingDataResolverFn"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/queryGetBookingResolver": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GetBookingResolver"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "Query.getBooking"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/QuerylistBookingspreAuth0Function/QuerylistBookingspreAuth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "QuerylistBookingspreAuth0FunctionQuerylistBookingspreAuth0FunctionAppSyncFunction4FF4F0FB"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "QuerylistBookingspreAuth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/QuerylistBookingsauth0Function/QuerylistBookingsauth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "QuerylistBookingsauth0FunctionQuerylistBookingsauth0FunctionAppSyncFunctionCAE35A04"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "QuerylistBookingsauth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/QuerylistBookingspostAuth0Function/QuerylistBookingspostAuth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "QuerylistBookingspostAuth0FunctionQuerylistBookingspostAuth0FunctionAppSyncFunction27C1B5B3"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "QuerylistBookingspostAuth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/QueryListBookingsDataResolverFn/QueryListBookingsDataResolverFn.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "QueryListBookingsDataResolverFnQueryListBookingsDataResolverFnAppSyncFunctionA277640B"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "QueryListBookingsDataResolverFn"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/queryListBookingsResolver": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ListBookingResolver"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "Query.listBookings"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/MutationcreateBookinginit0Function/MutationcreateBookinginit0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MutationcreateBookinginit0FunctionMutationcreateBookinginit0FunctionAppSyncFunctionCF4ACAAA"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "MutationcreateBookinginit0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/MutationcreateBookingpreAuth0Function/MutationcreateBookingpreAuth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MutationcreateBookingpreAuth0FunctionMutationcreateBookingpreAuth0FunctionAppSyncFunctionE33BD47D"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "MutationcreateBookingpreAuth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/MutationcreateBookingauth0Function/MutationcreateBookingauth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MutationcreateBookingauth0FunctionMutationcreateBookingauth0FunctionAppSyncFunctionF11BEF1F"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "MutationcreateBookingauth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/MutationcreateBookingpostAuth0Function/MutationcreateBookingpostAuth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MutationcreateBookingpostAuth0FunctionMutationcreateBookingpostAuth0FunctionAppSyncFunction67996F0C"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "MutationcreateBookingpostAuth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/MutationCreateBookingDataResolverFn/MutationCreateBookingDataResolverFn.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MutationCreateBookingDataResolverFnMutationCreateBookingDataResolverFnAppSyncFunction305870D3"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "MutationCreateBookingDataResolverFn"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/mutationCreateBookingResolver": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CreateBookingResolver"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "Mutation.createBooking"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/MutationupdateBookinginit0Function/MutationupdateBookinginit0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MutationupdateBookinginit0FunctionMutationupdateBookinginit0FunctionAppSyncFunctionB76D399F"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "MutationupdateBookinginit0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/MutationupdateBookingpreAuth0Function/MutationupdateBookingpreAuth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MutationupdateBookingpreAuth0FunctionMutationupdateBookingpreAuth0FunctionAppSyncFunctionAA94A871"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "MutationupdateBookingpreAuth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/MutationupdateBookingauth0Function/MutationupdateBookingauth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MutationupdateBookingauth0FunctionMutationupdateBookingauth0FunctionAppSyncFunction27A7145F"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "MutationupdateBookingauth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/MutationupdateBookingpostAuth0Function/MutationupdateBookingpostAuth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MutationupdateBookingpostAuth0FunctionMutationupdateBookingpostAuth0FunctionAppSyncFunction70EED2CA"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "MutationupdateBookingpostAuth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/MutationUpdateBookingDataResolverFn/MutationUpdateBookingDataResolverFn.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MutationUpdateBookingDataResolverFnMutationUpdateBookingDataResolverFnAppSyncFunctionC1D672BC"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "MutationUpdateBookingDataResolverFn"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/mutationUpdateBookingResolver": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "UpdateBookingResolver"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "Mutation.updateBooking"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/MutationdeleteBookingpreAuth0Function/MutationdeleteBookingpreAuth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MutationdeleteBookingpreAuth0FunctionMutationdeleteBookingpreAuth0FunctionAppSyncFunctionE15BFA6E"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "MutationdeleteBookingpreAuth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/MutationdeleteBookingauth0Function/MutationdeleteBookingauth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MutationdeleteBookingauth0FunctionMutationdeleteBookingauth0FunctionAppSyncFunction50755C84"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "MutationdeleteBookingauth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/MutationdeleteBookingpostAuth0Function/MutationdeleteBookingpostAuth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MutationdeleteBookingpostAuth0FunctionMutationdeleteBookingpostAuth0FunctionAppSyncFunction9D1DF788"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "MutationdeleteBookingpostAuth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/MutationDeleteBookingDataResolverFn/MutationDeleteBookingDataResolverFn.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MutationDeleteBookingDataResolverFnMutationDeleteBookingDataResolverFnAppSyncFunction4E060C22"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "MutationDeleteBookingDataResolverFn"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/mutationDeleteBookingResolver": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DeleteBookingResolver"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "Mutation.deleteBooking"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/SubscriptiononCreateBookingauth0Function/SubscriptiononCreateBookingauth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SubscriptiononCreateBookingauth0FunctionSubscriptiononCreateBookingauth0FunctionAppSyncFunction5243B826"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "SubscriptiononCreateBookingauth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/SubscriptiononCreateBookingpostAuth0Function/SubscriptiononCreateBookingpostAuth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SubscriptiononCreateBookingpostAuth0FunctionSubscriptiononCreateBookingpostAuth0FunctionAppSyncFunctionCEE18C4E"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "SubscriptiononCreateBookingpostAuth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/SubscriptionOnCreateBookingDataResolverFn/SubscriptionOnCreateBookingDataResolverFn.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SubscriptionOnCreateBookingDataResolverFnSubscriptionOnCreateBookingDataResolverFnAppSyncFunction40A6105B"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "SubscriptionOnCreateBookingDataResolverFn"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/subscriptionOnCreateBookingResolver": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SubscriptiononCreateBookingResolver"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "Subscription.onCreateBooking"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/SubscriptiononUpdateBookingauth0Function/SubscriptiononUpdateBookingauth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SubscriptiononUpdateBookingauth0FunctionSubscriptiononUpdateBookingauth0FunctionAppSyncFunction8FB0A17D"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "SubscriptiononUpdateBookingauth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/SubscriptiononUpdateBookingpostAuth0Function/SubscriptiononUpdateBookingpostAuth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SubscriptiononUpdateBookingpostAuth0FunctionSubscriptiononUpdateBookingpostAuth0FunctionAppSyncFunction7562B4FD"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "SubscriptiononUpdateBookingpostAuth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/SubscriptionOnUpdateBookingDataResolverFn/SubscriptionOnUpdateBookingDataResolverFn.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SubscriptionOnUpdateBookingDataResolverFnSubscriptionOnUpdateBookingDataResolverFnAppSyncFunctionE15704F7"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "SubscriptionOnUpdateBookingDataResolverFn"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/subscriptionOnUpdateBookingResolver": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SubscriptiononUpdateBookingResolver"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "Subscription.onUpdateBooking"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/SubscriptiononDeleteBookingauth0Function/SubscriptiononDeleteBookingauth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SubscriptiononDeleteBookingauth0FunctionSubscriptiononDeleteBookingauth0FunctionAppSyncFunctionC2A3454E"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "SubscriptiononDeleteBookingauth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/SubscriptiononDeleteBookingpostAuth0Function/SubscriptiononDeleteBookingpostAuth0Function.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SubscriptiononDeleteBookingpostAuth0FunctionSubscriptiononDeleteBookingpostAuth0FunctionAppSyncFunction8F89DB22"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "SubscriptiononDeleteBookingpostAuth0Function"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/SubscriptionOnDeleteBookingDataResolverFn/SubscriptionOnDeleteBookingDataResolverFn.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SubscriptionOnDeleteBookingDataResolverFnSubscriptionOnDeleteBookingDataResolverFnAppSyncFunctionC8FD7D03"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "SubscriptionOnDeleteBookingDataResolverFn"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/subscriptionOnDeleteBookingResolver": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SubscriptiononDeleteBookingResolver"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "Subscription.onDeleteBooking"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/CDKMetadata/Condition": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadataAvailable"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/reference-to-amplifyrastupindows11sandbox0437e2d5bfdatarastupdevapiAmplifyTableManagerNestedStackAmplifyTableManagerNestedStackResource1B08C574Outputs.amplifyrastupindows11sandbox0437e2d5bfdatarastupdevapiAmplifyTableManagerTableManagerCustomProviderframeworkonEvent61CBAE4EArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "referencetoamplifyrastupindows11sandbox0437e2d5bfdatarastupdevapiAmplifyTableManagerNestedStackAmplifyTableManagerNestedStackResource1B08C574Outputsamplifyrastupindows11sandbox0437e2d5bfdatarastupdevapiAmplifyTableManagerTableManagerCustomPB657B791"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/reference-to-amplifyrastupindows11sandbox0437e2d5bfdatarastupdevapiGraphQLAPI6348C470ApiId": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "referencetoamplifyrastupindows11sandbox0437e2d5bfdatarastupdevapiGraphQLAPI6348C470ApiId"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/reference-to-amplifyrastupindows11sandbox0437e2d5bfdatarastupdevapiGraphQLAPINONEDS4D4D5D52Name": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "referencetoamplifyrastupindows11sandbox0437e2d5bfdatarastupdevapiGraphQLAPINONEDS4D4D5D52Name"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/reference-to-amplifyrastupindows11sandbox0437e2d5bfauthNestedStackauthNestedStackResourceA5EAD944Outputs.amplifyrastupindows11sandbox0437e2d5bfauthamplifyAuthauthenticatedUserRoleC0F3E3F2Ref": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "referencetoamplifyrastupindows11sandbox0437e2d5bfauthNestedStackauthNestedStackResourceA5EAD944Outputsamplifyrastupindows11sandbox0437e2d5bfauthamplifyAuthauthenticatedUserRoleC0F3E3F2Ref"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/reference-to-amplifyrastupindows11sandbox0437e2d5bfauthNestedStackauthNestedStackResourceA5EAD944Outputs.amplifyrastupindows11sandbox0437e2d5bfauthamplifyAuthunauthenticatedUserRoleBF23473CRef": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "referencetoamplifyrastupindows11sandbox0437e2d5bfauthNestedStackauthNestedStackResourceA5EAD944Outputsamplifyrastupindows11sandbox0437e2d5bfauthamplifyAuthunauthenticatedUserRoleBF23473CRef"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking/reference-to-amplifyrastupindows11sandbox0437e2d5bfauthNestedStackauthNestedStackResourceA5EAD944Outputs.amplifyrastupindows11sandbox0437e2d5bfauthamplifyAuthIdentityPool60CC43F7Ref": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "referencetoamplifyrastupindows11sandbox0437e2d5bfauthNestedStackauthNestedStackResourceA5EAD944Outputsamplifyrastupindows11sandbox0437e2d5bfauthamplifyAuthIdentityPool60CC43F7Ref"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/Booking.NestedStack/Booking.NestedStackResource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "rastupdevapiBookingNestedStackBookingNestedStackResourceA51C7FB1"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/FunctionDirectiveStack/HasEnvironmentParameter": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HasEnvironmentParameter"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/FunctionDirectiveStack/FnViewerLambdaDataSource": [
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "FnViewerLambdaDataSource"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/FunctionDirectiveStack/FnViewerLambdaDataSource/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FnViewerLambdaDataSourceServiceRoleC880D448"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/FunctionDirectiveStack/FnViewerLambdaDataSource/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FnViewerLambdaDataSourceServiceRoleDefaultPolicy3A05CAD9"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/FunctionDirectiveStack/FnViewerLambdaDataSource/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FnViewerLambdaDataSource"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "FnViewerLambdaDataSource"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/FunctionDirectiveStack/InvokeFnViewerLambdaDataSource/InvokeFnViewerLambdaDataSource.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "InvokeFnViewerLambdaDataSourceInvokeFnViewerLambdaDataSourceAppSyncFunction7E6063FA"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "InvokeFnViewerLambdaDataSource"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/FunctionDirectiveStack/queryViewerResolver": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "QueryviewerResolver"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "Query.viewer"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/FunctionDirectiveStack/QueryViewerAuthFN/QueryViewerAuthFN.AppSyncFunction": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "QueryViewerAuthFNQueryViewerAuthFNAppSyncFunctionC3583104"
+          },
+          {
+            "type": "graphqltransformer:resourceName",
+            "data": "QueryViewerAuthFN"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/FunctionDirectiveStack/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/FunctionDirectiveStack/CDKMetadata/Condition": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadataAvailable"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/FunctionDirectiveStack/reference-to-amplifyrastupindows11sandbox0437e2d5bffunctionNestedStackfunctionNestedStackResource6C185F93Outputs.amplifyrastupindows11sandbox0437e2d5bffunctionhandlerlambdaFA5638D1Arn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "referencetoamplifyrastupindows11sandbox0437e2d5bffunctionNestedStackfunctionNestedStackResource6C185F93Outputsamplifyrastupindows11sandbox0437e2d5bffunctionhandlerlambdaFA5638D1Arn"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/FunctionDirectiveStack/reference-to-amplifyrastupindows11sandbox0437e2d5bfdatarastupdevapiGraphQLAPI6348C470ApiId": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "referencetoamplifyrastupindows11sandbox0437e2d5bfdatarastupdevapiGraphQLAPI6348C470ApiId"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/FunctionDirectiveStack/reference-to-amplifyrastupindows11sandbox0437e2d5bfauthNestedStackauthNestedStackResourceA5EAD944Outputs.amplifyrastupindows11sandbox0437e2d5bfauthamplifyAuthauthenticatedUserRoleC0F3E3F2Ref": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "referencetoamplifyrastupindows11sandbox0437e2d5bfauthNestedStackauthNestedStackResourceA5EAD944Outputsamplifyrastupindows11sandbox0437e2d5bfauthamplifyAuthauthenticatedUserRoleC0F3E3F2Ref"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/FunctionDirectiveStack/reference-to-amplifyrastupindows11sandbox0437e2d5bfauthNestedStackauthNestedStackResourceA5EAD944Outputs.amplifyrastupindows11sandbox0437e2d5bfauthamplifyAuthunauthenticatedUserRoleBF23473CRef": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "referencetoamplifyrastupindows11sandbox0437e2d5bfauthNestedStackauthNestedStackResourceA5EAD944Outputsamplifyrastupindows11sandbox0437e2d5bfauthamplifyAuthunauthenticatedUserRoleBF23473CRef"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/FunctionDirectiveStack/reference-to-amplifyrastupindows11sandbox0437e2d5bfauthNestedStackauthNestedStackResourceA5EAD944Outputs.amplifyrastupindows11sandbox0437e2d5bfauthamplifyAuthIdentityPool60CC43F7Ref": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "referencetoamplifyrastupindows11sandbox0437e2d5bfauthNestedStackauthNestedStackResourceA5EAD944Outputsamplifyrastupindows11sandbox0437e2d5bfauthamplifyAuthIdentityPool60CC43F7Ref"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/FunctionDirectiveStack/reference-to-amplifyrastupindows11sandbox0437e2d5bfdatarastupdevapiGraphQLAPINONEDS4D4D5D52Name": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "referencetoamplifyrastupindows11sandbox0437e2d5bfdatarastupdevapiGraphQLAPINONEDS4D4D5D52Name"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/FunctionDirectiveStack.NestedStack/FunctionDirectiveStack.NestedStackResource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "rastupdevapiFunctionDirectiveStackNestedStackFunctionDirectiveStackNestedStackResourceE52D2606"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/AmplifyCodegenAssets/AmplifyCodegenAssetsBucket/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "rastupdevapiAmplifyCodegenAssetsAmplifyCodegenAssetsBucketCF9D7DC3"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/AmplifyCodegenAssets/AmplifyCodegenAssetsBucket/Policy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "rastupdevapiAmplifyCodegenAssetsAmplifyCodegenAssetsBucketPolicy23689AC6"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/AmplifyCodegenAssets/AmplifyCodegenAssetsBucket/AutoDeleteObjectsCustomResource/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "rastupdevapiAmplifyCodegenAssetsAmplifyCodegenAssetsBucketAutoDeleteObjectsCustomResource65812906"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/AmplifyCodegenAssets/AmplifyCodegenAssetsDeployment/AwsCliLayer/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "rastupdevapiAmplifyCodegenAssetsAmplifyCodegenAssetsDeploymentAwsCliLayer2D5956DC"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/rastup-dev-api/AmplifyCodegenAssets/AmplifyCodegenAssetsDeployment/CustomResource-1536MiB/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "rastupdevapiAmplifyCodegenAssetsAmplifyCodegenAssetsDeploymentCustomResource1536MiB0090E766"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/DynamoDBModelTableReadIOPS": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DynamoDBModelTableReadIOPS"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/DynamoDBModelTableWriteIOPS": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DynamoDBModelTableWriteIOPS"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/DynamoDBBillingMode": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DynamoDBBillingMode"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/DynamoDBEnablePointInTimeRecovery": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DynamoDBEnablePointInTimeRecovery"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/DynamoDBEnableServerSideEncryption": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DynamoDBEnableServerSideEncryption"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/Custom::S3AutoDeleteObjectsCustomResourceProvider": [
+          {
+            "type": "aws:cdk:is-custom-resource-handler-customResourceProvider",
+            "data": true
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/Custom::S3AutoDeleteObjectsCustomResourceProvider/Role": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/Custom::S3AutoDeleteObjectsCustomResourceProvider/Handler": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/Custom::CDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C1536MiB": [
+          {
+            "type": "aws:cdk:is-custom-resource-handler-singleton",
+            "data": true
+          },
+          {
+            "type": "aws:cdk:is-custom-resource-handler-runtime-family",
+            "data": 2
+          },
+          {
+            "type": "aws:cdk:is-custom-resource-handler-singleton",
+            "data": true
+          },
+          {
+            "type": "aws:cdk:is-custom-resource-handler-runtime-family",
+            "data": 2
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/Custom::CDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C1536MiB/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C1536MiBServiceRoleA41FC8C2"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/Custom::CDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C1536MiB/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C1536MiBServiceRoleDefaultPolicyFF1C635B"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/Custom::CDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C1536MiB/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C1536MiBC5D8AB21"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/modelIntrospectionSchemaBucket/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "modelIntrospectionSchemaBucketF566B665"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/modelIntrospectionSchemaBucket/Policy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "modelIntrospectionSchemaBucketPolicy4DAB0D15"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/modelIntrospectionSchemaBucket/AutoDeleteObjectsCustomResource/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "modelIntrospectionSchemaBucketAutoDeleteObjectsCustomResourceFE57309F"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/modelIntrospectionSchemaBucketDeployment/AwsCliLayer/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "modelIntrospectionSchemaBucketDeploymentAwsCliLayer13C432F7"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/modelIntrospectionSchemaBucketDeployment/CustomResource-1536MiB/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "modelIntrospectionSchemaBucketDeploymentCustomResource1536MiB104B97EC"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/AMPLIFY_DATARASTUP_DEV_API_GRAPHQL_ENDPOINTParameter/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AMPLIFYDATARASTUPDEVAPIGRAPHQLENDPOINTParameter4D56B8DD"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/AMPLIFY_DATARASTUP_DEV_API_MODEL_INTROSPECTION_SCHEMA_BUCKET_NAMEParameter/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AMPLIFYDATARASTUPDEVAPIMODELINTROSPECTIONSCHEMABUCKETNAMEParameter3DE4F652"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/AMPLIFY_DATARASTUP_DEV_API_MODEL_INTROSPECTION_SCHEMA_KEYParameter/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AMPLIFYDATARASTUPDEVAPIMODELINTROSPECTIONSCHEMAKEYParameterF656E208"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/AMPLIFY_DATA_DEFAULT_NAMEParameter/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AMPLIFYDATADEFAULTNAMEParameterE7C23CC4"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/RASTUP_DEV_API_GRAPHQL_ENDPOINTParameter/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RASTUPDEVAPIGRAPHQLENDPOINTParameter52FC1DD5"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/CDKMetadata/Condition": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadataAvailable"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/reference-to-amplifyrastupindows11sandbox0437e2d5bfauthNestedStackauthNestedStackResourceA5EAD944Outputs.amplifyrastupindows11sandbox0437e2d5bfauthamplifyAuthUserPool3D77D7D4Ref": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "referencetoamplifyrastupindows11sandbox0437e2d5bfauthNestedStackauthNestedStackResourceA5EAD944Outputsamplifyrastupindows11sandbox0437e2d5bfauthamplifyAuthUserPool3D77D7D4Ref"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/reference-to-amplifyrastupindows11sandbox0437e2d5bfauthNestedStackauthNestedStackResourceA5EAD944Outputs.amplifyrastupindows11sandbox0437e2d5bfauthamplifyAuthauthenticatedUserRoleC0F3E3F2Ref": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "referencetoamplifyrastupindows11sandbox0437e2d5bfauthNestedStackauthNestedStackResourceA5EAD944Outputsamplifyrastupindows11sandbox0437e2d5bfauthamplifyAuthauthenticatedUserRoleC0F3E3F2Ref"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/reference-to-amplifyrastupindows11sandbox0437e2d5bfauthNestedStackauthNestedStackResourceA5EAD944Outputs.amplifyrastupindows11sandbox0437e2d5bfauthamplifyAuthunauthenticatedUserRoleBF23473CRef": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "referencetoamplifyrastupindows11sandbox0437e2d5bfauthNestedStackauthNestedStackResourceA5EAD944Outputsamplifyrastupindows11sandbox0437e2d5bfauthamplifyAuthunauthenticatedUserRoleBF23473CRef"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/reference-to-amplifyrastupindows11sandbox0437e2d5bfauthNestedStackauthNestedStackResourceA5EAD944Outputs.amplifyrastupindows11sandbox0437e2d5bfauthamplifyAuthIdentityPool60CC43F7Ref": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "referencetoamplifyrastupindows11sandbox0437e2d5bfauthNestedStackauthNestedStackResourceA5EAD944Outputsamplifyrastupindows11sandbox0437e2d5bfauthamplifyAuthIdentityPool60CC43F7Ref"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/reference-to-amplifyrastupindows11sandbox0437e2d5bffunctionNestedStackfunctionNestedStackResource6C185F93Outputs.amplifyrastupindows11sandbox0437e2d5bffunctionhandlerlambdaFA5638D1Arn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "referencetoamplifyrastupindows11sandbox0437e2d5bffunctionNestedStackfunctionNestedStackResource6C185F93Outputsamplifyrastupindows11sandbox0437e2d5bffunctionhandlerlambdaFA5638D1Arn"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/amplifyrastupindows11sandbox0437e2d5bfdatarastupdevapiGraphQLAPI6348C470ApiId": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyrastupindows11sandbox0437e2d5bfdatarastupdevapiGraphQLAPI6348C470ApiId"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/amplifyrastupindows11sandbox0437e2d5bfdatarastupdevapiGraphQLAPI6348C470GraphQLUrl": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyrastupindows11sandbox0437e2d5bfdatarastupdevapiGraphQLAPI6348C470GraphQLUrl"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data/amplifyrastupindows11sandbox0437e2d5bfdatarastupdevapiAmplifyCodegenAssetsAmplifyCodegenAssetsDeploymentCustomResource1536MiBA5FBE188DestinationBucketArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyrastupindows11sandbox0437e2d5bfdatarastupdevapiAmplifyCodegenAssetsAmplifyCodegenAssetsDeploymentCustomResource1536MiBA5FBE188DestinationBucketArn"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/data.NestedStack/data.NestedStackResource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "data7552DF31"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/function/handler-lambda/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "handlerlambdaServiceRole46D7AF61"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/function/handler-lambda/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "handlerlambdaE29D1580"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/function/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/function/CDKMetadata/Condition": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadataAvailable"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/function/amplifyrastupindows11sandbox0437e2d5bffunctionhandlerlambdaFA5638D1Arn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyrastupindows11sandbox0437e2d5bffunctionhandlerlambdaFA5638D1Arn"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/function/amplifyrastupindows11sandbox0437e2d5bffunctionhandlerlambdaFA5638D1Ref": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyrastupindows11sandbox0437e2d5bffunctionhandlerlambdaFA5638D1Ref"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/function.NestedStack/function.NestedStackResource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "function1351588B"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/definedFunctions": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "definedFunctions"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/awsAppsyncApiId": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "awsAppsyncApiId"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/awsAppsyncApiEndpoint": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "awsAppsyncApiEndpoint"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/awsAppsyncAuthenticationType": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "awsAppsyncAuthenticationType"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/awsAppsyncRegion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "awsAppsyncRegion"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/amplifyApiModelSchemaS3Uri": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "amplifyApiModelSchemaS3Uri"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/awsAppsyncAdditionalAuthenticationTypes": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "awsAppsyncAdditionalAuthenticationTypes"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/CDKMetadata/Condition": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadataAvailable"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/amplify-rastup-indows11-sandbox-0437e2d5bf/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "amplify-rastup-indows11-sandbox-0437e2d5bf"
+    },
+    "Tree": {
+      "type": "cdk:tree",
+      "properties": {
+        "file": "tree.json"
+      }
+    },
+    "aws-cdk-lib/feature-flag-report": {
+      "type": "cdk:feature-flag-report",
+      "properties": {
+        "module": "aws-cdk-lib",
+        "flags": {
+          "@aws-cdk/aws-signer:signingProfileNamePassedToCfn": {
+            "recommendedValue": true,
+            "explanation": "Pass signingProfileName to CfnSigningProfile"
+          },
+          "@aws-cdk/core:newStyleStackSynthesis": {
+            "recommendedValue": true,
+            "explanation": "Switch to new stack synthesis method which enables CI/CD",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/core:stackRelativeExports": {
+            "recommendedValue": true,
+            "explanation": "Name exports based on the construct paths relative to the stack, rather than the global construct path",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/aws-ecs-patterns:secGroupsDisablesImplicitOpenListener": {
+            "recommendedValue": true,
+            "explanation": "Disable implicit openListener when custom security groups are provided"
+          },
+          "@aws-cdk/aws-rds:lowercaseDbIdentifier": {
+            "recommendedValue": true,
+            "explanation": "Force lowercasing of RDS Cluster names in CDK",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/aws-apigateway:usagePlanKeyOrderInsensitiveId": {
+            "recommendedValue": true,
+            "explanation": "Allow adding/removing multiple UsagePlanKeys independently",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/aws-lambda:recognizeVersionProps": {
+            "recommendedValue": true,
+            "explanation": "Enable this feature flag to opt in to the updated logical id calculation for Lambda Version created using the  `fn.currentVersion`.",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/aws-lambda:recognizeLayerVersion": {
+            "recommendedValue": true,
+            "explanation": "Enable this feature flag to opt in to the updated logical id calculation for Lambda Version created using the `fn.currentVersion`."
+          },
+          "@aws-cdk/aws-cloudfront:defaultSecurityPolicyTLSv1.2_2021": {
+            "recommendedValue": true,
+            "explanation": "Enable this feature flag to have cloudfront distributions use the security policy TLSv1.2_2021 by default.",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/core:checkSecretUsage": {
+            "recommendedValue": true,
+            "explanation": "Enable this flag to make it impossible to accidentally use SecretValues in unsafe locations"
+          },
+          "@aws-cdk/core:target-partitions": {
+            "recommendedValue": [
+              "aws",
+              "aws-cn"
+            ],
+            "explanation": "What regions to include in lookup tables of environment agnostic stacks"
+          },
+          "@aws-cdk-containers/ecs-service-extensions:enableDefaultLogDriver": {
+            "recommendedValue": true,
+            "explanation": "ECS extensions will automatically add an `awslogs` driver if no logging is specified"
+          },
+          "@aws-cdk/aws-ec2:uniqueImdsv2TemplateName": {
+            "recommendedValue": true,
+            "explanation": "Enable this feature flag to have Launch Templates generated by the `InstanceRequireImdsv2Aspect` use unique names."
+          },
+          "@aws-cdk/aws-ecs:arnFormatIncludesClusterName": {
+            "recommendedValue": true,
+            "explanation": "ARN format used by ECS. In the new ARN format, the cluster name is part of the resource ID."
+          },
+          "@aws-cdk/aws-iam:minimizePolicies": {
+            "recommendedValue": true,
+            "explanation": "Minimize IAM policies by combining Statements"
+          },
+          "@aws-cdk/core:validateSnapshotRemovalPolicy": {
+            "recommendedValue": true,
+            "explanation": "Error on snapshot removal policies on resources that do not support it."
+          },
+          "@aws-cdk/aws-codepipeline:crossAccountKeyAliasStackSafeResourceName": {
+            "recommendedValue": true,
+            "explanation": "Generate key aliases that include the stack name"
+          },
+          "@aws-cdk/aws-s3:createDefaultLoggingPolicy": {
+            "recommendedValue": true,
+            "explanation": "Enable this feature flag to create an S3 bucket policy by default in cases where an AWS service would automatically create the Policy if one does not exist."
+          },
+          "@aws-cdk/aws-sns-subscriptions:restrictSqsDescryption": {
+            "recommendedValue": true,
+            "explanation": "Restrict KMS key policy for encrypted Queues a bit more"
+          },
+          "@aws-cdk/aws-apigateway:disableCloudWatchRole": {
+            "recommendedValue": true,
+            "explanation": "Make default CloudWatch Role behavior safe for multiple API Gateways in one environment"
+          },
+          "@aws-cdk/core:enablePartitionLiterals": {
+            "recommendedValue": true,
+            "explanation": "Make ARNs concrete if AWS partition is known"
+          },
+          "@aws-cdk/aws-events:eventsTargetQueueSameAccount": {
+            "recommendedValue": true,
+            "explanation": "Event Rules may only push to encrypted SQS queues in the same account"
+          },
+          "@aws-cdk/aws-ecs:disableExplicitDeploymentControllerForCircuitBreaker": {
+            "recommendedValue": true,
+            "explanation": "Avoid setting the \"ECS\" deployment controller when adding a circuit breaker"
+          },
+          "@aws-cdk/aws-iam:importedRoleStackSafeDefaultPolicyName": {
+            "recommendedValue": true,
+            "explanation": "Enable this feature to create default policy names for imported roles that depend on the stack the role is in."
+          },
+          "@aws-cdk/aws-s3:serverAccessLogsUseBucketPolicy": {
+            "recommendedValue": true,
+            "explanation": "Use S3 Bucket Policy instead of ACLs for Server Access Logging"
+          },
+          "@aws-cdk/aws-route53-patters:useCertificate": {
+            "recommendedValue": true,
+            "explanation": "Use the official `Certificate` resource instead of `DnsValidatedCertificate`"
+          },
+          "@aws-cdk/customresources:installLatestAwsSdkDefault": {
+            "recommendedValue": false,
+            "explanation": "Whether to install the latest SDK by default in AwsCustomResource"
+          },
+          "@aws-cdk/aws-rds:databaseProxyUniqueResourceName": {
+            "recommendedValue": true,
+            "explanation": "Use unique resource name for Database Proxy"
+          },
+          "@aws-cdk/aws-codedeploy:removeAlarmsFromDeploymentGroup": {
+            "recommendedValue": true,
+            "explanation": "Remove CloudWatch alarms from deployment group"
+          },
+          "@aws-cdk/aws-apigateway:authorizerChangeDeploymentLogicalId": {
+            "recommendedValue": true,
+            "explanation": "Include authorizer configuration in the calculation of the API deployment logical ID."
+          },
+          "@aws-cdk/aws-ec2:launchTemplateDefaultUserData": {
+            "recommendedValue": true,
+            "explanation": "Define user data for a launch template by default when a machine image is provided."
+          },
+          "@aws-cdk/aws-secretsmanager:useAttachedSecretResourcePolicyForSecretTargetAttachments": {
+            "recommendedValue": true,
+            "explanation": "SecretTargetAttachments uses the ResourcePolicy of the attached Secret."
+          },
+          "@aws-cdk/aws-redshift:columnId": {
+            "recommendedValue": true,
+            "explanation": "Whether to use an ID to track Redshift column changes"
+          },
+          "@aws-cdk/aws-stepfunctions-tasks:enableEmrServicePolicyV2": {
+            "recommendedValue": true,
+            "explanation": "Enable AmazonEMRServicePolicy_v2 managed policies"
+          },
+          "@aws-cdk/aws-ec2:restrictDefaultSecurityGroup": {
+            "recommendedValue": true,
+            "explanation": "Restrict access to the VPC default security group"
+          },
+          "@aws-cdk/aws-apigateway:requestValidatorUniqueId": {
+            "recommendedValue": true,
+            "explanation": "Generate a unique id for each RequestValidator added to a method"
+          },
+          "@aws-cdk/aws-kms:aliasNameRef": {
+            "recommendedValue": true,
+            "explanation": "KMS Alias name and keyArn will have implicit reference to KMS Key"
+          },
+          "@aws-cdk/aws-kms:applyImportedAliasPermissionsToPrincipal": {
+            "recommendedValue": true,
+            "explanation": "Enable grant methods on Aliases imported by name to use kms:ResourceAliases condition"
+          },
+          "@aws-cdk/aws-autoscaling:generateLaunchTemplateInsteadOfLaunchConfig": {
+            "recommendedValue": true,
+            "explanation": "Generate a launch template when creating an AutoScalingGroup"
+          },
+          "@aws-cdk/core:includePrefixInUniqueNameGeneration": {
+            "recommendedValue": true,
+            "explanation": "Include the stack prefix in the stack name generation process"
+          },
+          "@aws-cdk/aws-efs:denyAnonymousAccess": {
+            "recommendedValue": true,
+            "explanation": "EFS denies anonymous clients accesses"
+          },
+          "@aws-cdk/aws-opensearchservice:enableOpensearchMultiAzWithStandby": {
+            "recommendedValue": true,
+            "explanation": "Enables support for Multi-AZ with Standby deployment for opensearch domains"
+          },
+          "@aws-cdk/aws-lambda-nodejs:useLatestRuntimeVersion": {
+            "recommendedValue": true,
+            "explanation": "Enables aws-lambda-nodejs.Function to use the latest available NodeJs runtime as the default"
+          },
+          "@aws-cdk/aws-efs:mountTargetOrderInsensitiveLogicalId": {
+            "recommendedValue": true,
+            "explanation": "When enabled, mount targets will have a stable logicalId that is linked to the associated subnet."
+          },
+          "@aws-cdk/aws-rds:auroraClusterChangeScopeOfInstanceParameterGroupWithEachParameters": {
+            "recommendedValue": true,
+            "explanation": "When enabled, a scope of InstanceParameterGroup for AuroraClusterInstance with each parameters will change."
+          },
+          "@aws-cdk/aws-appsync:useArnForSourceApiAssociationIdentifier": {
+            "recommendedValue": true,
+            "explanation": "When enabled, will always use the arn for identifiers for CfnSourceApiAssociation in the GraphqlApi construct rather than id."
+          },
+          "@aws-cdk/aws-rds:preventRenderingDeprecatedCredentials": {
+            "recommendedValue": true,
+            "explanation": "When enabled, creating an RDS database cluster from a snapshot will only render credentials for snapshot credentials."
+          },
+          "@aws-cdk/aws-codepipeline-actions:useNewDefaultBranchForCodeCommitSource": {
+            "recommendedValue": true,
+            "explanation": "When enabled, the CodeCommit source action is using the default branch name 'main'."
+          },
+          "@aws-cdk/aws-cloudwatch-actions:changeLambdaPermissionLogicalIdForLambdaAction": {
+            "recommendedValue": true,
+            "explanation": "When enabled, the logical ID of a Lambda permission for a Lambda action includes an alarm ID."
+          },
+          "@aws-cdk/aws-codepipeline:crossAccountKeysDefaultValueToFalse": {
+            "recommendedValue": true,
+            "explanation": "Enables Pipeline to set the default value for crossAccountKeys to false."
+          },
+          "@aws-cdk/aws-codepipeline:defaultPipelineTypeToV2": {
+            "recommendedValue": true,
+            "explanation": "Enables Pipeline to set the default pipeline type to V2."
+          },
+          "@aws-cdk/aws-kms:reduceCrossAccountRegionPolicyScope": {
+            "recommendedValue": true,
+            "explanation": "When enabled, IAM Policy created from KMS key grant will reduce the resource scope to this key only."
+          },
+          "@aws-cdk/pipelines:reduceAssetRoleTrustScope": {
+            "recommendedValue": true,
+            "explanation": "Remove the root account principal from PipelineAssetsFileRole trust policy",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/aws-eks:nodegroupNameAttribute": {
+            "recommendedValue": true,
+            "explanation": "When enabled, nodegroupName attribute of the provisioned EKS NodeGroup will not have the cluster name prefix."
+          },
+          "@aws-cdk/aws-ec2:ebsDefaultGp3Volume": {
+            "recommendedValue": true,
+            "explanation": "When enabled, the default volume type of the EBS volume will be GP3"
+          },
+          "@aws-cdk/aws-ecs:removeDefaultDeploymentAlarm": {
+            "recommendedValue": true,
+            "explanation": "When enabled, remove default deployment alarm settings"
+          },
+          "@aws-cdk/custom-resources:logApiResponseDataPropertyTrueDefault": {
+            "recommendedValue": false,
+            "explanation": "When enabled, the custom resource used for `AwsCustomResource` will configure the `logApiResponseData` property as true by default"
+          },
+          "@aws-cdk/aws-s3:keepNotificationInImportedBucket": {
+            "recommendedValue": false,
+            "explanation": "When enabled, Adding notifications to a bucket in the current stack will not remove notification from imported stack."
+          },
+          "@aws-cdk/aws-stepfunctions-tasks:useNewS3UriParametersForBedrockInvokeModelTask": {
+            "recommendedValue": true,
+            "explanation": "When enabled, use new props for S3 URI field in task definition of state machine for bedrock invoke model.",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/core:explicitStackTags": {
+            "recommendedValue": true,
+            "explanation": "When enabled, stack tags need to be assigned explicitly on a Stack."
+          },
+          "@aws-cdk/aws-ecs:enableImdsBlockingDeprecatedFeature": {
+            "recommendedValue": false,
+            "explanation": "When set to true along with canContainersAccessInstanceRole=false in ECS cluster, new updated commands will be added to UserData to block container accessing IMDS. **Applicable to Linux only. IMPORTANT: See [details.](#aws-cdkaws-ecsenableImdsBlockingDeprecatedFeature)**"
+          },
+          "@aws-cdk/aws-ecs:disableEcsImdsBlocking": {
+            "recommendedValue": true,
+            "explanation": "When set to true, CDK synth will throw exception if canContainersAccessInstanceRole is false. **IMPORTANT: See [details.](#aws-cdkaws-ecsdisableEcsImdsBlocking)**"
+          },
+          "@aws-cdk/aws-ecs:reduceEc2FargateCloudWatchPermissions": {
+            "recommendedValue": true,
+            "explanation": "When enabled, we will only grant the necessary permissions when users specify cloudwatch log group through logConfiguration"
+          },
+          "@aws-cdk/aws-dynamodb:resourcePolicyPerReplica": {
+            "recommendedValue": true,
+            "explanation": "When enabled will allow you to specify a resource policy per replica, and not copy the source table policy to all replicas"
+          },
+          "@aws-cdk/aws-ec2:ec2SumTImeoutEnabled": {
+            "recommendedValue": true,
+            "explanation": "When enabled, initOptions.timeout and resourceSignalTimeout values will be summed together."
+          },
+          "@aws-cdk/aws-appsync:appSyncGraphQLAPIScopeLambdaPermission": {
+            "recommendedValue": true,
+            "explanation": "When enabled, a Lambda authorizer Permission created when using GraphqlApi will be properly scoped with a SourceArn."
+          },
+          "@aws-cdk/aws-rds:setCorrectValueForDatabaseInstanceReadReplicaInstanceResourceId": {
+            "recommendedValue": true,
+            "explanation": "When enabled, the value of property `instanceResourceId` in construct `DatabaseInstanceReadReplica` will be set to the correct value which is `DbiResourceId` instead of currently `DbInstanceArn`"
+          },
+          "@aws-cdk/core:cfnIncludeRejectComplexResourceUpdateCreatePolicyIntrinsics": {
+            "recommendedValue": true,
+            "explanation": "When enabled, CFN templates added with `cfn-include` will error if the template contains Resource Update or Create policies with CFN Intrinsics that include non-primitive values."
+          },
+          "@aws-cdk/aws-lambda-nodejs:sdkV3ExcludeSmithyPackages": {
+            "recommendedValue": true,
+            "explanation": "When enabled, both `@aws-sdk` and `@smithy` packages will be excluded from the Lambda Node.js 18.x runtime to prevent version mismatches in bundled applications."
+          },
+          "@aws-cdk/aws-stepfunctions-tasks:fixRunEcsTaskPolicy": {
+            "recommendedValue": true,
+            "explanation": "When enabled, the resource of IAM Run Ecs policy generated by SFN EcsRunTask will reference the definition, instead of constructing ARN."
+          },
+          "@aws-cdk/aws-ec2:bastionHostUseAmazonLinux2023ByDefault": {
+            "recommendedValue": true,
+            "explanation": "When enabled, the BastionHost construct will use the latest Amazon Linux 2023 AMI, instead of Amazon Linux 2."
+          },
+          "@aws-cdk/core:aspectStabilization": {
+            "recommendedValue": true,
+            "explanation": "When enabled, a stabilization loop will be run when invoking Aspects during synthesis.",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/aws-route53-targets:userPoolDomainNameMethodWithoutCustomResource": {
+            "recommendedValue": true,
+            "explanation": "When enabled, use a new method for DNS Name of user pool domain target without creating a custom resource."
+          },
+          "@aws-cdk/aws-elasticloadbalancingV2:albDualstackWithoutPublicIpv4SecurityGroupRulesDefault": {
+            "recommendedValue": true,
+            "explanation": "When enabled, the default security group ingress rules will allow IPv6 ingress from anywhere"
+          },
+          "@aws-cdk/aws-iam:oidcRejectUnauthorizedConnections": {
+            "recommendedValue": true,
+            "explanation": "When enabled, the default behaviour of OIDC provider will reject unauthorized connections"
+          },
+          "@aws-cdk/core:enableAdditionalMetadataCollection": {
+            "recommendedValue": true,
+            "explanation": "When enabled, CDK will expand the scope of usage data collected to better inform CDK development and improve communication for security concerns and emerging issues."
+          },
+          "@aws-cdk/aws-lambda:createNewPoliciesWithAddToRolePolicy": {
+            "recommendedValue": false,
+            "explanation": "[Deprecated] When enabled, Lambda will create new inline policies with AddToRolePolicy instead of adding to the Default Policy Statement"
+          },
+          "@aws-cdk/aws-s3:setUniqueReplicationRoleName": {
+            "recommendedValue": true,
+            "explanation": "When enabled, CDK will automatically generate a unique role name that is used for s3 object replication."
+          },
+          "@aws-cdk/pipelines:reduceStageRoleTrustScope": {
+            "recommendedValue": true,
+            "explanation": "Remove the root account principal from Stage addActions trust policy",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/aws-events:requireEventBusPolicySid": {
+            "recommendedValue": true,
+            "explanation": "When enabled, grantPutEventsTo() will use resource policies with Statement IDs for service principals."
+          },
+          "@aws-cdk/core:aspectPrioritiesMutating": {
+            "recommendedValue": true,
+            "explanation": "When set to true, Aspects added by the construct library on your behalf will be given a priority of MUTATING."
+          },
+          "@aws-cdk/aws-dynamodb:retainTableReplica": {
+            "recommendedValue": true,
+            "explanation": "When enabled, table replica will be default to the removal policy of source table unless specified otherwise."
+          },
+          "@aws-cdk/cognito:logUserPoolClientSecretValue": {
+            "recommendedValue": false,
+            "explanation": "When disabled, the value of the user pool client secret will not be logged in the custom resource lambda function logs."
+          },
+          "@aws-cdk/pipelines:reduceCrossAccountActionRoleTrustScope": {
+            "recommendedValue": true,
+            "explanation": "When enabled, scopes down the trust policy for the cross-account action role",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/aws-stepfunctions:useDistributedMapResultWriterV2": {
+            "recommendedValue": true,
+            "explanation": "When enabled, the resultWriterV2 property of DistributedMap will be used insted of resultWriter"
+          },
+          "@aws-cdk/s3-notifications:addS3TrustKeyPolicyForSnsSubscriptions": {
+            "recommendedValue": true,
+            "explanation": "Add an S3 trust policy to a KMS key resource policy for SNS subscriptions."
+          },
+          "@aws-cdk/aws-ec2:requirePrivateSubnetsForEgressOnlyInternetGateway": {
+            "recommendedValue": true,
+            "explanation": "When enabled, the EgressOnlyGateway resource is only created if private subnets are defined in the dual-stack VPC."
+          },
+          "@aws-cdk/aws-ec2-alpha:useResourceIdForVpcV2Migration": {
+            "recommendedValue": false,
+            "explanation": "When enabled, use resource IDs for VPC V2 migration"
+          },
+          "@aws-cdk/aws-s3:publicAccessBlockedByDefault": {
+            "recommendedValue": true,
+            "explanation": "When enabled, setting any combination of options for BlockPublicAccess will automatically set true for any options not defined."
+          },
+          "@aws-cdk/aws-lambda:useCdkManagedLogGroup": {
+            "recommendedValue": true,
+            "explanation": "When enabled, CDK creates and manages loggroup for the lambda function"
+          },
+          "@aws-cdk/aws-elasticloadbalancingv2:networkLoadBalancerWithSecurityGroupByDefault": {
+            "recommendedValue": true,
+            "explanation": "When enabled, Network Load Balancer will be created with a security group by default."
+          },
+          "@aws-cdk/aws-stepfunctions-tasks:httpInvokeDynamicJsonPathEndpoint": {
+            "recommendedValue": true,
+            "explanation": "When enabled, allows using a dynamic apiEndpoint with JSONPath format in HttpInvoke tasks.",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/aws-ecs-patterns:uniqueTargetGroupId": {
+            "recommendedValue": true,
+            "explanation": "When enabled, ECS patterns will generate unique target group IDs to prevent conflicts during load balancer replacement"
+          }
+        }
+      }
+    }
+  },
+  "minimumCliVersion": "2.1033.0"
+}

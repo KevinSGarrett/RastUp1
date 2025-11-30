@@ -1,97 +1,274 @@
-# Orchestrator Primer — RastUp1 (Short)
+# Orchestrator Primer — RastUp1
 
-## Repo & Blueprints
+_Last refreshed: 2025-11-26_
 
-- Repo root (Windows): C:\RastUp1
-- Repo root (WSL): /mnt/c/RastUp1
+This file is the short “drop-in” summary so a new AI helper (or a human)
+can quickly understand how the orchestrator + Cursor agents work for this
+repo, without rereading old chat logs.
 
-- Main project blueprints:
-  - Non‑tech: ProjectPlans/Combined_Master_PLAIN_Non_Tech_001.docx
-  - Tech:     ProjectPlans/TechnicalDevelopmentPlan.odt
+---
 
-- We already ran `python -m orchestrator.cli ingest-blueprints`:
-  - Both docs were converted to markdown under docs/blueprints/.
-  - They were chunked into ~932 chunks (NT‑xxxx and TD‑xxxx).
-  - Each chunk was summarised with OpenAI and embedded.
-  - All of this is indexed in docs/blueprints/blueprint_index.json.
+## 1. Project & Inputs
 
-This index + the chunk markdown files are how the orchestrator and agents
-see the full 500k+ words without hitting token limits.
+- **Repo**
+  - Local root (WSL): `/mnt/c/RastUp1`
+  - Local root (Windows): `C:\RastUp1`
+  - Git remote: https://github.com/KevinSGarrett/RastUp1
 
-## Orchestrator Responsibilities (Python package `orchestrator/`)
+- **Blueprints (already ingested)**
+  - Non‑technical plan:  
+    `ProjectPlans/Combined_Master_PLAIN_Non_Tech_001.docx`
+  - Technical plan:  
+    `ProjectPlans/TechnicalDevelopmentPlan.odt`
+  - Ingested via:
 
-- Owns the Work Breakdown Structure:
-  - ops/wbs.json      → WBS items and dependencies
-  - ops/queue.jsonl   → queue of tasks with status (todo / in_progress / done)
-  - docs/TODO_MASTER.md → human-readable WBS list
+        python -m orchestrator.cli ingest-blueprints
 
-- Uses OpenAI (and optionally Anthropic) for:
-  - Blueprint ingestion (summaries + embeddings)
-  - Planning the WBS and queue
-  - File indexing (docs/FILE_INDEX.*)
-  - Reviewing agent run reports and updating statuses
+  - Indexed into:
+    - `docs/blueprints/blueprint_index.json`
+    - Per‑chunk markdown files under `docs/blueprints/`
 
-- Dispatches work to 4 Cursor agents using the Cursor CLI.
+The blueprints have been split into many chunks, summarised with OpenAI,
+and embedded so the orchestrator can search them.
 
-## Cursor Agents (real agents, not just roles)
+---
 
-AGENT‑1 — Bootstrap & DevOps  
-AGENT‑2 — Backend & Services  
-AGENT‑3 — Frontend & Developer Experience  
-AGENT‑4 — QA, Security, Docs, Release  
+## 2. Roles & Responsibilities
 
-For each WBS item:
+### Orchestrator (this repo’s `orchestrator/` package)
 
-1. The orchestrator picks the next unblocked todo item from ops/queue.jsonl.
-2. It writes a task file under ops/tasks/AGENT-N/ with:
-   - WBS ID
-   - Relevant NT/TD IDs from the blueprint index
-   - Allowed paths to edit (scope_paths)
-   - Test commands that must be run
-   - Run-report + attach-pack requirements
-3. It calls Cursor CLI (cursor-agent) to run the appropriate AGENT‑N
-   using Cursor’s models and plugins.
-4. When the agent finishes and writes its run report + attach pack, the
-   orchestrator:
-   - updates ops/queue.jsonl (status),
-   - updates docs/PROGRESS.md,
-   - may update other progress/outline files.
+- Owns the **WBS** (`ops/wbs.json`) and **task queue** (`ops/queue.jsonl`).
+- Reads the blueprint index and plans work.
+- Dispatches tasks to Cursor agents via `orchestrator.cli run-next`.
+- Reviews agent run reports and updates statuses/progress.
+- Enforces the policies in:
 
-Cursor uses its own models; the orchestrator uses my OpenAI/Anthropic keys.
+  - `docs/orchestrator/LONG_SPEC.md`
+  - `docs/orchestrator/ORCHESTRATOR_SPEC.md`
+  - `ops/orchestrator_capabilities.yaml`
 
-## Key Commands (run from /mnt/c/RastUp1)
+### Cursor Agents (AGENT‑1…AGENT‑4, via `cursor-agent`)
 
-- Initialise orchestrator layout:
-    python -m orchestrator.cli init
+- Each agent run is tied to a WBS item (e.g. WBS‑001).
+- For each run, agents produce:
 
-- Ingest blueprints (heavy, already run at least once):
-    python -m orchestrator.cli ingest-blueprints
+  - A **run report**:  
+    `docs/runs/YYYY-MM-DD-WBS-XXX-AGENT-N.md`
+  - An **attach pack** (zip with logs, git status, test output, etc.):  
+    `docs/orchestrator/from-agents/AGENT-N/run-<timestamp>-attach.zip`
 
-- Plan WBS + queue:
-    python -m orchestrator.cli plan
+- The orchestrator treats agents as workers; it is the “boss”.
 
-- Index repo files:
-    python -m orchestrator.cli index-files --max-files 300
+---
 
-- Show status:
-    python -m orchestrator.cli status
-    python -m orchestrator.task_status list
+## 3. Core Commands
 
-- Run next WBS task via Cursor agent:
-    python -m orchestrator.cli run-next
+All commands assume:
 
-- Review and adjust WBS statuses:
-    python -m orchestrator.review_latest
-    python -m orchestrator.apply_latest_review
-    python -m orchestrator.review_all_in_progress
+    cd /mnt/c/RastUp1
+    source .venv/bin/activate
 
-- Autopilot loop (dispatch + review + progress + git):
-    python -m orchestrator.autopilot_loop
+### 3.1 One‑time / rare setup
 
-## Where to look for "what actually happened"
+- **Initialise orchestrator layout** (config, docs, empty queue):
 
-- docs/runs/                         → Cursor agent run reports
-- docs/orchestrator/from-agents/     → attach packs (.zip)
-- docs/orchestrator/reviews/         → orchestrator reviews
-- docs/PROGRESS.md                   → human summary of current status
-- ops/wbs.json / ops/queue.jsonl     → canonical WBS + queue
+      python -m orchestrator.cli init
+
+- **Ingest & index blueprints** (heavy):
+
+      python -m orchestrator.cli ingest-blueprints
+
+- **Generate WBS + queue + human TODO:**
+
+      python -m orchestrator.cli plan
+
+- **Build a file/directory index:**
+
+      python -m orchestrator.cli index-files --max-files 300
+
+### 3.2 Day‑to‑day WBS / queue operations
+
+- **See WBS + queue status:**
+
+      python -m orchestrator.cli status
+      python -m orchestrator.task_status list
+
+- **Run the next unblocked WBS item via Cursor agent:**
+
+      python -m orchestrator.cli run-next
+
+  This:
+  - Creates a task file under `ops/tasks/AGENT-N/…`
+  - Calls `cursor-agent` with the task instructions
+  - Expects the agent to produce a run report + attach pack
+
+- **Manually adjust a WBS item (when needed):**
+
+      python -m orchestrator.task_status set --id WBS-004 --status todo
+      python -m orchestrator.task_status set --id WBS-004 --status done
+
+### 3.3 Review, progress, and autopilot
+
+- **Review the latest agent run report (OpenAI + Anthropic “manager”):**
+
+      python -m orchestrator.review_latest
+
+  Writes an orchestrator review to:
+
+      docs/orchestrator/reviews/orchestrator-review-*.md
+
+- **Apply the latest orchestrator review back to WBS statuses:**
+
+      python -m orchestrator.apply_latest_review
+
+- **Sweep all in‑progress items and decide whether to reset to `todo`:**
+
+      python -m orchestrator.review_all_in_progress
+
+- **Autopilot loop (dispatch, review, update, push):**
+
+      python -m orchestrator.autopilot_loop
+
+  Typical loop:
+  1. `run-next`
+  2. Wait for agent
+  3. Review + update statuses
+  4. Optionally commit & push
+
+---
+
+## 4. CI, Tests & Guardrails
+
+### 4.1 Local CI
+
+- **Full local CI (TypeScript + Python + Node + infra checks):**
+
+      make ci
+
+  This runs (via the `Makefile`):
+
+  - `node-install` (root + `web/` Node deps as needed)
+  - TypeScript typecheck (`tsconfig.ci.json` + `web/tsconfig.json`)
+  - Python tests under `tests/python` and `tests/search`
+  - Node tests under `tests/frontend`, `tests/booking`, `tests/search`, `tests/docs`
+  - Infra guardrails:
+
+        python -m tools.infra.preflight --format text
+        python -m tools.infra.smoke --format text
+
+### 4.2 GitHub Actions CI
+
+- GitHub workflow: `.github/workflows/ci.yml`
+
+  On `push` and `pull_request`, it:
+
+  - Checks out the repo
+  - Sets up Python 3.12 and Node 20
+  - Installs Python deps (`requirements.txt`)
+  - Runs `make node-install`
+  - Runs the full `make ci` suite
+
+CI must be green before a WBS item is truly “done”.
+
+---
+
+## 5. Runs, Locks, and Indexes
+
+- **Run reports:**  
+  `docs/runs/YYYY-MM-DD-WBS-XXX-AGENT-N.md`
+
+- **Orchestrator run index:**  
+  `docs/orchestrator/_index/runs_index.csv`  
+  `docs/orchestrator/_index/runs_index.md`  
+  (maintained by a helper like `tools/index/verify_runs_index.py`.)
+
+- **Attach packs:**  
+  `docs/orchestrator/from-agents/AGENT-N/run-<timestamp>-attach.zip`  
+  Contain `git-status.txt`, `node-tests.txt`, `pytest-results.txt`,
+  `preflight.json`, `smoke.json`, `manifest.json`, `run-report.md`, etc.
+
+- **Locks:**  
+  `ops/locks/AGENT-N.lock`  
+  Used to avoid two agents stepping on the same scope at once.
+
+- **Model decisions log:**  
+  `ops/model-decisions.jsonl`  
+  Append‑only log of which models were used for which WBS / task.
+
+---
+
+## 6. Current High‑Level State (as of 2025‑11‑26)
+
+From the latest runs and status commands:
+
+- **WBS items completed:**
+
+  - `WBS-001` — Infrastructure Bootstrap and DevOps Setup  
+  - `WBS-002` — Core Backend Services: Profiles, Booking, Payments, Trust  
+  - `WBS-003` — Frontend: Profiles, Search, Booking UI, Messaging  
+  - `WBS-004` — QA, Security, Documentation, Release & Orchestrator Improvements  
+
+- **Queue:**
+
+      python -m orchestrator.cli status
+
+  Currently reports:
+
+  - `done: 4`
+  - No unblocked `todo` items:
+
+        python -m orchestrator.cli run-next
+        → [run-next] No unblocked todo items found.
+
+At this moment, the backlog in `ops/wbs.json` is fully processed
+according to the orchestrator’s queue (all four defined WBS items are done).
+
+---
+
+## 7. How to “Rehydrate” a New AI Helper
+
+When you open a **new** ChatGPT / AI session and want it to understand
+this project, do this from the repo root:
+
+1. Print the key context files:
+
+       cd /mnt/c/RastUp1
+       source .venv/bin/activate
+
+       cat docs/orchestrator/primer.md
+       cat docs/PROGRESS.md || echo "No PROGRESS.md yet"
+       cat docs/orchestrator/TODO_ORCHESTRATOR.md || echo "No TODO_ORCHESTRATOR.md yet"
+       cat ops/orchestrator_capabilities.yaml
+       ls docs/orchestrator/reviews 2>/dev/null | tail -n 3
+
+2. Open the most recent orchestrator review and the run report(s)
+   relevant to the WBS you care about, for example:
+
+       cat docs/orchestrator/reviews/orchestrator-review-<latest>.md
+       cat docs/runs/2025-11-26-WBS-004-AGENT-4.md
+
+3. Paste those into the new chat and say something like:
+
+   > You are stepping into an existing orchestrator + 4‑agent setup  
+   > for the RastUp1 repo. Here is the primer and recent reviews.  
+   > Read them, restate in your own words where the project is up to,  
+   > then help me with: <NEXT THING I WANT>.
+
+That’s your rotation/rehydration protocol: instead of relying on the
+old chat history, you always trust the repo artifacts.
+
+---
+
+## 8. Where to Look Next
+
+When deciding what to do next, prefer **these** sources, in order:
+
+1. `python -m orchestrator.cli status`  
+2. `python -m orchestrator.task_status list`  
+3. `docs/PROGRESS.md`  
+4. `docs/orchestrator/TODO_ORCHESTRATOR.md`  
+5. Latest orchestrator review in `docs/orchestrator/reviews/`
+
+The chat is just an interface. The repo, queue, and run reports are
+the real source of truth.
+

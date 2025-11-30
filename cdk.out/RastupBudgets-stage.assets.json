@@ -1,0 +1,21 @@
+{
+  "version": "48.0.0",
+  "files": {
+    "4f137f49792bfffb07a977489bee292ec6e37c61cc3f9aaaf852c84448c908e2": {
+      "displayName": "RastupBudgets-stage Template",
+      "source": {
+        "path": "RastupBudgets-stage.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "029530099913-us-east-1-297fdb2c": {
+          "bucketName": "cdk-hnb659fds-assets-029530099913-us-east-1",
+          "objectKey": "4f137f49792bfffb07a977489bee292ec6e37c61cc3f9aaaf852c84448c908e2.json",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::029530099913:role/cdk-hnb659fds-file-publishing-role-029530099913-us-east-1"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}

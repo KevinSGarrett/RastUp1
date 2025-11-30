@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://docs.rastup.internal/events/auth.mfa.challenge_issued.v1.schema.json",
+  "title": "auth.mfa.challenge_issued",
+  "description": "Emitted when the platform issues an MFA challenge to a user.",
+  "type": "object",
+  "properties": {
+    "event": { "const": "auth.mfa.challenge_issued" },
+    "version": { "const": 1 },
+    "occurred_at": { "type": "string", "format": "date-time" },
+    "emitted_at": { "type": "string", "format": "date-time" },
+    "source": { "type": "string", "minLength": 3, "maxLength": 120 },
+    "privacy_tier": { "type": "string", "enum": ["restricted"] },
+    "retention_class": { "type": "string", "enum": ["security_core"] },
+    "pii_fields": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z0-9_.]+$" },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "payload": {
+      "type": "object",
+      "properties": {
+        "challenge_id": { "type": "string", "format": "uuid" },
+        "factor_id": { "type": "string", "format": "uuid" },
+        "user_id": { "type": "string", "format": "uuid" },
+        "challenge_type": { "type": "string", "enum": ["sms_otp", "totp", "webauthn"] },
+        "max_attempts": { "type": "integer", "minimum": 1, "maximum": 10 },
+        "expires_at": { "type": "string", "format": "date-time" },
+        "delivery": {
+          "type": "object",
+          "properties": {
+            "channel": { "type": "string", "const": "sms" },
+            "to": { "type": ["string", "null"], "pattern": "^\\+[1-9][0-9]{6,14}$" },
+            "template_id": { "type": ["string", "null"], "minLength": 3, "maxLength": 120 }
+          },
+          "required": ["channel"],
+          "additionalProperties": false
+        },
+        "reason": { "type": ["string", "null"], "maxLength": 120 }
+      },
+      "required": [
+        "challenge_id",
+        "factor_id",
+        "user_id",
+        "challenge_type",
+        "max_attempts",
+        "expires_at",
+        "delivery"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "event",
+    "version",
+    "occurred_at",
+    "emitted_at",
+    "source",
+    "privacy_tier",
+    "retention_class",
+    "pii_fields",
+    "payload"
+  ],
+  "additionalProperties": false
+}

@@ -1,4 +1,4 @@
 agent: AGENT-3
-timestamp: 2025-11-19T21:35:00Z
-status: unlocked
-notes: "WBS-006 part21 moderation queue hydration & workspace integration"
+timestamp: 2025-11-25T20:48:21Z
+status: locked
+notes: "WBS-003 frontend surfaces: profiles/search/booking/inbox pass"

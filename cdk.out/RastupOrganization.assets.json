@@ -1,0 +1,21 @@
+{
+  "version": "48.0.0",
+  "files": {
+    "69b6b08ce825cdfe08824c745c3c92f6a4402bcee60f8eb6b151c3e214343444": {
+      "displayName": "RastupOrganization Template",
+      "source": {
+        "path": "RastupOrganization.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "029530099913-us-east-1-dd4256f1": {
+          "bucketName": "cdk-hnb659fds-assets-029530099913-us-east-1",
+          "objectKey": "69b6b08ce825cdfe08824c745c3c92f6a4402bcee60f8eb6b151c3e214343444.json",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::029530099913:role/cdk-hnb659fds-file-publishing-role-029530099913-us-east-1"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}

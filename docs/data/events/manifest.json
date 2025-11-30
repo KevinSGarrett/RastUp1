@@ -1,8 +1,48 @@
 {
-  "generated_at": "2025-11-18T07:30:00Z",
-  "agent": "AGENT-1",
-  "wbs_id": "WBS-002",
+  "generated_at": "2025-11-29T03:25:00Z",
+  "agent": "AGENT-2",
+  "wbs_id": "WBS-003",
   "events": [
+    {
+      "event_name": "auth.admin.elevation_granted",
+      "version": 1,
+      "schema_file": "auth.admin.elevation_granted.v1.schema.json",
+      "privacy_tier": "restricted",
+      "retention_class": "security_core",
+      "sha256": "02e4b92dadb61a28f973b2d318aaa4a7ddd5f7513f3f4cb7b4154b27443c4ccd"
+    },
+    {
+      "event_name": "auth.mfa.challenge_issued",
+      "version": 1,
+      "schema_file": "auth.mfa.challenge_issued.v1.schema.json",
+      "privacy_tier": "restricted",
+      "retention_class": "security_core",
+      "sha256": "36b6892a6168b782fcc45e753eabad5f6ec2a02c5d080d53acf0d75152dae0fe"
+    },
+    {
+      "event_name": "auth.mfa.challenge_verified",
+      "version": 1,
+      "schema_file": "auth.mfa.challenge_verified.v1.schema.json",
+      "privacy_tier": "restricted",
+      "retention_class": "security_core",
+      "sha256": "bf533509debe49eb8d9ec21efaa52a8f75f05fbf438903ebed4f55b069352c33"
+    },
+    {
+      "event_name": "auth.session.created",
+      "version": 1,
+      "schema_file": "auth.session.created.v1.schema.json",
+      "privacy_tier": "restricted",
+      "retention_class": "security_core",
+      "sha256": "24e80170e006719744efa2edafe4d2637db5a80603ff7a4b4380da7dba7a6667"
+    },
+    {
+      "event_name": "auth.session.refreshed",
+      "version": 1,
+      "schema_file": "auth.session.refreshed.v1.schema.json",
+      "privacy_tier": "restricted",
+      "retention_class": "security_core",
+      "sha256": "fd330c854611de5f53f6f178544668923246f32fa0e38aefca6df8180d2bed20"
+    },
     {
       "event_name": "user.account.created",
       "version": 1,
@@ -34,6 +74,30 @@
       "privacy_tier": "tier2",
       "retention_class": "messaging_core",
       "sha256": "6f09707be4683a60e2652b5d75485b4b5c3b767aa4f24cf31fc74fa1e5c7c59e"
+    },
+    {
+      "event_name": "profile.service_profile.published",
+      "version": 1,
+      "schema_file": "profile.service_profile.published.v1.schema.json",
+      "privacy_tier": "tier2",
+      "retention_class": "profiles_core",
+      "sha256": "104676b6c78bd7159d580d84b2c1230dfbf00b0475fe3af2fd0aeb6480a7325c"
+    },
+    {
+      "event_name": "studio.location.verified",
+      "version": 1,
+      "schema_file": "studio.location.verified.v1.schema.json",
+      "privacy_tier": "tier1",
+      "retention_class": "studios_core",
+      "sha256": "349daf9178a24165b06580eb092fe017b09fb6691af33c50311ff96aac89f499"
+    },
+    {
+      "event_name": "payments.payout.released",
+      "version": 1,
+      "schema_file": "payments.payout.released.v1.schema.json",
+      "privacy_tier": "tier1",
+      "retention_class": "payments_core",
+      "sha256": "dda0ff1efc5146e4a4b992fd064e33033b06c10a81233799514cff48e527f708"
     }
   ]
 }

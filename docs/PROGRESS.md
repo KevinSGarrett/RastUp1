@@ -7,6 +7,22 @@
 
 - Orchestrator initialised. Blueprints not yet ingested.
 
+## 2025-11-29 — AGENT-2 (WBS-003)
+
+- Implemented backend auth domain modules (`services/auth/{errors,mfa,rbac,events,sessions,providers}.js` + typed re-exports) covering credential hashing, social token validation, session issuance/rotation, MFA enrolment/challenges, and RBAC with JIT elevation helpers.
+- Added Aurora `auth` schema migration (`db/migrations/028_auth_system.sql`) plus security event contracts (`docs/data/events/auth.*.v1.schema.json`) and refreshed `docs/data/events/manifest.json`.
+- `node --test tests/auth/*.test.mjs` → pass (18 subtests across password, providers, sessions, MFA, RBAC, event envelopes).  
+  `pytest tests/python/test_auth_schema.py` → pass (4 tests validating new auth schema).
+- `make ci` → failed (TypeScript typecheck errors in `web/app/app/{bookings,page.tsx,me/page.tsx}` due to missing Amplify client types); CI failure captured for continuity.
+
+## 2025-11-26 — AGENT-1 (WBS-001)
+
+- Scaffolded Amplify Gen 2 blueprint (`amplify/stack.ts`, `amplify/backend/**`, `amplify/scripts/print-blueprint.ts`) capturing environment guardrails, stack decomposition, and secret rotation policy for dev/stage/prod.
+- Introduced CDK multi-account bootstrap (`cdk/bin/infra.ts`, `cdk/lib/{org-stack,budgets-stack,identity-stack}.ts`, `cdk/scripts/run-nag.ts`) plus package scripts to run synth/diff/nag under `tsx`.
+- Updated `Makefile` to run Node tests with `--loader tsx`; added infrastructure test suites (`tests/infra/*.test.ts`) validating Amplify blueprints and CDK assembly contents.
+- Refreshed infrastructure roadmap with current status and next steps for resource-level CDK implementation.
+- `make ci` → pass (Python infra docs/tests + Node frontend/search/booking/docs suites + new infra tests); artefacts captured for attach pack.
+
 ## 2025-11-18 — AGENT-1 (WBS-002)
 
 - Seeded core data architecture docs under `docs/data/` (Aurora schema, event contracts, pipelines, privacy, metrics).
@@ -105,7 +121,7 @@
 - Authored infrastructure bootstrap roadmap (`docs/infra/bootstrap-plan.md`) covering multi-account setup, Amplify Gen 2/CDK structure, security baseline, CI/CD pipeline, observability, cost controls, phased rollout, and validation strategy aligned to TD-0062 – TD-0114.
 - Added Python unit test (`tests/python/test_infra_docs.py`) to enforce roadmap completeness (required headings, environment matrix integrity, no placeholder text).
 - `python -m unittest tests.python.test_infra_docs` → pass (3 tests).
-- `make ci` → pass (Python booking schema tests + Node booking suites executed via target).
+- `make ci` → pass (Python booking schema tests + Node booking suites executed via target). At this stage CI was still narrow (booking-focused) and did not yet include infra preflight/smoke or TypeScript Bundler config; those were added in the later Part 2 run.
 
 ## 2025-11-19 — AGENT-3 (WBS-006) Part 3
 
@@ -288,7 +304,7 @@
   - `node --test tests/search/*.test.mjs` → pass (8 tests).
   - `python -m unittest tests.search.test_collections_json` → pass (3 tests).
   - `node --test tests/booking/*.test.mjs` → pass (65 tests).
-    - `make ci` → pass (Python booking schema + Node booking suites).
+  - `make ci` → pass (Python booking schema + Node booking suites).
 
 ## 2025-11-19 — AGENT-3 (WBS-006) Part 9
 
@@ -379,3 +395,34 @@
 - Enabled moderation queue prefetch for support/admin viewers by extending `createMessagingNextAdapter`, the messaging workspace client, and Next.js page to read `x-viewer-roles` / `MESSAGING_SHOW_MODERATION_QUEUE`, hydrate cases during SSR, and surface the queue sidebar immediately.
 - Updated messaging data source helpers plus unit suites (`tests/frontend/messaging/{next_adapter,dataSources}.test.mjs`) to cover moderation queue GraphQL/stub execution alongside refreshed docs (`implementation_plan.md`, `test_plan.md`, `ui_flows.md`).
 - Regression: `node --test tests/frontend/messaging/*.test.mjs` → pass (see run artifacts); `make ci` → pass (Python booking schema + Node booking suites).
+
+## 2025-11-24 — AGENT-1 (WBS-001) Part 2
+
+- Added `tsconfig.ci.json` and pointed the `typecheck` target at it so CI can use Bundler resolution without forcing `.js` suffixes while keeping runtime configs unchanged.
+- Extended the `Makefile` with `infra-preflight`, `infra-smoke`, and `infra-rotation-report` targets and wired them into `make ci`; tightened Node test discovery to use `find`-based globbing and converted the legacy `tests/frontend/index.js` placeholder to ESM.
+- Quoted the `abuse_ticket` activation condition in `ops/config/flags.yaml` to maintain YAML compatibility and documented the new guardrail stage in `docs/infra/bootstrap-plan.md`.
+- Tests:
+  - `python -m unittest tests.python.test_infra_tools`
+  - `python -m unittest tests.python.test_infra_docs`
+  - `make ci` (TypeScript Bundler typecheck + Python infra/docs tests + full frontend/search/booking Node suites, followed by `tools.infra.preflight` / `tools.infra.smoke` and rotation summary; all passing).
+- Scope and follow-ups:
+  - This closes WBS-001 for **local CI + guardrails**: `make ci` is now green and enforces infra roadmap/docs, registry/feature-flag/runbook/rotation checks, and Node/TypeScript correctness.
+  - Deeper AWS infrastructure automation (Amplify/CDK stacks, AWS Organizations/AppConfig wiring, IaC static analysis via cdk-nag/infracost, and comprehensive deployment validation) is explicitly deferred to later infrastructure WBS items and tracked in `TODO_ORCHESTRATOR.md`.
+
+## 2025-11-25 — AGENT-2 (WBS-002)
+
+- Derived the blueprint DDL into executable migration `db/migrations/021_core_base.sql`, establishing accounts, service profiles, studios, booking legs, payments, trust telemetry, analytics tiers, DSAR, and schema registry tables with supporting indexes and constraints.
+- Added Python schema guard `tests/python/test_core_schema.py` (now exercised via `make ci`) to lock enum values, required tables, and safety checks for profiles/trust analytics.
+- Implemented service profile validation/completeness/safe-mode utilities (`services/profiles/{domain.js,domain.ts,types.ts,index.ts}`) and trust aggregation modules (`services/trust/{domain.js,domain.ts,types.ts,index.ts}`) aligned with §1.1 and §1.6 invariants.
+- Authored Node unit suites `node --test tests/profiles/*.test.mjs tests/trust/*.test.mjs` (11 passing subtests) covering validation, scoring, safe-mode filtering, trust badges, risk scoring, eligibility gates, and recertification logic.
+- Delivered GraphQL contract `api/schema/core.graphql` exposing profile management, evaluation, and trust/status operations for downstream AppSync resolvers.
+- `make ci` → pass (tsc, Python schema/infra suites, frontend/search/booking Node suites, infra preflight/smoke).
+
+## 2025-11-27 — AGENT-2 (WBS-002)
+
+- Finalised `db/migrations/021_core_base.sql` with generated SHA-256 digests for email/phone PII, safe-mode aware messaging tables, promotions/trust/support artifacts, analytics bronze/silver/gold pipelines, DSAR + schema registry catalogues, and lineage auditing — all with cascade deletes and guardrail constraints.
+- Introduced reusable core domain toolkit (`services/core/{domain,types,index}.{js,ts}`) supplying user/profile/studio/booking/payment/message validators, deterministic hashing/masking helpers, Safe-Mode enforcement, and event envelope builder aligned with blueprint invariants.
+- Expanded event catalog with JSON Schema contracts for `profile.service_profile.published`, `studio.location.verified`, and `payments.payout.released`; refreshed manifest SHA registry and tightened `tools/validate_event_contracts.py` to enforce versioned filenames, checksum format, and positive semantic versions.
+- Added targeted test coverage: Node suite `tests/core/domain.test.mjs` (9 subtests) validating normalization, privacy masking, booking totals, and event envelope behaviour, plus Python guards `tests/python/test_core_schema.py` and new `tests/python/test_event_manifest.py`.
+- `make ci` → pass (tsc typecheck, Python schema/privacy/event suites, Node booking/frontend/search/docs/infra tests, infra preflight & smoke audits).
+- 2025-11-27T05:45Z attempt: `make ci` → **fail** (tsc aborted on `services/auth/errors.ts` circular alias; module pre-existing/untracked outside WBS-002 scope).

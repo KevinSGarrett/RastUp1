@@ -1,9 +1,9 @@
 # Orchestrator Review
 
-- Source: **docs/runs/2025-11-24-WBS-001-AGENT-1.md**
-- Input size: **5349 chars**
-- Assistant‑manager: **anthropic/claude-3-5-haiku-20241022** (17483 ms)
-- Primary‑decider: **openai/gpt-5** (37781 ms)
+- Source: **docs/runs/2025-11-29-WBS-003-AGENT-2.md**
+- Input size: **6237 chars**
+- Assistant‑manager: **anthropic/claude-3-5-haiku-20241022** (19915 ms)
+- Primary‑decider: **openai/gpt-5** (26619 ms)
 
 ## Assistant‑Manager Review
 
@@ -11,101 +11,121 @@
 
 ## Risk Log
 
-1. **CI/CD Pipeline Blockage**
-   - TypeScript module resolution is currently breaking `make ci`
-   - Risk: Potential deployment and integration delays
-   - Severity: High - Blocks continuous integration process
+1. **TypeScript Compilation Failures**
+   - Unresolved TypeScript errors in `web/app/app/*`
+   - Missing Amplify typings for `viewer`, `Booking`, and `amplify/data/resource`
+   - Risk Level: High - Blocks CI/CD pipeline and future integration
 
-2. **Incomplete Infrastructure Automation**
-   - Tooling developed but not yet integrated into CI/attach-pack
-   - Risk: Partial implementation may lead to inconsistent deployment practices
-   - Severity: Medium
+2. **Incomplete Authentication Infrastructure**
+   - Pending integrations for:
+     - Real IdP/SMS providers
+     - JWKS fetch caching
+     - PKCE flows
+     - Secrets management
+   - Risk Level: Medium - Potential security and integration gaps
 
-3. **Module Caching Warnings**
-   - Runtime warnings when sequentially invoking infrastructure tools
-   - Risk: Potential subtle runtime inconsistencies or unexpected behavior
-   - Severity: Low
+3. **Dependency Constraints**
+   - Depends on `WBS-001`
+   - Unresolved frontend typing dependencies
+   - Risk Level: Medium - Potential blocking dependencies
 
 ## Missing Deliverables
 
-1. CI Integration
-   - Preflight/smoke scripts not yet wired into CI pipeline
-   - No automated JSON output storage mechanism
-
-2. AWS Infrastructure Implementation
-   - Amplify/CDK stacks not yet implemented
-   - No dry-run or static analysis for cloud resources
-
-3. TypeScript Module Configuration
-   - Missing `.js` extension resolution strategy
-   - No coordinated update plan for `services/*` modules
+1. GraphQL/AppSync resolver implementations
+2. Repository persistence layer
+3. Real IdP and SMS integration components
+4. Complete infrastructure automation
+5. End-to-end security testing framework
+6. Observability dashboards and runbooks
 
 ## Recommended Follow-Ups
 
-1. **Immediate Technical Debt Resolution**
-   - Create a targeted task to resolve TypeScript `.js` extension issue
-     * Audit all `services/*` modules
-     * Implement consistent import strategy
-     * Update TypeScript configuration to support module resolution
+1. **Immediate TypeScript Resolution**
+   - Assign frontend team to implement missing Amplify typings
+   - Create explicit typing for `viewer`, `Booking`, and data resources
+   - Update `tsconfig.ci.json` to resolve compilation errors
 
-2. **CI/CD Pipeline Enhancement**
-   - Develop integration script for:
-     * Automatic preflight/smoke script execution
-     * JSON output capture and archival
-     * Blocking conditions based on tooling checks
-
-3. **Infrastructure Automation Expansion**
+2. **Authentication Infrastructure Completion**
    - Queue tasks for:
-     * Implement AWS Organizations dry-run scripts
-     * Add AppConfig static analysis
-     * Begin Amplify/CDK stack development using new preflight guardrails
+     - JWKS caching mechanism implementation
+     - OAuth token exchange logic
+     - SMS delivery integration
+     - Secrets management strategy
+   - Develop comprehensive secrets injection framework
 
-4. **Tooling Refinement**
-   - Investigate and resolve module caching warning
-   - Create a robust runner mechanism to prevent sequential invocation issues
+3. **Integration and Testing Roadmap**
+   - Create detailed plan for GraphQL resolver integration
+   - Design end-to-end security testing strategy
+   - Develop observability dashboards for authentication flows
+   - Create runbooks for authentication error scenarios
 
-5. **Documentation and Tracking**
-   - Update infrastructure roadmap with specific implementation milestones
-   - Create detailed tracking for each recommended follow-up task
-   - Establish clear ownership and timeline for each action item
+4. **Dependency Management**
+   - Schedule coordination meeting with `WBS-001` team
+   - Validate and document interdependency requirements
+   - Establish clear integration checkpoints
 
-**Priority Ranking:**
-1. TypeScript Module Resolution
-2. CI Pipeline Integration
-3. Infrastructure Automation Expansion
-4. Tooling Refinement
-5. Documentation Update
+5. **Documentation and Knowledge Transfer**
+   - Update architecture documentation with current auth module details
+   - Create comprehensive integration guides for future agents
+   - Document current limitations and planned improvements
+
+**Priority**: High-priority items are TypeScript resolution and authentication infrastructure completion.
 
 ## Final Orchestrator Decision
 
 Overall state and risks
-- Status: Not ready to mark done. CI is currently blocked by TypeScript module resolution failures, and key deliverables (CI integration, infra stacks, automated outputs) are missing.
-- High risk: CI/CD pipeline blockage (make ci failing). This prevents integration, gating, and safe deployment.
-- Medium risk: Infrastructure automation is only partially implemented; no CDK/Amplify stacks or dry-run/static analysis yet, risking drift and inconsistent practices.
-- Low-to-medium risk: Module caching warnings could lead to subtle runtime inconsistencies, especially under sequential tooling invocations.
-- Operational impact: Without CI gating and artifacted preflight results, we lack automated signal-to-block merges and no audit trail of checks.
+- Current state: Not releasable. CI is blocked by TypeScript compilation failures; several critical components (auth, persistence, resolvers, infra automation, security testing, observability) are missing or incomplete. Dependency on WBS-001 remains unresolved.
+- Key risks:
+  - High: TypeScript/Amplify typing gaps in web/app/app/* block CI/CD and mask further integration issues.
+  - Medium: Authentication infrastructure gaps (IdP/SMS integrations, JWKS caching, PKCE, secrets handling) create security and integration risk.
+  - Medium: External dependency WBS-001 may block downstream delivery if not coordinated.
+  - Additional: Missing resolvers, persistence, automation, and test/observability assets extend critical path and threaten schedule predictability.
 
-Decision and rationale
-- Decision: Keep IN PROGRESS. CI is not green, multiple critical deliverables are missing, and risks remain unmitigated. We should not accept until CI is unblocked, preflight checks are running and enforced, and initial infra automation guardrails are in place.
+Decision
+- Not ready to mark DONE. Multiple high- and medium-risk items remain, CI is red, and critical deliverables are absent.
+
+Rationale
+- We lack working builds, integrated auth, persistence, and E2E test/observability foundations. Risk profile is elevated, and dependencies are not yet retired. Biasing toward safety, we keep this IN PROGRESS until CI is green and P0s are closed.
 
 Prioritized next actions, owners, and target dates
-1) P0 – Unblock CI: TypeScript module resolution fix
-- Scope:
-  - Audit services/* imports and standardize .js extension usage for ESM/NodeNext.
-  - Update tsconfig: "module": "NodeNext", "moduleResolution": "NodeNext"; ensure "type": "module" where appropriate.
-  - Add ESLint rule and CI check to forbid extensionless ESM imports.
-  - Implement automated codemod to add .js extensions where needed and update barrel files.
-  - Verify build, test, and local make ci; open PR with migration notes.
-- Owner: Alex (TS Platform Lead) with service owners for reviews.
-- Target date: 2025-11-27.
-- Exit criteria: make ci passes locally and in CI; no unresolved module warnings; lints enforce the rule; migration doc merged.
+P0 — Unblock CI (TypeScript/Amplify typings)
+1) Define and implement missing Amplify/Domain typings (viewer, Booking, amplify/data/resource)
+   - Owner: Frontend Lead (FE: A. Patel)
+   - Actions: add explicit interfaces and ambient module declarations; generate/update Amplify types; tighten imports
+   - Target: 2025-12-04
+   - Acceptance: tsc --noEmit passes locally and in CI; no any suppressions introduced without TODO ticket
 
-2) P1 – CI pipeline integration for preflight/smoke with artifacts
-- Scope:
-  - Add CI job (e.g., GitHub Actions/CircleCI) to run preflight/smoke on PRs and main.
-  - Capture JSON outputs as build artifacts; retain for 14 days; upload to artifact store or S3 with prefix per commit SHA.
-  - Define blocking conditions from tooling checks; failing checks block merges.
-  - Wire into attach-pack
+2) Update tsconfig.ci.json and CI step
+   - Owner: FE + DevOps (S. Kim)
+   - Actions: enforce strict type checking in CI; fail on TS errors; cache node_modules and type generation artifacts
+   - Target: 2025-12-04
+   - Acceptance: CI shows green compile step on main; cache effectiveness verified (<2 min install/build)
+
+3) Resolve external typing dependencies
+   - Owner: FE (A. Patel) with Architecture (M. Rossi)
+   - Actions: lock versions; document peer deps; add types for 3rd-party libs or replace with typed alternatives
+   - Target: 2025-12-05
+   - Acceptance: zero TS suppressions; dependency audit updated
+
+P0 — Dependency alignment (WBS-001)
+4) Coordination checkpoint with WBS-001
+   - Owner: PM (J. Rivera)
+   - Actions: confirm interfaces, timelines, blocking items; agree on integration contract and dates
+   - Target: 2025-12-02
+   - Acceptance: signed integration notes, risks and owners captured; dates added to roadmap
+
+P1 — Authentication infrastructure completion
+5) JWKS fetch + caching module
+   - Owner: Backend Lead (BE: N. Chen)
+   - Actions: implement JWKS retrieval with cache/TTL and rotation; fallback and rate limiting; metrics
+   - Target: 2025-12-11
+   - Acceptance: unit/integration tests with mocked JWKS; performance budget documented; dashboards emit cache hit rate
+
+6) PKCE + OAuth/OIDC flow integration
+   - Owner: BE + FE (N. Chen / A. Patel)
+   - Actions: end-to-end auth code + PKCE; token exchange; refresh flow; error handling
+   - Target: 2025-12-13
+   -
 
 ACCEPTANCE: no
 Decision: in_progress

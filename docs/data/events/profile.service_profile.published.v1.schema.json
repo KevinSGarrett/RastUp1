@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://docs.rastup.internal/events/profile.service_profile.published.v1.schema.json",
+  "title": "profile.service_profile.published",
+  "description": "Emitted when a service profile transitions to the published state and becomes discoverable.",
+  "type": "object",
+  "properties": {
+    "event": { "const": "profile.service_profile.published" },
+    "version": { "const": 1 },
+    "occurred_at": { "type": "string", "format": "date-time" },
+    "emitted_at": { "type": "string", "format": "date-time" },
+    "source": { "type": "string", "minLength": 3, "maxLength": 120 },
+    "privacy_tier": { "type": "string", "enum": ["tier1", "tier2"] },
+    "retention_class": { "type": "string", "enum": ["profiles_core"] },
+    "pii_fields": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-zA-Z0-9_.]+$" },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "payload": {
+      "type": "object",
+      "properties": {
+        "service_profile_id": { "type": "string", "format": "uuid" },
+        "user_id": { "type": "string", "format": "uuid" },
+        "role": { "type": "string", "enum": ["model", "photographer", "videographer", "creator", "fansub"] },
+        "display_name": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "slug": { "type": "string", "minLength": 3, "maxLength": 160, "pattern": "^[a-z0-9-]+$" },
+        "city": { "type": "string", "minLength": 1 },
+        "region": { "type": ["string", "null"] },
+        "country": { "type": "string", "pattern": "^[A-Z]{2}$" },
+        "safe_mode_band": { "type": "integer", "minimum": 0, "maximum": 2 },
+        "completeness_score": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "instant_book": { "type": "boolean" },
+        "genres": {
+          "type": "array",
+          "items": { "type": "string" },
+          "maxItems": 12,
+          "uniqueItems": true
+        },
+        "languages": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[a-z]{2}$" },
+          "maxItems": 5,
+          "uniqueItems": true
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string", "maxLength": 32 },
+          "maxItems": 12,
+          "uniqueItems": true
+        },
+        "published_at": { "type": "string", "format": "date-time" },
+        "contact_email_hash": { "type": "string", "pattern": "^[A-Fa-f0-9]{64}$" },
+        "contact_phone_hash": {
+          "type": ["string", "null"],
+          "pattern": "^[A-Fa-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "service_profile_id",
+        "user_id",
+        "role",
+        "display_name",
+        "slug",
+        "city",
+        "country",
+        "safe_mode_band",
+        "completeness_score",
+        "instant_book",
+        "published_at",
+        "contact_email_hash"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "event",
+    "version",
+    "occurred_at",
+    "emitted_at",
+    "source",
+    "privacy_tier",
+    "retention_class",
+    "pii_fields",
+    "payload"
+  ],
+  "additionalProperties": false
+}

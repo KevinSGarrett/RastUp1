@@ -73,6 +73,8 @@ cdk/
 
 Branch protection rules enforce status checks, signed commits, change management tags (security, migration, cost).
 
+- Local guardrails: `make ci` now invokes `infra-preflight` and `infra-smoke` targets, blocking merges if registry, feature flag, runbook, or rotation checks fail.
+
 ## Observability Foundation
 
 - CloudWatch dashboards: `Latency`, `ErrorRate`, `QueueDepth`, `Spend`.
@@ -108,6 +110,14 @@ Branch protection rules enforce status checks, signed commits, change management
    - Stage restore rehearsal + documentation of outcomes.
 
 Each phase must exit with CI evidence and documented runbook updates.
+
+## Implementation Status — 2025-11-26
+
+- **Amplify scaffolding:** `amplify/stack.ts`, `amplify/backend/**`, and `amplify/scripts/print-blueprint.ts` now model Auth, API, Data, Workflow, Media, Search, Observability, Comms, and Admin stacks with guardrails (branch mapping, feature flags, secret rotation).
+- **CDK scaffolding:** `cdk/bin/infra.ts`, `cdk/lib/{org-stack,budgets-stack,identity-stack}.ts`, and `cdk/scripts/run-nag.ts` synthesise Organizations guardrails, budgets, and IAM controls for `dev`, `stage`, and `prod`.
+- **Tooling updates:** New package scripts (`pnpm cdk:synth`, `pnpm cdk:diff`, `pnpm cdk:nag`, `pnpm amplify:plan`) and Makefile loader support (`NODE_TEST_IMPORT=--import tsx`) keep CI aware of TypeScript-based infra artefacts.
+- **Unit coverage:** Node tests under `tests/infra/` validate Amplify blueprint integrity and CDK assembly contents; `make ci` now executes them alongside existing suites.
+- **Next steps:** Extend stacks with resource-level CDK implementations (AppSync schema binding, Aurora migrations, WAF rules) and wire `cdk diff`/`infracost` outputs into attach-pack automation.
 
 ## Testing & Validation Plan
 

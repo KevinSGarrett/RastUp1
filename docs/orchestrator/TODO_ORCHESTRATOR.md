@@ -5,8 +5,59 @@ spec (the giant "Initial prompt for cursor agents..." you wrote) into
 concrete repo artifacts and CI-enforced behavior.
 
 The high-level capabilities are mirrored from `ops/orchestrator_capabilities.yaml`
-and the long-form rules live in your original orchestrator prompt (to be
-copied into a long-spec file later if desired).
+and the long-form rules now live in `docs/orchestrator/LONG_SPEC.md`
+(your original orchestrator prompt, saved into the repo).
+
+---
+
+## Verticals (End-to-End Flows)
+
+This section tracks concrete “vertical” flows that cut across multiple subsystems
+(search, profile, booking, auth, payments, messaging, etc.). Each vertical should have:
+
+- A checklist doc under `docs/checklists/`.
+- Design references under `docs/design/`.
+- At least one WBS item in `ops/wbs.json`.
+- At least one E2E smoke path once the UI is more complete.
+
+### V-001: Search → Profile → Booking → Signup → Payment
+
+Targets:
+
+- `docs/checklists/search_profile_booking.md`
+- `docs/design/foundations.md`
+- `web/app/search`, `web/app/booking`
+- `web/components/Search/*`, `web/components/Profile/*`, `web/components/Booking/*`
+
+Tasks:
+
+- [x] Create vertical checklist file:
+      - `docs/checklists/search_profile_booking.md`.
+- [x] Draft design foundations v0:
+      - `docs/design/foundations.md`.
+- [x] Implement initial search/profile/booking pages wired to stub stores
+      and data sources (WBS-003).
+- [x] Add at least one visible UX improvement to the Search UI
+      (results header + empty state).
+- [ ] Add a dedicated WBS entry in `ops/wbs.json` for
+      “V-001: Search → Profile → Booking → Signup → Payment” that:
+      - References this checklist.
+      - Lists primary code paths (search workspace, profile page, booking page,
+        auth/signup, payment).
+      - Has clear “done” criteria tied to the checklist.
+- [ ] Extend `docs/PROGRESS.md` / `docs/OUTLINE.md` (once implemented) to
+      show per-vertical status using the checklist.
+- [ ] Add an E2E smoke test covering this full vertical (e.g. Playwright):
+      - Search → open profile → start booking → (stub) signup/login → (stub) payment.
+      - Wire into `make ci` or a dedicated `make test-e2e`.
+- [ ] Teach `orchestrator.autopilot_loop` (or a future planner) to prefer
+      completing one vertical before spreading to new ones when reasonable.
+
+### Future verticals (examples)
+
+- [ ] V-002: Messaging → Moderation → Safe Mode
+- [ ] V-003: Studio Management → Availability → Calendar Connect
+- [ ] V-004: Disputes → Evidence → Payouts
 
 ---
 
@@ -73,6 +124,9 @@ Tasks:
       - Roles/permissions for AWS, GitHub, registry, secret manager, etc.
 - [ ] Encode an "autopilot gate" rule: autopilot is only considered ON when
       critical rows (FS, Docker, CI, registry, secret store) are PASS.
+- [ ] Teach the Access Readiness Matrix to consume the existing `tools.infra.preflight`
+      / `tools.infra.smoke` outputs (or their JSON variants) so infra readiness
+      becomes part of the ON/OFF gate instead of a separate manual check.
 
 ---
 
@@ -119,6 +173,15 @@ Tasks:
       document for new sessions/windows.
 - [ ] Define rotation folder structure under
       `docs/orchestrator/rotations/` for session handoff bundles.
+- [ ] Teach the run-review flow to parse "Missing Deliverables" and
+      "Recommended Follow-Ups" sections from agent reports and automatically
+      propose structured backlog entries (e.g., new WBS items or orchestrator
+      TODO bullets) instead of relying only on manual copy/paste.
+- [ ] Add a notion of "strictness tier" per WBS (foundation vs feature vs
+      stretch) in `ops/orchestrator_capabilities.yaml`, and have
+      `apply_latest_review` use it when deciding whether a partially completed
+      WBS is allowed to move to `done` **only if** all follow-ups are captured
+      as explicit backlog items.
 
 ---
 
@@ -172,6 +235,9 @@ Tasks:
 - [ ] Define schema for `ops/tools-manifest.json`:
       - { task_id, agent, selected_plugins, reason, alternatives }.
 - [ ] Ensure agent run reports write entries to both files.
+- [ ] Add a small lint/CI check to keep `ops/model-decisions.jsonl` well-formed
+      and free of stale entries, and to ensure it remains in sync with the
+      models/tools actually used by the orchestrator.
 
 ---
 
@@ -207,22 +273,30 @@ Tasks (planning-level; details to be filled by agents when we reach those WBS it
       - Add expected secret names into the secrets catalog/rotation ledger.
 - [ ] Ensure CI has basic "integration smoke" tests (mocked or sandbox).
 
-
 ---
 
-## Appendix: Candidate External Services (for later evaluation)
+## 10. WBS-001 Follow-Ups (Infra Automation & CI Hardening)
 
-These are NOT active yet; they are options for future integration, to be
-designed and wired in via WBS items and CI, not ad-hoc:
+Context: WBS-001 now gives you a green, guardrail-aware local CI (`make ci`)
+and infra preflight/smoke tooling, but the deep AWS/IaC automation was
+explicitly scoped out of this WBS and needs to land later.
 
-- **Code quality & security**
-  - GitHub Advanced Security / CodeQL
-  - SAST/DAST tools (Snyk, Semgrep, etc.)
-- **Observability**
-  - Error tracking / APM (e.g., Sentry, Datadog, New Relic)
-- **Product integrations**
-  - Email: SES / SendGrid / Postmark (for verification & transactional email)
-  - SMS: Twilio / SNS / MessageBird (for phone verification & alerts)
-  - CAPTCHA: reCAPTCHA / hCaptcha / Cloudflare Turnstile
-- **AI helpers around GitHub**
-  - Bugbot (PR-level review & suggestions)
+Tasks:
+- [ ] Design and implement AWS infra dry-run/static-analysis wrappers under
+      `tools/infra/` (e.g., `cdk diff`, `cfn-lint`, `infracost`, AWS
+      Organizations/AppConfig checks) and surface them via the existing
+      `infra-preflight` / `infra-smoke` targets.
+- [ ] Extend `make ci` and CI workflows to persist JSON artifacts for infra
+      checks (preflight, smoke, rotation) under `docs/test-reports/infra/`
+      and link them from run reports/attach packs.
+- [ ] Automate attach-pack generation for infra/CI runs (zip containing
+      `ci.txt`, `tests.txt`, infra JSON outputs, rotation summaries, manifest)
+      and record the path in run reports so the orchestrator can consume it.
+- [ ] Resolve the `runpy` module caching warnings for repeated
+      `python -m tools.infra.*` invocations (e.g., by using a shared
+      entrypoint function or `importlib`-based dispatch instead of
+      multiple `-m` calls).
+- [ ] Capture the "deep AWS infra" work as explicit WBS items in
+      `ops/por.json` (Amplify/CDK stacks, AWS Organizations/AppConfig
+      bootstrap, IaC static analysis, deployment validation) so the
+      orchestrator can sequence them after WBS-001.

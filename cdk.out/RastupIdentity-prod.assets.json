@@ -1,0 +1,21 @@
+{
+  "version": "48.0.0",
+  "files": {
+    "69e0d614085a9e5eaa14921c1e2fd7e67d57b614394501d64f805a65f7ddb24e": {
+      "displayName": "RastupIdentity-prod Template",
+      "source": {
+        "path": "RastupIdentity-prod.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "029530099913-us-east-1-8eefd6d7": {
+          "bucketName": "cdk-hnb659fds-assets-029530099913-us-east-1",
+          "objectKey": "69e0d614085a9e5eaa14921c1e2fd7e67d57b614394501d64f805a65f7ddb24e.json",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::029530099913:role/cdk-hnb659fds-file-publishing-role-029530099913-us-east-1"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}

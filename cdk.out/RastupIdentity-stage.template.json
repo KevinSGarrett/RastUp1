@@ -1,0 +1,334 @@
+{
+ "Description": "IAM roles and break-glass controls for stage.",
+ "Resources": {
+  "PipelineRoleDCFDBB91": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "codebuild.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Description": "CI/CD pipeline role for Amplify and CDK deployment.",
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/AdministratorAccess-Amplify"
+       ]
+      ]
+     }
+    ],
+    "MaxSessionDuration": 43200,
+    "RoleName": "rastup-stage-pipeline",
+    "Tags": [
+     {
+      "Key": "rastup:component",
+      "Value": "identity"
+     },
+     {
+      "Key": "rastup:environment",
+      "Value": "stage"
+     },
+     {
+      "Key": "rastup:managed-by",
+      "Value": "cdk"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "RastupIdentity-stage/PipelineRole/Resource",
+    "cdk_nag": {
+     "rules_to_suppress": [
+      {
+       "reason": "CI/CD pipeline role intentionally uses AWS managed AdministratorAccess-Amplify while the team iterates toward a least-privilege custom policy.",
+       "id": "AwsSolutions-IAM4",
+       "applies_to": [
+        "Policy::arn:<AWS::Partition>:iam::aws:policy/AdministratorAccess-Amplify"
+       ]
+      },
+      {
+       "reason": "Pipeline requires wildcard resource access for configuration and secret reads during bootstrap; will be narrowed once resource boundaries stabilize.",
+       "id": "AwsSolutions-IAM5",
+       "applies_to": [
+        "Resource::*"
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "PipelineRoleDefaultPolicy77A82A74": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "appconfig:GetConfiguration",
+        "appconfig:StartConfigurationSession"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "PipelineRoleDefaultPolicy77A82A74",
+    "Roles": [
+     {
+      "Ref": "PipelineRoleDCFDBB91"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "RastupIdentity-stage/PipelineRole/DefaultPolicy/Resource",
+    "cdk_nag": {
+     "rules_to_suppress": [
+      {
+       "reason": "CI/CD pipeline role intentionally uses AWS managed AdministratorAccess-Amplify while the team iterates toward a least-privilege custom policy.",
+       "id": "AwsSolutions-IAM4",
+       "applies_to": [
+        "Policy::arn:<AWS::Partition>:iam::aws:policy/AdministratorAccess-Amplify"
+       ]
+      },
+      {
+       "reason": "Pipeline requires wildcard resource access for configuration and secret reads during bootstrap; will be narrowed once resource boundaries stabilize.",
+       "id": "AwsSolutions-IAM5",
+       "applies_to": [
+        "Resource::*"
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "BreakGlassAdmin3E42B078": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "AWS": {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":iam::029530099913:root"
+          ]
+         ]
+        }
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Description": "Break-glass admin role requiring MFA and ticket annotation.",
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/AdministratorAccess"
+       ]
+      ]
+     }
+    ],
+    "MaxSessionDuration": 14400,
+    "Policies": [
+     {
+      "PolicyDocument": {
+       "Statement": [
+        {
+         "Action": [
+          "sts:SetSessionTags",
+          "sts:TagSession"
+         ],
+         "Effect": "Allow",
+         "Resource": "*"
+        }
+       ],
+       "Version": "2012-10-17"
+      },
+      "PolicyName": "SessionControl"
+     }
+    ],
+    "RoleName": "rastup-stage-breakglass-admin",
+    "Tags": [
+     {
+      "Key": "rastup:component",
+      "Value": "identity"
+     },
+     {
+      "Key": "rastup:environment",
+      "Value": "stage"
+     },
+     {
+      "Key": "rastup:managed-by",
+      "Value": "cdk"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "RastupIdentity-stage/BreakGlassAdmin/Resource",
+    "cdk_nag": {
+     "rules_to_suppress": [
+      {
+       "reason": "Break-glass admin intentionally uses full AdministratorAccess for emergency recovery; access is gated by MFA and ticketing processes.",
+       "id": "AwsSolutions-IAM4",
+       "applies_to": [
+        "Policy::arn:<AWS::Partition>:iam::aws:policy/AdministratorAccess"
+       ]
+      },
+      {
+       "reason": "Break-glass admin needs wildcard permissions for rare catastrophic scenarios; sessions are time-bounded and audited.",
+       "id": "AwsSolutions-IAM5",
+       "applies_to": [
+        "Resource::*"
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "SupportRole68F72D2C": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "AWS": {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":iam::029530099913:root"
+          ]
+         ]
+        }
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Description": "Support engineering role with scoped read-only permissions.",
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/ReadOnlyAccess"
+       ]
+      ]
+     }
+    ],
+    "MaxSessionDuration": 14400,
+    "RoleName": "rastup-stage-support",
+    "Tags": [
+     {
+      "Key": "rastup:component",
+      "Value": "identity"
+     },
+     {
+      "Key": "rastup:environment",
+      "Value": "stage"
+     },
+     {
+      "Key": "rastup:managed-by",
+      "Value": "cdk"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "RastupIdentity-stage/SupportRole/Resource",
+    "cdk_nag": {
+     "rules_to_suppress": [
+      {
+       "reason": "Support role uses AWS managed ReadOnlyAccess to provide broad visibility while a more scoped support policy is designed.",
+       "id": "AwsSolutions-IAM4",
+       "applies_to": [
+        "Policy::arn:<AWS::Partition>:iam::aws:policy/ReadOnlyAccess"
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/yWM2wmAMAwAZ/G/jRJHcAGpA0itEWJrC8YHIu4u1a+7+zkErCuoCnuKdqPXgQe4u806r+wpPdsFbpMCqWaKH9sU2F05f3uUIUn76uhRMY0Es5QHImC+zsKs1z1uvBCYny9ENTpucgAAAA=="
+   },
+   "Metadata": {
+    "aws:cdk:path": "RastupIdentity-stage/CDKMetadata/Default"
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

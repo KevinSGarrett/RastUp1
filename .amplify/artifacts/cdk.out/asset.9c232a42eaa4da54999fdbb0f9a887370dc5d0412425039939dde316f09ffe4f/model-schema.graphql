@@ -1,0 +1,18 @@
+type ViewerReturnType @aws_cognito_user_pools
+{
+  id: ID!
+  email: String
+  groups: [String]!
+  username: String
+  isBuyer: Boolean
+  isSeller: Boolean
+  isStudioOwner: Boolean
+  isAdmin: Boolean
+  isTrust: Boolean
+  isSupport: Boolean
+  isFinance: Boolean
+}
+
+type Query {
+  viewer: ViewerReturnType @function(name: "FnViewer") @auth(rules: [{allow: private}])
+}

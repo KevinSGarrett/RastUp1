@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://docs.rastup.internal/events/payments.payout.released.v1.schema.json",
+  "title": "payments.payout.released",
+  "description": "Emitted when funds are released to a provider following booking completion or manual approval.",
+  "type": "object",
+  "properties": {
+    "event": { "const": "payments.payout.released" },
+    "version": { "const": 1 },
+    "occurred_at": { "type": "string", "format": "date-time" },
+    "emitted_at": { "type": "string", "format": "date-time" },
+    "source": { "type": "string", "minLength": 3, "maxLength": 120 },
+    "privacy_tier": { "type": "string", "enum": ["tier1"] },
+    "retention_class": { "type": "string", "enum": ["payments_core"] },
+    "pii_fields": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-zA-Z0-9_.]+$" },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "payload": {
+      "type": "object",
+      "properties": {
+        "payout_id": { "type": "string", "pattern": "^po_\w+$" },
+        "provider_user_id": { "type": "string", "format": "uuid" },
+        "booking_id": { "type": "string", "format": "uuid" },
+        "leg_id": { "type": "string", "format": "uuid" },
+        "amount_cents": { "type": "integer", "minimum": 0 },
+        "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+        "transfer_reference": { "type": "string" },
+        "bank_account_hash": { "type": "string", "pattern": "^[A-Fa-f0-9]{64}$" },
+        "released_at": { "type": "string", "format": "date-time" },
+        "payout_method": { "type": "string", "enum": ["standard", "instant"] },
+        "fees_cents": { "type": "integer", "minimum": 0 }
+      },
+      "required": [
+        "payout_id",
+        "provider_user_id",
+        "booking_id",
+        "leg_id",
+        "amount_cents",
+        "currency",
+        "transfer_reference",
+        "bank_account_hash",
+        "released_at",
+        "payout_method",
+        "fees_cents"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "event",
+    "version",
+    "occurred_at",
+    "emitted_at",
+    "source",
+    "privacy_tier",
+    "retention_class",
+    "pii_fields",
+    "payload"
+  ],
+  "additionalProperties": false
+}

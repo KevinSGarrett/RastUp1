@@ -1,0 +1,44 @@
+{
+    "version": 1,
+    "models": {},
+    "enums": {},
+    "nonModels": {
+        "ViewerReturnType": {
+            "name": "ViewerReturnType",
+            "fields": {
+                "id": {
+                    "name": "id",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": true,
+                    "attributes": []
+                },
+                "email": {
+                    "name": "email",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "groups": {
+                    "name": "groups",
+                    "isArray": true,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": [],
+                    "isArrayNullable": false
+                }
+            }
+        }
+    },
+    "queries": {
+        "viewer": {
+            "name": "viewer",
+            "isArray": false,
+            "type": {
+                "nonModel": "ViewerReturnType"
+            },
+            "isRequired": false
+        }
+    }
+}

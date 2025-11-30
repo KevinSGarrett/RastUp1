@@ -1,0 +1,29 @@
+type Profile @model @auth(rules: [{allow: private}])
+{
+  id: ID! @primaryKey
+  email: String
+  displayName: String
+  avatarUrl: String
+  city: String
+  country: String
+  bio: String
+}
+
+type ViewerReturnType @aws_cognito_user_pools
+{
+  id: ID!
+  email: String
+  username: String
+  groups: [String]!
+  isBuyer: Boolean
+  isSeller: Boolean
+  isStudioOwner: Boolean
+  isAdmin: Boolean
+  isTrust: Boolean
+  isSupport: Boolean
+  isFinance: Boolean
+}
+
+type Query {
+  viewer: ViewerReturnType @function(name: "FnViewer") @auth(rules: [{allow: private}])
+}

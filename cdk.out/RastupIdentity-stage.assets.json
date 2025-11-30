@@ -1,0 +1,21 @@
+{
+  "version": "48.0.0",
+  "files": {
+    "0277d6d0fe92bdac7703591bd7edd1b669931d5c3aac31d8249b2f77d0d4b43c": {
+      "displayName": "RastupIdentity-stage Template",
+      "source": {
+        "path": "RastupIdentity-stage.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "029530099913-us-east-1-3238e720": {
+          "bucketName": "cdk-hnb659fds-assets-029530099913-us-east-1",
+          "objectKey": "0277d6d0fe92bdac7703591bd7edd1b669931d5c3aac31d8249b2f77d0d4b43c.json",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::029530099913:role/cdk-hnb659fds-file-publishing-role-029530099913-us-east-1"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}

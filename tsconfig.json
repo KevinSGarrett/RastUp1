@@ -23,7 +23,9 @@
     "web/**/*.tsx",
     "services/**/*.ts",
     "tools/**/*.ts",
-    "tests/**/*.ts"
+    "tests/**/*.ts",
+    "amplify/**/*.ts",
+    "cdk/**/*.ts"
   ],
   "exclude": [
     "node_modules",
