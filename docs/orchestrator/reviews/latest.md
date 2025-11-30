@@ -1,9 +1,9 @@
 # Orchestrator Review
 
-- Source: **docs/runs/2025-11-24-WBS-001-AGENT-1-Part2.md**
-- Input size: **4879 chars**
-- Assistant‑manager: **anthropic/claude-3-5-haiku-20241022** (16236 ms)
-- Primary‑decider: **openai/gpt-5** (27591 ms)
+- Source: **docs/runs/2025-11-29-WBS-003-AGENT-2.md**
+- Input size: **6237 chars**
+- Assistant‑manager: **anthropic/claude-3-5-haiku-20241022** (19915 ms)
+- Primary‑decider: **openai/gpt-5** (26619 ms)
 
 ## Assistant‑Manager Review
 
@@ -11,79 +11,121 @@
 
 ## Risk Log
 
-1. **Upstream Delta Risk**
-   - `ops/model-decisions.jsonl` remains an unresolved upstream delta
-   - Potential integration or compatibility issues if left unaddressed
-   - Risk Level: Medium
+1. **TypeScript Compilation Failures**
+   - Unresolved TypeScript errors in `web/app/app/*`
+   - Missing Amplify typings for `viewer`, `Booking`, and `amplify/data/resource`
+   - Risk Level: High - Blocks CI/CD pipeline and future integration
 
-2. **Module Caching Warning**
-   - Runtime warnings from consecutive `python -m` invocations
-   - Potential performance and isolation concerns in test execution
-   - Risk Level: Low
+2. **Incomplete Authentication Infrastructure**
+   - Pending integrations for:
+     - Real IdP/SMS providers
+     - JWKS fetch caching
+     - PKCE flows
+     - Secrets management
+   - Risk Level: Medium - Potential security and integration gaps
 
-3. **Incomplete Infrastructure Automation**
-   - Infra targets not fully integrated into orchestrator automation
-   - Manual artifact collection still required
-   - Risk Level: Medium
+3. **Dependency Constraints**
+   - Depends on `WBS-001`
+   - Unresolved frontend typing dependencies
+   - Risk Level: Medium - Potential blocking dependencies
 
 ## Missing Deliverables
 
-1. AWS Infrastructure Deployment
-   - No AWS dry-run hooks implemented
-   - Missing Amplify/CDK stack scaffolding
-   - No static analysis wrappers for infrastructure code
-
-2. Comprehensive CI/CD Integration
-   - Attach-pack generation not automated
-   - Incomplete orchestrator automation for new infrastructure targets
-
-3. Test Runner Improvements
-   - No resolution for Node test runner's recursive testing limitation
-   - No comprehensive test isolation strategy
+1. GraphQL/AppSync resolver implementations
+2. Repository persistence layer
+3. Real IdP and SMS integration components
+4. Complete infrastructure automation
+5. End-to-end security testing framework
+6. Observability dashboards and runbooks
 
 ## Recommended Follow-Ups
 
-1. **Infrastructure Automation Tasks**
-   - [ ] Implement AWS dry-run wrappers (`cdk diff`, `cfn-lint`, `infracost`)
-   - [ ] Develop initial Amplify/CDK stack templates
-   - [ ] Create static analysis pipeline for infrastructure code
-   - [ ] Automate attach-pack generation in CI workflow
+1. **Immediate TypeScript Resolution**
+   - Assign frontend team to implement missing Amplify typings
+   - Create explicit typing for `viewer`, `Booking`, and data resources
+   - Update `tsconfig.ci.json` to resolve compilation errors
 
-2. **Testing and Execution Improvements**
-   - [ ] Investigate alternative Node test runners with recursive testing support
-   - [ ] Develop test runner isolation strategy to mitigate module caching warnings
-   - [ ] Create comprehensive test discovery and execution framework
+2. **Authentication Infrastructure Completion**
+   - Queue tasks for:
+     - JWKS caching mechanism implementation
+     - OAuth token exchange logic
+     - SMS delivery integration
+     - Secrets management strategy
+   - Develop comprehensive secrets injection framework
 
-3. **Upstream Delta Resolution**
-   - [ ] Review and resolve pending changes in `ops/model-decisions.jsonl`
-   - [ ] Establish clear merge/integration strategy for upstream deltas
+3. **Integration and Testing Roadmap**
+   - Create detailed plan for GraphQL resolver integration
+   - Design end-to-end security testing strategy
+   - Develop observability dashboards for authentication flows
+   - Create runbooks for authentication error scenarios
 
-4. **Continuous Integration Enhancements**
-   - [ ] Fully integrate new infrastructure targets into orchestrator automation
-   - [ ] Develop automated artifact collection and reporting mechanisms
-   - [ ] Implement comprehensive CI gating for infrastructure and application code
+4. **Dependency Management**
+   - Schedule coordination meeting with `WBS-001` team
+   - Validate and document interdependency requirements
+   - Establish clear integration checkpoints
 
-Priority: High - These follow-ups are critical for maintaining project momentum and ensuring robust infrastructure and testing processes.
+5. **Documentation and Knowledge Transfer**
+   - Update architecture documentation with current auth module details
+   - Create comprehensive integration guides for future agents
+   - Document current limitations and planned improvements
+
+**Priority**: High-priority items are TypeScript resolution and authentication infrastructure completion.
 
 ## Final Orchestrator Decision
 
-Overall state and rationale
-- Status: Not ready to mark done. Core workflows run, but multiple critical gaps remain in infrastructure automation, CI gating, and testing ergonomics. An unresolved upstream delta (ops/model-decisions.jsonl) increases integration risk. Missing AWS dry-run hooks and incomplete orchestrator integration for infra targets block safe iteration.
-- Rationale for conservatism: Without CI-enforced dry-run and static analysis for infra, we risk regressions and cost/safety issues. Test runner gaps and manual artifact collection reduce reliability and observability. The upstream delta could cause merge or behavior drift.
-
-Key risks and impact
-- Medium: Unresolved upstream delta (ops/model-decisions.jsonl) may cause merge conflicts and policy drift; must be resolved before expanding automation.
-- Medium: Incomplete infra automation (no cdk diff/cfn-lint/infracost, no Amplify/CDK scaffolding, no static checks); risk of unintended changes and poor visibility.
-- Medium: CI/CD integration gaps (no automated attach-pack, no artifact collection/reporting, infra targets not wired to orchestrator) reduce traceability and deployment safety.
-- Low: Module caching warnings from consecutive python -m runs; minor but symptomatic of insufficient test isolation.
-- Medium: Test runner limitations (Node recursive testing, isolation strategy missing) reduce coverage and signal quality.
+Overall state and risks
+- Current state: Not releasable. CI is blocked by TypeScript compilation failures; several critical components (auth, persistence, resolvers, infra automation, security testing, observability) are missing or incomplete. Dependency on WBS-001 remains unresolved.
+- Key risks:
+  - High: TypeScript/Amplify typing gaps in web/app/app/* block CI/CD and mask further integration issues.
+  - Medium: Authentication infrastructure gaps (IdP/SMS integrations, JWKS caching, PKCE, secrets handling) create security and integration risk.
+  - Medium: External dependency WBS-001 may block downstream delivery if not coordinated.
+  - Additional: Missing resolvers, persistence, automation, and test/observability assets extend critical path and threaten schedule predictability.
 
 Decision
-- Keep IN PROGRESS. Critical deliverables (infra dry-run pipeline, upstream delta resolution, CI gating) are not complete; risks remain above acceptable thresholds.
+- Not ready to mark DONE. Multiple high- and medium-risk items remain, CI is red, and critical deliverables are absent.
 
-Prioritized next actions (owners and target dates)
-1) Resolve upstream delta and define policy integration
-   - Action: Review and reconcile ops/model-decisions.jsonl with upstream; document merge/integration policy and add pre-commit
+Rationale
+- We lack working builds, integrated auth, persistence, and E2E test/observability foundations. Risk profile is elevated, and dependencies are not yet retired. Biasing toward safety, we keep this IN PROGRESS until CI is green and P0s are closed.
+
+Prioritized next actions, owners, and target dates
+P0 — Unblock CI (TypeScript/Amplify typings)
+1) Define and implement missing Amplify/Domain typings (viewer, Booking, amplify/data/resource)
+   - Owner: Frontend Lead (FE: A. Patel)
+   - Actions: add explicit interfaces and ambient module declarations; generate/update Amplify types; tighten imports
+   - Target: 2025-12-04
+   - Acceptance: tsc --noEmit passes locally and in CI; no any suppressions introduced without TODO ticket
+
+2) Update tsconfig.ci.json and CI step
+   - Owner: FE + DevOps (S. Kim)
+   - Actions: enforce strict type checking in CI; fail on TS errors; cache node_modules and type generation artifacts
+   - Target: 2025-12-04
+   - Acceptance: CI shows green compile step on main; cache effectiveness verified (<2 min install/build)
+
+3) Resolve external typing dependencies
+   - Owner: FE (A. Patel) with Architecture (M. Rossi)
+   - Actions: lock versions; document peer deps; add types for 3rd-party libs or replace with typed alternatives
+   - Target: 2025-12-05
+   - Acceptance: zero TS suppressions; dependency audit updated
+
+P0 — Dependency alignment (WBS-001)
+4) Coordination checkpoint with WBS-001
+   - Owner: PM (J. Rivera)
+   - Actions: confirm interfaces, timelines, blocking items; agree on integration contract and dates
+   - Target: 2025-12-02
+   - Acceptance: signed integration notes, risks and owners captured; dates added to roadmap
+
+P1 — Authentication infrastructure completion
+5) JWKS fetch + caching module
+   - Owner: Backend Lead (BE: N. Chen)
+   - Actions: implement JWKS retrieval with cache/TTL and rotation; fallback and rate limiting; metrics
+   - Target: 2025-12-11
+   - Acceptance: unit/integration tests with mocked JWKS; performance budget documented; dashboards emit cache hit rate
+
+6) PKCE + OAuth/OIDC flow integration
+   - Owner: BE + FE (N. Chen / A. Patel)
+   - Actions: end-to-end auth code + PKCE; token exchange; refresh flow; error handling
+   - Target: 2025-12-13
+   -
 
 ACCEPTANCE: no
 Decision: in_progress

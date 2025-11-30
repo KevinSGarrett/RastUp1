@@ -50,6 +50,10 @@ def validate_manifest(manifest: dict) -> list[str]:
             problems.append("Event entry missing string event_name.")
             continue
 
+        if not isinstance(version, int) or version <= 0:
+            problems.append(f"{event_name}: version must be a positive integer.")
+            continue
+
         if (event_name, version) in seen:
             problems.append(f"Duplicate manifest entry for {event_name} v{version}.")
             continue
@@ -64,6 +68,12 @@ def validate_manifest(manifest: dict) -> list[str]:
         if not schema_path.exists():
             problems.append(f"{event_name} v{version}: schema file {schema_file} not found.")
             continue
+
+        expected_filename = f"{event_name}.v{version}.schema.json"
+        if schema_file != expected_filename:
+            problems.append(
+                f"{event_name} v{version}: schema_file must be {expected_filename}, found {schema_file}."
+            )
 
         expected_hash = entry.get("sha256")
         actual_hash = sha256_for_file(schema_path)
@@ -80,6 +90,10 @@ def validate_manifest(manifest: dict) -> list[str]:
         retention_class = entry.get("retention_class")
         if not retention_class:
             problems.append(f"{event_name} v{version}: retention_class is required.")
+
+        sha_value = entry.get("sha256")
+        if not isinstance(sha_value, str) or len(sha_value) != 64 or any(ch not in "0123456789abcdef" for ch in sha_value.lower()):
+            problems.append(f"{event_name} v{version}: sha256 must be a 64-character hex string.")
 
     return problems
 

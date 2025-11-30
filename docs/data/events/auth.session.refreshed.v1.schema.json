@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://docs.rastup.internal/events/auth.session.refreshed.v1.schema.json",
+  "title": "auth.session.refreshed",
+  "description": "Emitted when an authenticated session rotates its refresh token.",
+  "type": "object",
+  "properties": {
+    "event": { "const": "auth.session.refreshed" },
+    "version": { "const": 1 },
+    "occurred_at": { "type": "string", "format": "date-time" },
+    "emitted_at": { "type": "string", "format": "date-time" },
+    "source": { "type": "string", "minLength": 3, "maxLength": 120 },
+    "privacy_tier": { "type": "string", "enum": ["restricted"] },
+    "retention_class": { "type": "string", "enum": ["security_core"] },
+    "pii_fields": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z0-9_.]+$" },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "payload": {
+      "type": "object",
+      "properties": {
+        "session_id": { "type": "string", "format": "uuid" },
+        "user_id": { "type": "string", "format": "uuid" },
+        "refresh_reason": { "type": "string", "minLength": 2, "maxLength": 80 },
+        "idle_expires_at": { "type": "string", "format": "date-time" },
+        "rotated_at": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "session_id",
+        "user_id",
+        "refresh_reason",
+        "idle_expires_at",
+        "rotated_at"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "event",
+    "version",
+    "occurred_at",
+    "emitted_at",
+    "source",
+    "privacy_tier",
+    "retention_class",
+    "pii_fields",
+    "payload"
+  ],
+  "additionalProperties": false
+}

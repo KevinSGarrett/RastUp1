@@ -1,6 +1,15 @@
 // amplify/backend.ts
-import { defineBackend } from '@aws-amplify/backend';
+import { defineBackend } from "@aws-amplify/backend";
+import { auth } from "./auth/resource";
+import { data } from "./data/resource";
 
-// For now, this is just an empty backend so that `ampx sandbox` can run.
-// We’ll wire in actual auth/api/data resources later.
-defineBackend({});
+/**
+ * Amplify Gen 2 backend root.
+ *
+ * This wires up Auth + Data. We can hang additional resources
+ * (api, storage, etc.) off this same backend definition.
+ */
+defineBackend({
+  auth,
+  data,
+});

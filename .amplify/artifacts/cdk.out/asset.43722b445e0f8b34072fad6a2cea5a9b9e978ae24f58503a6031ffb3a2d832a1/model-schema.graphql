@@ -1,0 +1,10 @@
+type ViewerReturnType @aws_cognito_user_pools
+{
+  id: ID!
+  email: String
+  groups: [String]!
+}
+
+type Query {
+  viewer: ViewerReturnType @function(name: "FnViewer") @auth(rules: [{allow: private}])
+}

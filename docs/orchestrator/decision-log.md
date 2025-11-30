@@ -36,3 +36,7 @@ def log_decision(entry: DecisionLogEntry):
 - 2025-11-24 19:50:41Z WBS=WBS-001 acceptance=no ci=FAIL gate_apply=BLOCK review=./docs/orchestrator/reviews/latest.md run_report=docs/runs/2025-11-24-WBS-001-AGENT-1.md
 - 2025-11-24 20:22:14Z WBS=WBS-001 acceptance=no ci=PASS gate_apply=BLOCK review=./docs/orchestrator/reviews/latest.md run_report=docs/runs/2025-11-24-WBS-001-AGENT-1-Part2.md
 - 2025-11-25 02:29:25Z WBS=WBS-001 acceptance=no ci=PASS gate_apply=BLOCK review=./docs/orchestrator/reviews/latest.md run_report=docs/runs/2025-11-24-WBS-001-AGENT-1-Part2.md
+- 2025-11-27 04:01:52Z WBS=WBS-004 acceptance=no ci=UNKNOWN gate_apply=BLOCK review=./docs/orchestrator/reviews/latest.md run_report=docs/runs/2025-11-26-WBS-004-AGENT-4.md
+- 2025-11-27 04:04:15Z WBS=WBS-004 acceptance=no ci=UNKNOWN gate_apply=BLOCK review=./docs/orchestrator/reviews/latest.md run_report=docs/runs/2025-11-26-WBS-004-AGENT-4.md
+- 2025-11-27 04:20:29Z WBS=WBS-001 acceptance=no ci=PASS gate_apply=BLOCK review=./docs/orchestrator/reviews/latest.md run_report=docs/runs/2025-11-27-WBS-001-AGENT-1.md
+- 2025-11-30 03:41:13Z WBS=WBS-003 acceptance=no ci=UNKNOWN gate_apply=BLOCK review=./docs/orchestrator/reviews/latest.md run_report=docs/runs/2025-11-29-WBS-003-AGENT-2.md

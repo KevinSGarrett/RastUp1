@@ -1,0 +1,100 @@
+{
+    "version": 1,
+    "models": {},
+    "enums": {},
+    "nonModels": {
+        "ViewerReturnType": {
+            "name": "ViewerReturnType",
+            "fields": {
+                "id": {
+                    "name": "id",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": true,
+                    "attributes": []
+                },
+                "email": {
+                    "name": "email",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "groups": {
+                    "name": "groups",
+                    "isArray": true,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": [],
+                    "isArrayNullable": false
+                },
+                "username": {
+                    "name": "username",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "isBuyer": {
+                    "name": "isBuyer",
+                    "isArray": false,
+                    "type": "Boolean",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "isSeller": {
+                    "name": "isSeller",
+                    "isArray": false,
+                    "type": "Boolean",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "isStudioOwner": {
+                    "name": "isStudioOwner",
+                    "isArray": false,
+                    "type": "Boolean",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "isAdmin": {
+                    "name": "isAdmin",
+                    "isArray": false,
+                    "type": "Boolean",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "isTrust": {
+                    "name": "isTrust",
+                    "isArray": false,
+                    "type": "Boolean",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "isSupport": {
+                    "name": "isSupport",
+                    "isArray": false,
+                    "type": "Boolean",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "isFinance": {
+                    "name": "isFinance",
+                    "isArray": false,
+                    "type": "Boolean",
+                    "isRequired": false,
+                    "attributes": []
+                }
+            }
+        }
+    },
+    "queries": {
+        "viewer": {
+            "name": "viewer",
+            "isArray": false,
+            "type": {
+                "nonModel": "ViewerReturnType"
+            },
+            "isRequired": false
+        }
+    }
+}

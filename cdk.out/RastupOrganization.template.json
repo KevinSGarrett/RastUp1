@@ -1,0 +1,330 @@
+{
+ "Description": "Bootstrap AWS Organizations structure, guardrails, and service control policies for Rastup environments.",
+ "Resources": {
+  "RootOu": {
+   "Type": "AWS::Organizations::OrganizationalUnit",
+   "Properties": {
+    "Name": "rastup",
+    "ParentId": "r-root"
+   },
+   "Metadata": {
+    "aws:cdk:path": "RastupOrganization/RootOu"
+   }
+  },
+  "DEVOu": {
+   "Type": "AWS::Organizations::OrganizationalUnit",
+   "Properties": {
+    "Name": "OU-DEV",
+    "ParentId": {
+     "Fn::GetAtt": [
+      "RootOu",
+      "Id"
+     ]
+    },
+    "Tags": [
+     {
+      "Key": "rastup:component",
+      "Value": "organizations"
+     },
+     {
+      "Key": "rastup:environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "rastup:managed-by",
+      "Value": "cdk"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "RastupOrganization/DEVOu"
+   }
+  },
+  "devGuardrails": {
+   "Type": "AWS::Organizations::Policy",
+   "Properties": {
+    "Content": {
+     "Version": "2012-10-17",
+     "Statement": [
+      {
+       "Sid": "DenyLegacyAmplify",
+       "Effect": "Deny",
+       "Action": [
+        "amplify:CreateApp",
+        "amplify:CreateBranch",
+        "amplify:CreateBackendEnvironment"
+       ],
+       "Resource": "*",
+       "Condition": {
+        "StringLike": {
+         "aws:RequestedRegion": [
+          "us-east-1"
+         ]
+        }
+       }
+      },
+      {
+       "Sid": "DenyWildcardIam",
+       "Effect": "Deny",
+       "Action": "iam:CreatePolicy",
+       "Resource": "*",
+       "Condition": {
+        "StringEquals": {
+         "aws:ResourceTag/rastup:managed-by": "cdk"
+        }
+       }
+      }
+     ]
+    },
+    "Description": "Guardrails for dev preventing legacy Amplify Classic and wildcard IAM.",
+    "Name": "scp-dev",
+    "TargetIds": [
+     {
+      "Fn::GetAtt": [
+       "DEVOu",
+       "Id"
+      ]
+     }
+    ],
+    "Type": "SERVICE_CONTROL_POLICY"
+   },
+   "Metadata": {
+    "aws:cdk:path": "RastupOrganization/devGuardrails"
+   }
+  },
+  "STAGEOu": {
+   "Type": "AWS::Organizations::OrganizationalUnit",
+   "Properties": {
+    "Name": "OU-STAGE",
+    "ParentId": {
+     "Fn::GetAtt": [
+      "RootOu",
+      "Id"
+     ]
+    },
+    "Tags": [
+     {
+      "Key": "rastup:component",
+      "Value": "organizations"
+     },
+     {
+      "Key": "rastup:environment",
+      "Value": "stage"
+     },
+     {
+      "Key": "rastup:managed-by",
+      "Value": "cdk"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "RastupOrganization/STAGEOu"
+   }
+  },
+  "stageGuardrails": {
+   "Type": "AWS::Organizations::Policy",
+   "Properties": {
+    "Content": {
+     "Version": "2012-10-17",
+     "Statement": [
+      {
+       "Sid": "DenyLegacyAmplify",
+       "Effect": "Deny",
+       "Action": [
+        "amplify:CreateApp",
+        "amplify:CreateBranch",
+        "amplify:CreateBackendEnvironment"
+       ],
+       "Resource": "*",
+       "Condition": {
+        "StringLike": {
+         "aws:RequestedRegion": [
+          "us-east-1"
+         ]
+        }
+       }
+      },
+      {
+       "Sid": "DenyWildcardIam",
+       "Effect": "Deny",
+       "Action": "iam:CreatePolicy",
+       "Resource": "*",
+       "Condition": {
+        "StringEquals": {
+         "aws:ResourceTag/rastup:managed-by": "cdk"
+        }
+       }
+      }
+     ]
+    },
+    "Description": "Guardrails for stage preventing legacy Amplify Classic and wildcard IAM.",
+    "Name": "scp-stage",
+    "TargetIds": [
+     {
+      "Fn::GetAtt": [
+       "STAGEOu",
+       "Id"
+      ]
+     }
+    ],
+    "Type": "SERVICE_CONTROL_POLICY"
+   },
+   "Metadata": {
+    "aws:cdk:path": "RastupOrganization/stageGuardrails"
+   }
+  },
+  "PRODOu": {
+   "Type": "AWS::Organizations::OrganizationalUnit",
+   "Properties": {
+    "Name": "OU-PROD",
+    "ParentId": {
+     "Fn::GetAtt": [
+      "RootOu",
+      "Id"
+     ]
+    },
+    "Tags": [
+     {
+      "Key": "rastup:component",
+      "Value": "organizations"
+     },
+     {
+      "Key": "rastup:environment",
+      "Value": "prod"
+     },
+     {
+      "Key": "rastup:managed-by",
+      "Value": "cdk"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "RastupOrganization/PRODOu"
+   }
+  },
+  "prodGuardrails": {
+   "Type": "AWS::Organizations::Policy",
+   "Properties": {
+    "Content": {
+     "Version": "2012-10-17",
+     "Statement": [
+      {
+       "Sid": "DenyLegacyAmplify",
+       "Effect": "Deny",
+       "Action": [
+        "amplify:CreateApp",
+        "amplify:CreateBranch",
+        "amplify:CreateBackendEnvironment"
+       ],
+       "Resource": "*",
+       "Condition": {
+        "StringLike": {
+         "aws:RequestedRegion": [
+          "us-east-1"
+         ]
+        }
+       }
+      },
+      {
+       "Sid": "DenyWildcardIam",
+       "Effect": "Deny",
+       "Action": "iam:CreatePolicy",
+       "Resource": "*",
+       "Condition": {
+        "StringEquals": {
+         "aws:ResourceTag/rastup:managed-by": "cdk"
+        }
+       }
+      }
+     ]
+    },
+    "Description": "Guardrails for prod preventing legacy Amplify Classic and wildcard IAM.",
+    "Name": "scp-prod",
+    "TargetIds": [
+     {
+      "Fn::GetAtt": [
+       "PRODOu",
+       "Id"
+      ]
+     }
+    ],
+    "Type": "SERVICE_CONTROL_POLICY"
+   },
+   "Metadata": {
+    "aws:cdk:path": "RastupOrganization/prodGuardrails"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/02NQQ6CQAwA3+J9t5D6BB6AwXA2dQFTWLuEdiVK+LshXjzNZC6DgOcSyhOt6kM3+ch32K5GYXK06i0tDxL+kHESha0apP4rFFthc9UglxQ5vPdD62xztt1J6noYtXghAh6LUZn9ksX42UPz4xd5isv1fwAAAA=="
+   },
+   "Metadata": {
+    "aws:cdk:path": "RastupOrganization/CDKMetadata/Default"
+   }
+  }
+ },
+ "Outputs": {
+  "devOuId": {
+   "Description": "Organizational Unit ID for dev",
+   "Value": {
+    "Fn::GetAtt": [
+     "DEVOu",
+     "Id"
+    ]
+   }
+  },
+  "stageOuId": {
+   "Description": "Organizational Unit ID for stage",
+   "Value": {
+    "Fn::GetAtt": [
+     "STAGEOu",
+     "Id"
+    ]
+   }
+  },
+  "prodOuId": {
+   "Description": "Organizational Unit ID for prod",
+   "Value": {
+    "Fn::GetAtt": [
+     "PRODOu",
+     "Id"
+    ]
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

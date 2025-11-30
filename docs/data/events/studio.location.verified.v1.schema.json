@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://docs.rastup.internal/events/studio.location.verified.v1.schema.json",
+  "title": "studio.location.verified",
+  "description": "Emitted when a studio's physical location is verified by Trust & Safety.",
+  "type": "object",
+  "properties": {
+    "event": { "const": "studio.location.verified" },
+    "version": { "const": 1 },
+    "occurred_at": { "type": "string", "format": "date-time" },
+    "emitted_at": { "type": "string", "format": "date-time" },
+    "source": { "type": "string", "minLength": 3, "maxLength": 120 },
+    "privacy_tier": { "type": "string", "enum": ["tier1"] },
+    "retention_class": { "type": "string", "enum": ["studios_core"] },
+    "pii_fields": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-zA-Z0-9_.]+$" },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "payload": {
+      "type": "object",
+      "properties": {
+        "studio_id": { "type": "string", "format": "uuid" },
+        "owner_user_id": { "type": "string", "format": "uuid" },
+        "verified_by": { "type": "string", "format": "uuid" },
+        "verified_at": { "type": "string", "format": "date-time" },
+        "address": {
+          "type": "object",
+          "properties": {
+            "line1": { "type": "string", "minLength": 1 },
+            "line2": { "type": ["string", "null"] },
+            "city": { "type": "string", "minLength": 1 },
+            "region": { "type": ["string", "null"] },
+            "postal_code": { "type": ["string", "null"] },
+            "country": { "type": "string", "pattern": "^[A-Z]{2}$" }
+          },
+          "required": ["line1", "city", "country"],
+          "additionalProperties": false
+        },
+        "geo": {
+          "type": "object",
+          "properties": {
+            "latitude": { "type": "number", "minimum": -90, "maximum": 90 },
+            "longitude": { "type": "number", "minimum": -180, "maximum": 180 }
+          },
+          "required": ["latitude", "longitude"],
+          "additionalProperties": false
+        },
+        "amenities_hash": { "type": "string", "pattern": "^[A-Fa-f0-9]{64}$" },
+        "nsfw_allowed": { "type": "boolean" }
+      },
+      "required": [
+        "studio_id",
+        "owner_user_id",
+        "verified_by",
+        "verified_at",
+        "address",
+        "geo",
+        "amenities_hash",
+        "nsfw_allowed"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "event",
+    "version",
+    "occurred_at",
+    "emitted_at",
+    "source",
+    "privacy_tier",
+    "retention_class",
+    "pii_fields",
+    "payload"
+  ],
+  "additionalProperties": false
+}

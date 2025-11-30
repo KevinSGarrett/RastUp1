@@ -32,6 +32,6 @@
     "cdk:diff": "npx cdk diff --app \"node --import tsx cdk/bin/infra.ts\"",
     "cdk:nag": "node --import tsx cdk/scripts/run-nag.ts",
     "amplify:plan": "node --import tsx amplify/scripts/print-blueprint.ts",
-    "amplify:sandbox": "npx -p @aws-amplify/backend-cli ampx sandbox"
+    "amplify:sandbox": "npx -p @aws-amplify/backend-cli ampx sandbox --outputs-out-dir ./web --outputs-format json"
   }
 }
