@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { Authenticator } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
 import { generateClient } from "aws-amplify/data";
-import type { Schema } from "../../../amplify/data/resource";
+import type { Schema } from "../../../../amplify/data/resource";
 import { configureAmplify } from "../../../lib/amplifyClient";
 
 // Make sure Amplify is configured once on the client
@@ -47,7 +47,9 @@ export default function MePage() {
         const { data, errors } = await client.queries.viewer();
         if (errors && errors.length) {
           console.error(errors);
-          setError(errors.map((e) => e.message ?? String(e)).join("\n"));
+          setError(
+            errors.map((e: any) => e.message ?? String(e)).join("\n"),
+          );
           return;
         }
         setViewer(data as Viewer);
@@ -76,17 +78,21 @@ export default function MePage() {
 
         if (errors && errors.length) {
           console.error(errors);
-          setError(errors.map((e) => e.message ?? String(e)).join("\n"));
+          setError(
+            errors.map((e: any) => e.message ?? String(e)).join("\n"),
+          );
           return;
         }
 
-        if (data) {
-          setProfile(data);
+        const profileData = (data ?? null) as ProfileModel | null;
+
+        if (profileData) {
+          setProfile(profileData);
           setForm({
-            displayName: data.displayName ?? "",
-            city: data.city ?? "",
-            country: data.country ?? "",
-            bio: data.bio ?? "",
+            displayName: profileData.displayName ?? "",
+            city: profileData.city ?? "",
+            country: profileData.country ?? "",
+            bio: profileData.bio ?? "",
           });
         } else {
           // No profile yet – start with sensible defaults
@@ -134,11 +140,13 @@ export default function MePage() {
 
       if (errors && errors.length) {
         console.error(errors);
-        setError(errors.map((e) => e.message ?? String(e)).join("\n"));
+        setError(
+          errors.map((e: any) => e.message ?? String(e)).join("\n"),
+        );
         return;
       }
 
-      setProfile(data ?? null);
+      setProfile((data ?? null) as ProfileModel | null);
     } catch (err: any) {
       console.error(err);
       setError(err?.message ?? String(err));
@@ -158,7 +166,9 @@ export default function MePage() {
           </p>
 
           {/* Identity block */}
-          {loadingViewer && <p style={{ marginTop: "1rem" }}>Loading identity…</p>}
+          {loadingViewer && (
+            <p style={{ marginTop: "1rem" }}>Loading identity…</p>
+          )}
 
           {viewer && (
             <pre
@@ -200,44 +210,94 @@ export default function MePage() {
               <p style={{ marginTop: "0.5rem" }}>Loading profile…</p>
             ) : (
               <>
-                <div style={{ marginTop: "1rem", display: "grid", gap: "0.75rem" }}>
-                  <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <div
+                  style={{
+                    marginTop: "1rem",
+                    display: "grid",
+                    gap: "0.75rem",
+                  }}
+                >
+                  <label
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 4,
+                    }}
+                  >
                     <span>Display name</span>
                     <input
                       type="text"
                       value={form.displayName}
-                      onChange={(e) => handleChange("displayName", e.target.value)}
-                      style={{ padding: "0.4rem 0.6rem", borderRadius: 6 }}
+                      onChange={(e) =>
+                        handleChange("displayName", e.target.value)
+                      }
+                      style={{
+                        padding: "0.4rem 0.6rem",
+                        borderRadius: 6,
+                      }}
                     />
                   </label>
 
-                  <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  <label
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 4,
+                    }}
+                  >
                     <span>City</span>
                     <input
                       type="text"
                       value={form.city}
-                      onChange={(e) => handleChange("city", e.target.value)}
-                      style={{ padding: "0.4rem 0.6rem", borderRadius: 6 }}
+                      onChange={(e) =>
+                        handleChange("city", e.target.value)
+                      }
+                      style={{
+                        padding: "0.4rem 0.6rem",
+                        borderRadius: 6,
+                      }}
                     />
                   </label>
 
-                  <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  <label
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 4,
+                    }}
+                  >
                     <span>Country</span>
                     <input
                       type="text"
                       value={form.country}
-                      onChange={(e) => handleChange("country", e.target.value)}
-                      style={{ padding: "0.4rem 0.6rem", borderRadius: 6 }}
+                      onChange={(e) =>
+                        handleChange("country", e.target.value)
+                      }
+                      style={{
+                        padding: "0.4rem 0.6rem",
+                        borderRadius: 6,
+                      }}
                     />
                   </label>
 
-                  <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  <label
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 4,
+                    }}
+                  >
                     <span>Bio</span>
                     <textarea
                       value={form.bio}
-                      onChange={(e) => handleChange("bio", e.target.value)}
+                      onChange={(e) =>
+                        handleChange("bio", e.target.value)
+                      }
                       rows={4}
-                      style={{ padding: "0.4rem 0.6rem", borderRadius: 6 }}
+                      style={{
+                        padding: "0.4rem 0.6rem",
+                        borderRadius: 6,
+                      }}
                     />
                   </label>
                 </div>
@@ -253,7 +313,11 @@ export default function MePage() {
                     cursor: "pointer",
                   }}
                 >
-                  {saving ? "Saving…" : profile ? "Save changes" : "Create profile"}
+                  {saving
+                    ? "Saving…"
+                    : profile
+                    ? "Save changes"
+                    : "Create profile"}
                 </button>
               </>
             )}

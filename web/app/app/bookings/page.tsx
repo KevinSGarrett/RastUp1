@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Authenticator } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
 import { generateClient } from "aws-amplify/data";
+import type { Schema } from "../../../../amplify/data/resource";
 import { configureAmplify } from "../../../lib/amplifyClient";
 
 // Make sure Amplify is configured once on the client
@@ -27,7 +28,8 @@ type Booking = {
   notes?: string | null;
 };
 
-const client = generateClient();
+// Typed Amplify Data client
+const client = generateClient<Schema>();
 
 export default function BookingsPage() {
   const [viewer, setViewer] = useState<Viewer | null>(null);
@@ -144,10 +146,18 @@ export default function BookingsPage() {
             Amplify user: <strong>{user?.username}</strong>
           </p>
 
-          {loadingViewer && <p style={{ marginTop: "1rem" }}>Loading identity…</p>}
+          {loadingViewer && (
+            <p style={{ marginTop: "1rem" }}>Loading identity…</p>
+          )}
 
           {viewer && (
-            <p style={{ marginTop: "0.5rem", fontSize: "0.9rem", opacity: 0.8 }}>
+            <p
+              style={{
+                marginTop: "0.5rem",
+                fontSize: "0.9rem",
+                opacity: 0.8,
+              }}
+            >
               Viewer id: <code>{viewer.id}</code>
             </p>
           )}
@@ -169,7 +179,14 @@ export default function BookingsPage() {
           )}
 
           <section style={{ marginTop: "2rem", maxWidth: 720 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: "1rem",
+              }}
+            >
               <h2 style={{ margin: 0 }}>Bookings for you</h2>
               <button
                 onClick={handleCreateDemoBooking}
@@ -185,14 +202,25 @@ export default function BookingsPage() {
               </button>
             </div>
 
-            {loadingBookings && <p style={{ marginTop: "1rem" }}>Loading bookings…</p>}
+            {loadingBookings && (
+              <p style={{ marginTop: "1rem" }}>Loading bookings…</p>
+            )}
 
             {!loadingBookings && bookings.length === 0 && (
-              <p style={{ marginTop: "1rem" }}>No bookings yet. Try creating one.</p>
+              <p style={{ marginTop: "1rem" }}>
+                No bookings yet. Try creating one.
+              </p>
             )}
 
             {bookings.length > 0 && (
-              <ul style={{ marginTop: "1rem", padding: 0, listStyle: "none", maxWidth: 720 }}>
+              <ul
+                style={{
+                  marginTop: "1rem",
+                  padding: 0,
+                  listStyle: "none",
+                  maxWidth: 720,
+                }}
+              >
                 {bookings.map((b) => (
                   <li
                     key={b.id}
@@ -205,14 +233,30 @@ export default function BookingsPage() {
                     }}
                   >
                     <div style={{ fontWeight: 600 }}>{b.title}</div>
-                    <div style={{ fontSize: "0.85rem", opacity: 0.8, marginTop: "0.25rem" }}>
+                    <div
+                      style={{
+                        fontSize: "0.85rem",
+                        opacity: 0.8,
+                        marginTop: "0.25rem",
+                      }}
+                    >
                       {b.startTimeIso} → {b.endTimeIso}
                     </div>
-                    <div style={{ fontSize: "0.85rem", marginTop: "0.25rem" }}>
+                    <div
+                      style={{
+                        fontSize: "0.85rem",
+                        marginTop: "0.25rem",
+                      }}
+                    >
                       Status: <strong>{b.status}</strong>
                     </div>
                     {b.notes && (
-                      <div style={{ fontSize: "0.85rem", marginTop: "0.25rem" }}>
+                      <div
+                        style={{
+                          fontSize: "0.85rem",
+                          marginTop: "0.25rem",
+                        }}
+                      >
                         Notes: {b.notes}
                       </div>
                     )}
